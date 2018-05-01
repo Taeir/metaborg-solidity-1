@@ -1,0 +1,7 @@
+module test
+
+language solidity
+
+test parse [[
+
+]] parse succeeds

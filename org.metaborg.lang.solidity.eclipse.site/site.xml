@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.metaborg.lang.solidity.eclipse.feature_0.1.0.qualifier.jar" id="org.metaborg.lang.solidity.eclipse.feature" version="0.1.0.qualifier">
+      <category name="solidity"/>
+   </feature>
+   <category-def name="solidity" label="solidity language Eclipse plugin">
+      <description>
+         solidity language Eclipse plugin.
+      </description>
+   </category-def>
+</site>
