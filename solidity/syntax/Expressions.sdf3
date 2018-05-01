@@ -1,0 +1,46 @@
+module Expressions
+
+imports
+  
+  Common
+  Types
+  
+context-free syntax
+  Exp = <( <Exp> )> {bracket}
+
+  Exp.Add = < <Exp> + <Exp> > 						{left}
+  Exp.Sub = < <Exp> - <Exp> > 						{left}
+  Exp.Mul = < <Exp> * <Exp> > 						{left}
+  Exp.Lt = < <Exp> \< <Exp> > 						{non-assoc}
+  Exp.And = < <Exp> && <Exp> > 						{left}
+  
+  Exp.Not = <! <Exp> > 
+   
+  Exp.Call = <<Exp>.<ID> ( <{Param ","}*> ) >
+  
+  Exp.IntValue = < <INT> >
+  Exp.True = <true>
+  Exp.False = <false>
+  Exp.This = <this>
+  Exp.VarRef = < <ID> >
+  
+  Exp.NewObject = <new <ID> () >
+
+  context-free priorities
+  
+  {right: 
+    Exp.Not
+  } >
+  {left:
+    Exp.Mul
+  } >
+  {left:
+    Exp.Add
+    Exp.Sub
+  } >
+  {non-assoc :
+    Exp.Lt
+  } >
+  {non-assoc :
+    Exp.And
+  }

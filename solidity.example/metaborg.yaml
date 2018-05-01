@@ -1,0 +1,13 @@
+---
+id: org.example:solidity.example:0.1.0-SNAPSHOT
+name: solidity
+dependencies:
+  compile:
+  - org.example:solidity:0.1.0-SNAPSHOT
+debug:
+  typesmart: false
+runtime:
+  nabl2:
+    debug: analysis files
+build:
+  useBuildSystemSpec: true

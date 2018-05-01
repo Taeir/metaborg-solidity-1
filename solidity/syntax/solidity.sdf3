@@ -1,0 +1,54 @@
+module solidity
+
+imports
+  
+  Common
+  Expressions
+  Types
+
+context-free start-symbols
+  
+  Start
+
+context-free syntax
+  
+  Start.SourceUnit = <<ContractDefinition*>>
+
+  ContractDefinition.Contract = <contract <ID> { <ContractPart*> } >
+
+  ContractPart = VarDecl
+  VarDecl.Var = <<Type> <ID> ;>
+  
+  ContractPart.Struct = <struct <ID> { <FieldDecl+> }>
+  FieldDecl.Field = <<Type> <ID> ;>
+  
+  ContractPart.Function = <function <ID> ( <{Param ","}*> ) public returns ( <Type> ) { <Statement*> return <Exp> ; } >
+  ContractPart.Function = <function <ID> ( <{Param ","}*> ) public returns ( <Var> ) { <Statement*> } >
+  ContractPart.Function = <function <ID> ( <{Param ","}*> ) public { <Statement*> } >
+  
+  Statement.IfElse = <if ( <Exp> ) <Statement> else <Statement> >
+	
+  Statement.While = <while ( <Exp> ) <Statement> >
+			
+  Statement.Block = <{ <Statement*> }>
+  
+  Statement.Print = < print(<Exp>) ;>
+
+  Statement = AssignD
+  AssignD.Assign = <<VarCreate> = <Exp> ;>
+  
+  Statement = AssignV
+  AssignV.Assign = <<VarRef> = <Exp> ;>
+  
+  Statement = AssignF
+  AssignF.Assign = <<VarCreate> . <FieldRef> = <Exp> ;> {longest-match}
+  
+  VarRef.VarRef = Var
+  VarCreate.VarRef = <<ID>>
+  
+  FieldRef.FieldRef = <<ID>>
+
+  
+  
+  
+  
