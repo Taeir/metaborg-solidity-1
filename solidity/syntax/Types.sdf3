@@ -1,0 +1,17 @@
+module Types
+
+imports
+  Common
+
+sorts Type
+
+context-free syntax
+  
+  Type = TypeID
+  TypeID.Int = <int>
+  TypeID.Bool = <bool>
+  TypeID.Id = <<ID>>
+  
+  
+  Param.Param = <<Type> <ID>>
+  Var.Var = <<Type> <ID>>

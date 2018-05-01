@@ -1,0 +1,66 @@
+module solidity
+
+imports
+  
+  completion/completion
+  pp
+  outline
+  analysis
+
+rules // Debugging
+  
+  debug-show-aterm:
+    (node, _, _, path, project-path) -> (filename, result)
+    with
+      filename := <guarantee-extension(|"aterm")> path
+    ; result   := node
+    
+  editor-desugar:
+	(selected, position, ast, path, project-path) -> (filename, text)
+	where
+	filename := <guarantee-extension(|"desugared.aterm")> path ;
+	text     := <desugar-all> selected
+
+strategies
+
+  desugar-all = innermost(desugar)
+    
+signature
+	constructors
+	Plus : BinOp
+	Minus : BinOp
+	Mul : BinOp
+	
+	Lt : BinOp
+	And : BinOp
+	Assign: BinOp
+	
+	Not : UnOp
+	Integer : UnOp
+	Length : UnOp
+	Array : UnOp
+	Object : UnOp
+	
+	Subscript: BinOp
+	
+
+	BinExp : BinOp * Exp * Exp -> Exp
+	BinExp : BinOp * Exp * IndexExp -> Exp
+	
+	UnExp : UnOp * Exp -> Exp
+	UnExp : UnOp * ID -> Exp
+	UnExp : UnOp * INT -> Exp
+		
+rules
+desugar: Add(e1, e2) -> BinExp(Plus(), e1, e2)
+desugar: Sub(e1, e2) -> BinExp(Minus(), e1, e2)
+desugar: Mul(e1, e2) -> BinExp(Mul(), e1, e2)
+
+desugar: Lt(e1, e2) -> BinExp(Lt(), e1, e2)
+desugar: And(e1, e2) -> BinExp(And(), e1, e2)
+
+desugar: Not(e1) -> UnExp(Not(), e1)
+
+
+
+    
