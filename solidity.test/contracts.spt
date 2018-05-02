@@ -28,6 +28,85 @@ test fullcontract01[[
 ]] parse succeeds
 
 
+test fullcontract02[[
+	contract two {
+		struct structest {
+			int a;
+			bool b;
+		}
+		
+		int x;
+		int y;
+		int z;
+		structest what;
+		
+		function testone(int test) public returns (int){
+			if(x < test){
+				x = y;
+			}
+			else{
+				x = z;
+			}
+			
+			return test;
+		}
+	}
+]] parse succeeds
+
+test fullcontract03[[
+		contract two {
+		struct structest {
+			int a;
+			bool b;
+		}
+		
+		int x;
+		int y;
+		int z;
+		structest what;
+		
+		function testone(int test) public returns (int){
+			if(what.a < test){
+				x = y;
+			}
+			else{
+				x = z;
+			}
+			
+			return test;
+		}
+	}
+]] parse succeeds
+
+test fullcontract04[[
+	contract two {
+		struct structest {
+			int a;
+			bool b;
+		}
+		
+		int x;
+		int y;
+		int z;
+		structest what;
+		
+		function testone(int test) public returns (int){
+			if(x < test){
+				what.a = y;
+			}
+			else{
+				what.a = z;
+			}
+			
+			return test;
+		}
+	}
+
+]] parse succeeds
+
+
+
+
 
 
 	

@@ -26,27 +26,23 @@ context-free syntax
   ContractPart.Function = <function <ID> ( <{Param ","}*> ) public returns ( <Var> ) { <Statement*> } >
   ContractPart.Function = <function <ID> ( <{Param ","}*> ) public { <Statement*> } >
   
-  Statement.IfElse = <if ( <Exp> ) <Statement> else <Statement> >
+  Statement.IfElse = <if ( <Exp> ) { <Statement> } else { <Statement> } >
 	
-  Statement.While = <while ( <Exp> ) <Statement> >
+  Statement.While = <while ( <Exp> ) { <Statement> } >
 			
   Statement.Block = <{ <Statement*> }>
   
   Statement.Print = < print(<Exp>) ;>
+
+  Statement = AssignF
+  AssignF.Assign = <<FieldRef> = <Exp> ;>
 
   Statement = AssignD
   AssignD.Assign = <<VarCreate> = <Exp> ;>
   
   Statement = AssignV
   AssignV.Assign = <<VarRef> = <Exp> ;>
-  
-  Statement = AssignF
-  AssignF.Assign = <<VarCreate> . <FieldRef> = <Exp> ;> {longest-match}
-  
-  VarRef.VarRef = Var
-  VarCreate.VarRef = <<ID>>
-  
-  FieldRef.FieldRef = <<ID>>
+
 
   
   

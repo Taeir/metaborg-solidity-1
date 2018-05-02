@@ -75,4 +75,13 @@ test funcwrongreturn2[[
 	}
 ]] parse fails
 
+test funcwrongreturn3[[
+	contract two {
+		function testone(bool x, int y) public returns (int z){ 
+			z = x;
+			return true;
+		}
+	}
+]] parse fails
+
 
