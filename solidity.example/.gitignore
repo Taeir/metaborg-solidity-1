@@ -11,3 +11,5 @@
 *.name-resolution
 *.unifier
 *.symbolic
+
+*.aterm

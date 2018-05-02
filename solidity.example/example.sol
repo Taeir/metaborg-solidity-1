@@ -6,14 +6,17 @@
 		
 		int x;
 		int y;
+		int z;
 		structest what;
 		
-		function testone(int test) public returns (bool){
-			what.a = b;
-			x = 3 + 5; 
-			y = x;
-			int z = 5 - 2;
-			print(42);
-			return true;
+		function testone(int test) public returns (int){
+			if(x < test){
+				what.a = y;
+			}
+			else{
+				what.a = z;
+			}
+			
+			return test;
 		}
 	}

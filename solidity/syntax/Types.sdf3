@@ -11,7 +11,10 @@ context-free syntax
   TypeID.Int = <int>
   TypeID.Bool = <bool>
   TypeID.Id = <<ID>>
-  
-  
+
+  VarCreate.VarRef = Var        
+  VarRef.VarRef = <<ID>>
+  FieldRef.FieldRef = <<VarRef> . <ID>>
+    
   Param.Param = <<Type> <ID>>
   Var.Var = <<Type> <ID>>

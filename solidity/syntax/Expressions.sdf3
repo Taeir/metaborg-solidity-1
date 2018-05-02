@@ -22,7 +22,8 @@ context-free syntax
   Exp.True = <true>
   Exp.False = <false>
   Exp.This = <this>
-  Exp.VarRef = < <ID> >
+  Exp = VarRef
+  Exp = FieldRef
   
   Exp.NewObject = <new <ID> () >
 
