@@ -8,6 +8,6 @@ rules
 
   init ^ (s) := new s.
 
-  [[ Empty() ^ (s) ]] :=
+  [[ Program(elements) ^ (s) ]] :=
     false | note "Specify name binding and typing rules in static-semantics.nabl2".
 

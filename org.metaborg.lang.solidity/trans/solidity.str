@@ -6,6 +6,8 @@ imports
   pp
   outline
   analysis
+  expressions
+  statements
 
 rules // Debugging
   
@@ -14,3 +16,14 @@ rules // Debugging
     with
       filename := <guarantee-extension(|"aterm")> path
     ; result   := node
+  
+  editor-desugar:
+	(selected, position, ast, path, project-path) -> (filename, text)
+	where
+	filename := <guarantee-extension(|"desugared.aterm")> path ;
+	text     := <desugar-all> selected
+
+strategies
+
+  desugar-all = innermost(desugar)
+
