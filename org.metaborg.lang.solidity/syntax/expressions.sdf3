@@ -1,0 +1,164 @@
+module expressions
+
+imports
+  
+  Common
+  types
+  vars
+
+template options
+  tokenize : "({["
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = EXPKEYWORD
+  EXPKEYWORD = "true"
+  EXPKEYWORD = "false"
+  EXPKEYWORD = "this"
+  EXPKEYWORD = "new"
+  EXPKEYWORD = "delete"
+  ID = EXPKEYWORD {reject}
+
+sorts
+  Exp
+
+context-free start-symbols
+  Exp
+  
+context-free syntax
+  Exp = < (<Exp>) > {bracket}
+
+  //---------------------------------------------------------------------------
+  //Numeric operators
+  Exp.UMin   = < -<Exp> >         {right}
+  Exp.UPlus  = < +<Exp> >         {right}
+  Exp.Add    = < <Exp> + <Exp> >  {left}
+  Exp.Sub    = < <Exp> - <Exp> >  {left}
+  Exp.Mul    = < <Exp> * <Exp> >  {left}
+  Exp.Div    = < <Exp> / <Exp> >  {left}
+  Exp.Mod    = < <Exp> % <Exp> >  {left}
+  Exp.Pow    = < <Exp> ** <Exp> > {left}
+  Exp.LShift = [ [Exp] << [Exp] ] {left}
+  Exp.RShift = [ [Exp] >> [Exp] ] {left}
+  Exp.BitAnd = < <Exp> & <Exp> >  {left}
+  Exp.BitOr  = < <Exp> | <Exp> >  {left}
+  Exp.BitXor = < <Exp> ^ <Exp> >  {left}
+  Exp.BitNot = < ~<Exp> >         {right}
+  
+  //---------------------------------------------------------------------------
+  //Increment and decrement
+  Exp.RetInc = < <VarRef>++ > {left}
+  Exp.RetDec = < <VarRef>-- > {left}
+  Exp.IncRet = < ++<VarRef> > {right}
+  Exp.DecRet = < --<VarRef> > {right}
+  
+  //---------------------------------------------------------------------------
+  //Comparison
+  Exp.Lt     = [ [Exp] < [Exp] ]  {non-assoc}
+  Exp.LtEq   = [ [Exp] <= [Exp] ] {non-assoc}
+  Exp.Gt     = [ [Exp] > [Exp] ]  {non-assoc}
+  Exp.GtEq   = [ [Exp] >= [Exp] ] {non-assoc}
+  Exp.Eq     = < <Exp> == <Exp> > {non-assoc}
+  Exp.NEq    = < <Exp> != <Exp> > {non-assoc}
+  
+  //---------------------------------------------------------------------------
+  //Boolean logic
+  Exp.And    = < <Exp> && <Exp> > {left}
+  Exp.Or     = < <Exp> || <Exp> > {left}
+  Exp.Not    = < !<Exp> >         {right}
+  
+  //---------------------------------------------------------------------------
+  //Arrays
+  Exp.Subscript = < <Exp>[<AlsoExp>] > {left}
+  AlsoExp       = Exp
+  
+  //---------------------------------------------------------------------------
+  //Member access
+  Exp.Member = < <Exp>.<ID> > {left}
+  
+  //---------------------------------------------------------------------------
+  //Function calls
+  Exp.Call   = FunctionCall
+  FunctionCall.FunctionCall = < <Exp>(<{Exp ", "}*>) > {left}
+  
+  //---------------------------------------------------------------------------
+  //Literals
+  LitNumber = <<DECIMAL>>
+  LitNumber = <<HEXINT>>
+  
+  Exp.NumberLit = <<LitNumber> <NumberUnit?>>
+  Exp.FractLit  = <<FRACT>>
+  Exp.HexLit    = <<HEXSTRING>>
+  Exp.StringLit = <<STRING>>
+  Exp.True      = <true>
+  Exp.False     = <false>
+  Exp.This      = <this>
+  Exp.LitArray  = < [<{Exp ", "}+>] >
+  Exp.VarRef    = VarRef
+  
+  //TODO TupleExp
+  
+  //---------------------------------------------------------------------------
+  //Create and delete
+  //TODO
+  Exp.NewObject = <new <PATH>(<{Exp ", "}*>)> {prefer}
+  Exp.NewArray  = <new <Type>(<Exp>)>
+  Exp.Delete    = <delete <Exp>> {right}
+  
+  //---------------------------------------------------------------------------
+  //Cast
+  Exp.Cast = < <Type>(<Exp>) >
+  
+  //---------------------------------------------------------------------------
+  //Tenary if statement
+  Exp.Ternary = < <Exp> ? <Exp> : <Exp> > {left} //TODO Correct?
+  
+  //-----------------------------------------------------------------
+  //Assignment
+  Exp.Assign      = <<VarRef> = <Exp>>        {right}
+  Exp.AssignArray = <<VarRef>[<Exp>] = <Exp>> 
+  
+  //-----------------------------------------------------------------
+  //LValue shorthands
+  LVal.AddAssign    = <<VarRef> += <Exp>>  {right}
+  LVal.SubAssign    = <<VarRef> -= <Exp>>  {right}
+  LVal.MulAssign    = <<VarRef> *= <Exp>>  {right}
+  LVal.DivAssign    = <<VarRef> /= <Exp>>  {right}
+  LVal.ModAssign    = <<VarRef> %= <Exp>>  {right}
+  
+  LVal.BitOrAssign  = <<VarRef> |= <Exp>>  {right}
+  LVal.BitAndAssign = <<VarRef> &= <Exp>>  {right}
+  LVal.BitXorAssign = <<VarRef> ^= <Exp>>  {right}
+  
+  LVal.LShiftAssign = [[VarRef] <<= [Exp]] {right}
+  LVal.RShiftAssign = [[VarRef] >>= [Exp]] {right}
+  
+  Exp.LValAssign    = LVal
+  
+  //TODO TupleExp
+
+context-free priorities
+  {left:
+    Exp.RetInc Exp.RetDec
+    Exp.NewObject
+    Exp.Subscript
+    Exp.Member
+    Exp.Call} >
+  {right:
+    Exp.IncRet Exp.DecRet
+    Exp.UMin Exp.UPlus
+    Exp.Delete
+    Exp.Not Exp.BitNot} >
+  {left: Exp.Pow} >
+  {left: Exp.Mul    Exp.Div    Exp.Mod} >
+  {left: Exp.Add    Exp.Sub} >
+  {left: Exp.LShift Exp.RShift} >
+  {left: Exp.BitAnd} >
+  {left: Exp.BitXor} >
+  {left: Exp.BitOr} >
+  {non-assoc: Exp.Lt Exp.Gt Exp.LtEq Exp.GtEq} >
+  {non-assoc: Exp.Eq Exp.NEq} >
+  {non-assoc: Exp.And} >
+  {non-assoc: Exp.Or} >
+  {left: Exp.Ternary} >
+  {right: Exp.Assign Exp.AssignArray Exp.LValAssign}

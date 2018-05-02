@@ -1,0 +1,27 @@
+module assembly
+
+imports
+  Common
+
+template options
+  tokenize : "({"
+
+lexical syntax
+  //Anything is not a newline or bracket
+  Anything = ~[\n\{\}]+
+  
+  //Define as keyword
+  KEYWORD = ASMKEYWORD
+  ASMKEYWORD = "assembly"
+  
+context-free syntax
+  AssemblyStatement.Assembly = <assembly <STRING> <AssemblyBlock>>
+  AssemblyBlock.ASMBlock = <
+    {
+      <{AssemblyItem "\n"}*>
+    }>
+  
+  //We don't actually support the inline assembly, so we allow anything to just parse it into the AST
+  AssemblyItem = AssemblyBlock
+  AssemblyItem = Anything
+  AssemblyItem.AnyBlock = <<Anything> <AssemblyBlock>>

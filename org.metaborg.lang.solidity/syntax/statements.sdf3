@@ -1,0 +1,90 @@
+module statements
+
+imports
+  Common
+  expressions
+  types
+  vars
+  assembly
+
+template options
+  tokenize : "({;."
+
+lexical syntax
+  Continue = "continue"
+  Break    = "break"
+  Throw    = "throw"
+  
+  //Add keywords
+  KEYWORD = STMTKEYWORD
+  STMTKEYWORD = Continue
+  STMTKEYWORD = Break
+  STMTKEYWORD = Throw
+  STMTKEYWORD = "if"
+  STMTKEYWORD = "else"
+  STMTKEYWORD = "while"
+  STMTKEYWORD = "do"
+  STMTKEYWORD = "for"
+  STMTKEYWORD = "emit"
+  STMTKEYWORD = "return"
+  
+//  ID = STMTKEYWORD {reject}
+context-free start-symbols
+  Statement
+
+context-free syntax
+  //-----------------------------------------------------------------
+  //Control Flow
+  Statement.Block    = <
+    {
+      <{Statement "\n"}*>
+    }>
+  Statement.If       = < if (<Exp>) <Statement> <Else>>
+  Else.None          = <>
+  Else.Else          = < else <Statement> >
+//  Statement.IfElse  = < if (<Exp>) <Statement> else <Statement> >
+
+  Statement.While    = < while (<Exp>) <Statement> >
+  Statement.DoWhile  = < do <Statement> while (<Exp>); >
+  
+  //The first statement of for can be either ";", a variable declaration or an expression statement
+  Statement.For      = < for (<ForStatement> <Exp?>; <Exp?>) <Statement> >
+  ForStatement.None  = <;>
+  ForStatement       = VarDeclStatement
+  ForStatement       = ExpStatement
+  
+  Statement.Continue = <<Continue>;>
+  Statement.Break    = <<Break>;>
+  Statement.Throw    = <<Throw>;>
+  Statement.Emit     = <emit <FunctionCall>;>
+  
+  //-----------------------------------------------------------------
+  //Local variable declaration
+  VarDeclStatement.DeclareVar       = <<LocalVarType> <ID>;>
+  VarDeclStatement.DeclareVarAssign = <<LocalVarType> <ID> = <Exp>;>
+  Statement                         = VarDeclStatement
+  
+  //-----------------------------------------------------------------
+  //Arbitrary Expressions
+  ExpStatement.ExpStmt = <<Exp>;>
+  Statement            = ExpStatement
+  
+  //-----------------------------------------------------------------
+  //Inline assembly
+  Statement            = AssemblyStatement
+
+  //-----------------------------------------------------------------
+  //Added Print statement for usefullness
+  ExtraStatement.Print = < print(<Exp>); >
+  Statement = ExtraStatement
+  
+  //-----------------------------------------------------------------
+  //Shorthand for a statement or a return.
+  StatementOrReturn = Statement
+  StatementOrReturn = ReturnStatement
+  
+  StatementOrVoidReturn = Statement
+  StatementOrVoidReturn = VoidReturnStatement
+  
+  VoidReturnStatement.VoidReturn  = <return;>
+  ReturnStatement.ReturnStatement = <return <Exp>;>

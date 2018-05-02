@@ -1,0 +1,24 @@
+module structs
+
+imports
+  Common
+  types
+
+template options
+  tokenize : "({;"
+
+context-free start-symbols
+  Struct
+
+lexical syntax
+  KEYWORD = STRUCTKEYWORD
+  STRUCTKEYWORD = "struct"
+  ID = STRUCTKEYWORD {reject}
+
+context-free syntax
+  Struct.Struct = <
+    struct <ID> {
+      <{StructField "\n"}+>
+    }>
+  
+  StructField.StructField = <<Type> <ID>;>

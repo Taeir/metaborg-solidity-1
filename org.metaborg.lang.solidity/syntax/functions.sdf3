@@ -1,0 +1,91 @@
+module functions
+
+imports
+  Common
+  types
+  modifiers
+  expressions
+  statements
+
+template options
+  tokenize : "({;"
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = FUNKEYWORD
+  FUNKEYWORD = "function"
+  FUNKEYWORD = "constructor"
+  FUNKEYWORD = "returns"
+  ID = FUNKEYWORD {reject}
+
+context-free start-symbols
+  Function
+  AbstractFunction
+  Constructor
+  Param
+  Returns
+
+context-free syntax
+  //Function declarations
+  Function.Function = <
+    function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
+      <{StatementOrReturn "\n"}*>
+    }>
+  
+  Function.VoidFunction = <
+    function <ID>(<{Param ", "}*>) <ModifiersFun*> {
+      <{StatementOrVoidReturn "\n"}*>
+    }>
+  
+  //Fallback function has no name, no parameters and no returns.
+  Function.FallBackFunction = <
+    function() <ModifiersFun*> {
+      <{StatementOrVoidReturn "\n"}*>
+    }>
+  
+  //---------------------------------------------------------------------------
+  Function.AbstractFunction = <<AbstractFunction>>
+  
+  AbstractFunction.AbstractFunction = <function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns?>;>
+  
+  //---------------------------------------------------------------------------
+  //Constructors
+  Constructor.Constructor = <
+    constructor(<{Param ", "}*>) <ModifierCon?> {
+      <{StatementOrVoidReturn "\n"}*>
+    }>
+  
+  Constructor.ConstructorWithSuper = <
+    constructor(<{Param ", "}*>) <ModifierConSuper> {
+      <{StatementOrVoidReturn "\n"}*>
+    }>
+  
+  //---------------------------------------------------------------------------
+  //Params
+  Param.Param            = <<Type> <ModLocation?> <ParamName>>
+//  Param.ParamNameOmitted = <<Type>>
+  
+  ParamName.None = <>
+  ParamName      = ID
+  
+  //Return Params
+  Returns.Returns = <returns (<{Param ", "}+>)>
+  
+  //---------------------------------------------------------------------------
+  //Modifiers
+  ModifiersFun.Visibility      = <<ModVisibilityFun>>
+  ModifiersFun.StateMutability = <<ModStateMutability>>
+  ModifiersFun.UserDefined     = <<ModUserDefined>>
+  
+  ModUserDefined.Simple = <<ID>>
+  ModUserDefined.Ext    = <<ID>(<{Exp ", "}*>)>
+  
+  //Constructors can be internal or public
+  ModifierCon = Internal
+  ModifierCon = Public
+  
+  //Calls to base constructors can be done with modifier like syntax
+  ModifierConSuper.ModSuperCall = <<ModifierCon> <ID>(<{Exp ", "}*>)>
+  ModifierConSuper.SuperCallMod = <<ID>(<{Exp ", "}*>) <ModifierCon?>>
+  ModifierConSuper              = ModifierCon
+  

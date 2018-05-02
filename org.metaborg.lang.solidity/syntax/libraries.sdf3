@@ -1,0 +1,35 @@
+module libraries
+
+imports
+  Common
+  statevariables
+  functions
+  functionmodifiers
+  events
+  structs
+  enums
+
+template options
+  tokenize : "({;"
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = LIBKEYWORD
+  LIBKEYWORD = "library"
+  ID = LIBKEYWORD {reject}
+
+context-free start-symbols
+  Library
+
+context-free syntax
+  Library.Library = <
+    library <ID> {
+      <{LibraryContent "\n"}*>
+    }>
+  
+  LibraryContent = ConstantStateVariable
+  LibraryContent = Function
+  LibraryContent = FunctionModifier
+  LibraryContent = Event
+  LibraryContent = Struct
+  LibraryContent = Enum

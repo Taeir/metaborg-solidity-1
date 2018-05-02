@@ -1,0 +1,25 @@
+module vars
+
+imports
+  Common
+  types
+  expressions
+
+template options
+  tokenize : "(;"
+
+context-free start-symbols
+  LocalVar
+  LocalVarDecl
+  
+  VarRef
+
+context-free syntax
+  LocalVar.LocalVar               = <<LocalVarType> <ID>>
+  LocalVarDecl.LocalVarDecl       = <<LocalVar>;>
+  LocalVarDecl.LocalVarDeclAssign = <<LocalVar> = <Exp>;>
+  
+  //this.x
+  //x.item.item
+  VarRef.LocalRef = <<ID>>
+  VarRef.FieldRef = <<ID>.<PATH>>

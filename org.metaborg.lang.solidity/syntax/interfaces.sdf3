@@ -1,0 +1,23 @@
+module interfaces
+
+imports
+  Common
+  functions
+
+template options
+  tokenize : "({;"
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = INTERFACEKEYWORD
+  INTERFACEKEYWORD = "interface"
+  ID = INTERFACEKEYWORD {reject}
+
+context-free start-symbols
+  Interface
+
+context-free syntax
+  Interface.Interface = <
+    interface <ID> {
+      <{AbstractFunction "\n"}*>
+    }>

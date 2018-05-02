@@ -1,0 +1,37 @@
+module solimports
+
+imports
+  Common
+
+template options
+  tokenize : "({;"
+
+lexical syntax
+  KEYWORD = IMPORTKEYWORD
+  IMPORTKEYWORD = "import"
+  IMPORTKEYWORD = "as"
+  IMPORTKEYWORD = "from"
+  ID = IMPORTKEYWORD {reject}
+
+context-free start-symbols
+  Import
+
+context-free syntax
+  //import (x from)? file
+  //x = symbol (as ID)?
+  //x = {x, x*}
+  Import.Import      = <import <ImportFile>;>
+  Import.ImportFrom  = <import <ImportItem> from <ImportFile>;>
+  
+  //import "file" as symbolName; = import * as symbolName from "file";
+  Import.ImportExtra = <import <ImportFile> as <ImportName>;>
+  
+  ImportItem.Star     = <* as <ImportName>>
+  ImportItem.Single   = <<ImportName>>
+  ImportItem.SingleAs = <<ImportName> as <ImportName>>
+  ImportItem.Multi    = <{<{ImportItem ", "}+>}>
+  
+  ImportFile = STRING
+  ImportName = ID
+  
+  

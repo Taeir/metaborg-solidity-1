@@ -1,0 +1,48 @@
+module contracts
+
+imports
+  Common
+  statevariables
+  functions
+  functionmodifiers
+  events
+  structs
+  enums
+  expressions
+
+template options
+  tokenize : "({;"
+
+context-free start-symbols
+  Contract
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = CONTRACTKEYWORD
+  CONTRACTKEYWORD = "contract"
+  CONTRACTKEYWORD = "is"
+  ID = CONTRACTKEYWORD {reject}
+
+context-free syntax
+  Contract.Contract = <
+    contract <ID> {
+      <{ContractContent "\n"}*>
+    }>
+  
+  Contract.ContractInherits = <
+    contract <ID> is <{Inheritance ", "}+> {
+      <{ContractContent "\n"}*>
+    }>
+  
+  //The inherited contract with optionally a constructor invocation 
+  Inheritance.ID  = <<ID>>
+  Inheritance.Ext = <<ID>(<{Exp ", "}*>)>
+  
+  //Contracts can contain basically anything.
+  ContractContent = StateVariable
+  ContractContent = Constructor
+  ContractContent = Function
+  ContractContent = FunctionModifier
+  ContractContent = Event
+  ContractContent = Struct
+  ContractContent = Enum

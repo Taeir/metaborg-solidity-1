@@ -1,0 +1,21 @@
+module enums
+
+imports
+  Common
+
+template options
+  tokenize : "({;"
+
+context-free start-symbols
+  Enum
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = ENUMKEYWORD
+  ENUMKEYWORD = "enum"
+  ID = ENUMKEYWORD {reject}
+
+context-free syntax
+  Enum.Enum = < enum <ID> { <{EnumValue ", "}*> } >
+  
+  EnumValue.EnumValue = <<ID>>

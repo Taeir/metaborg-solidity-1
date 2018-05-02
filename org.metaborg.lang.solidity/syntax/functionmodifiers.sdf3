@@ -1,0 +1,32 @@
+module functionmodifiers
+
+imports
+  Common
+  functions
+  statements
+
+template options
+  tokenize : "({;"
+
+lexical syntax
+  //Define as keyword
+  KEYWORD = FUNMODKEYWORD
+  FUNMODKEYWORD = "modifier"
+  ID = FUNMODKEYWORD {reject}
+
+context-free start-symbols
+  FunctionModifier
+
+context-free syntax
+  FunctionModifier.FunctionModifier = <
+    modifier <ID> <FunctionModifierParams?> {
+      <{FMStatement "\n"}*>
+    }>
+  
+  FunctionModifierParams.FMParams = <(<{Param ", "}*>)>
+  
+  //Function modifier can contain all normal statements + the underscore statement
+  FMStatement = UnderscoreStatement
+  FMStatement = Statement
+  
+  UnderscoreStatement.Underscore = <_;>

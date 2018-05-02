@@ -1,0 +1,21 @@
+module unsupported
+
+//Unsupported syntax:
+//Before and after expressions
+
+
+//Tuple expressions
+
+
+//Returning multiple values
+
+
+//Using assignment as expression, e.g.
+//  if (a = b)
+//  if (a += b)
+
+
+//Using directive
+
+
+//Inline assembly (it is parsed but ignored)

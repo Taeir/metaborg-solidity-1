@@ -3,11 +3,39 @@ module solidity
 imports
   
   Common
+  
+  assembly
+  contracts
+  enums
+  events
+  expressions
+  functionmodifiers
+  functions
+  interfaces
+  libraries
+  modifiers
+  pragmas
+  solimports
+  statements
+  statevariables
+  structs
+  types
+  usingfor
+  vars
 
 context-free start-symbols
   
-  Start
+  Program
+  ID
+  INT
 
 context-free syntax
+  Program.Program = <<{ProgramItem "\n"}*>>
   
-  Start.Empty = <>
+  ProgramItem = Pragma
+  ProgramItem = Import
+  ProgramItem = ProgramContent
+  
+  ProgramContent = Contract
+  ProgramContent = Interface
+  ProgramContent = Library

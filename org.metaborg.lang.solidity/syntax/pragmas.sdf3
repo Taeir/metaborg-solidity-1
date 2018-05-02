@@ -1,0 +1,25 @@
+module pragmas
+
+imports
+  Common
+
+template options
+  tokenize : "(;"
+
+context-free start-symbols
+  Pragma
+
+lexical syntax
+  Version        = VersionOp? [0-9]+ "." [0-9]+ "." [0-9]+
+  Version        = STRING
+  VersionOp      = "^" | "~" | ">=" | ">" | "<" | "<=" | "="
+  
+  //Define as keyword
+  KEYWORD = PRAGMAKEYWORD
+  PRAGMAKEYWORD = "pragma"
+//  ID = PRAGMAKEYWORD {reject}
+
+context-free syntax
+  Pragma.Pragma = <pragma <PragmaName> <PragmaValue>;>
+  PragmaName    = ID
+  PragmaValue   = Version

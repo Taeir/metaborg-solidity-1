@@ -1,0 +1,33 @@
+module statevariables
+
+imports
+  Common
+  modifiers
+  types
+  expressions
+
+template options
+  tokenize : "(;"
+
+context-free start-symbols
+  StateVariable
+
+context-free syntax
+  StateVariable.StateVariable = <<Type> <ModifiersStateVarVis?> <ID> <StateVarAssignment?>;>
+  StateVariable               = ConstantStateVariable
+  
+  //Constant state variable
+  ConstantStateVariable.ConstantStateVariable = <<Type> <ModifiersStateVarVis?> <Constant> <ModifiersStateVarVis?> <ID> <StateVarAssignment?>;>
+  
+  //It can be initialized with an expression
+  StateVarAssignment.StateVarAssignment = <= <Exp>>
+  
+  //State variables cannot have external
+  ModifiersStateVar = Constant
+  ModifiersStateVar = Internal
+  ModifiersStateVar = Public
+  ModifiersStateVar = Private
+  
+  ModifiersStateVarVis = Internal
+  ModifiersStateVarVis = Public
+  ModifiersStateVarVis = Private

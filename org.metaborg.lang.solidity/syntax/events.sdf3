@@ -1,0 +1,27 @@
+module events
+
+imports
+  Common
+  types
+
+template options
+  tokenize : "({;"
+
+context-free start-symbols
+  Event
+
+lexical syntax
+  Anonymous = "anonymous"
+  Indexed   = "indexed"
+  
+  //Define as keyword
+  KEYWORD = EVENTKEYWORD
+  EVENTKEYWORD = "event"
+  EVENTKEYWORD = Anonymous
+  EVENTKEYWORD = Indexed
+  ID = EVENTKEYWORD {reject}
+
+context-free syntax
+  Event.Event = < event <ID>(<{EventParam ", "}*>) <Anonymous?>; >
+  
+  EventParam.EventParam = <<Type> <Indexed?> <ID?>>
