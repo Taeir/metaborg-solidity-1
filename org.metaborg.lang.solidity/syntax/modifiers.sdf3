@@ -21,16 +21,16 @@ lexical syntax
   
   //Define the modifiers as keywords
   KEYWORD = MODKEYWORD
-  MODKEYWORD = Internal
-  MODKEYWORD = External
-  MODKEYWORD = Public
-  MODKEYWORD = Private
-  MODKEYWORD = Constant
-  MODKEYWORD = Pure
-  MODKEYWORD = View
-  MODKEYWORD = Payable
-  MODKEYWORD = Memory
-  MODKEYWORD = Storage
+  MODKEYWORD = "internal"
+  MODKEYWORD = "external"
+  MODKEYWORD = "public"
+  MODKEYWORD = "private"
+  MODKEYWORD = "constant"
+  MODKEYWORD = "pure"
+  MODKEYWORD = "view"
+  MODKEYWORD = "payable"
+  MODKEYWORD = "memory"
+  MODKEYWORD = "storage"
   ID = MODKEYWORD {reject}
 
 context-free syntax

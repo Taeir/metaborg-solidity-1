@@ -14,6 +14,7 @@ lexical syntax
   KEYWORD = USINGKEYWORD
   USINGKEYWORD = "using"
   USINGKEYWORD = "for"
+  ID = USINGKEYWORD {reject}
 
 context-free syntax
   UsingFor.UsingFor = <using <PATH> for <UsingForItem>;>

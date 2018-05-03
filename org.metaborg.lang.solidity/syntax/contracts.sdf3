@@ -9,6 +9,7 @@ imports
   structs
   enums
   expressions
+  usingfor
 
 template options
   tokenize : "({;"
@@ -46,3 +47,4 @@ context-free syntax
   ContractContent = Event
   ContractContent = Struct
   ContractContent = Enum
+  ContractContent = UsingFor

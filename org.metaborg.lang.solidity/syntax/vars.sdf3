@@ -4,6 +4,7 @@ imports
   Common
   types
   expressions
+  modifiers
 
 template options
   tokenize : "(;"
@@ -15,7 +16,7 @@ context-free start-symbols
   VarRef
 
 context-free syntax
-  LocalVar.LocalVar               = <<LocalVarType> <ID>>
+  LocalVar.LocalVar               = <<LocalVarType> <ModLocation?> <ID>>
   LocalVarDecl.LocalVarDecl       = <<LocalVar>;>
   LocalVarDecl.LocalVarDeclAssign = <<LocalVar> = <Exp>;>
   

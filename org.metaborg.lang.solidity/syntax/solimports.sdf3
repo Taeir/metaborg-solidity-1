@@ -20,11 +20,11 @@ context-free syntax
   //import (x from)? file
   //x = symbol (as ID)?
   //x = {x, x*}
-  Import.Import      = <import <ImportFile>;>
-  Import.ImportFrom  = <import <ImportItem> from <ImportFile>;>
+  Import.ImportFromFile  = <import <ImportFile>;>
+  Import.ImportItemFrom  = <import <ImportItem> from <ImportFile>;>
   
   //import "file" as symbolName; = import * as symbolName from "file";
-  Import.ImportExtra = <import <ImportFile> as <ImportName>;>
+  Import.ImportFileAs = <import <ImportFile> as <ImportName>;>
   
   ImportItem.Star     = <* as <ImportName>>
   ImportItem.Single   = <<ImportName>>
