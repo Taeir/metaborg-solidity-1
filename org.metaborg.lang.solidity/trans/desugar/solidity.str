@@ -1,0 +1,10 @@
+module desugar/solidity
+
+imports
+  desugar/expressions
+  desugar/statements
+  desugar/solimports
+
+strategies
+
+  desugar-all = innermost(desugar)

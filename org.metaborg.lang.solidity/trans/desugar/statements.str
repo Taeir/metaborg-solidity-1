@@ -1,10 +1,10 @@
-module statements
+module desugar/statements
 
 imports
   
   signatures/statements-sig
   signatures/vars-sig
-  expressions
+  desugar/expressions
 
 rules
   //a += Exp --> a = a + Exp

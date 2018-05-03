@@ -1,0 +1,39 @@
+module desugar/types
+
+imports
+  signatures/types-sig
+
+signature
+  sorts
+  
+  constructors
+
+rules
+  //TODO Smarter strategy to be faster (first desugar types (only once on each term), then do the rest (innermost))
+
+  //Default values
+  desugar: IntType(None())    -> IntType(256)
+  desugar: UIntType(None())   -> UIntType(256)
+  desugar: FixedType(None())  -> FixedType(MxN(128, 18))
+  desugar: UFixedType(None()) -> UFixedType(MxN(128, 18))
+  desugar: ByteType()         -> FixedBytesArrayType(1)
+
+  //Convert the strings to ints
+  desugar: IntType(Some(x))      -> IntType(<string-to-int> x)
+  desugar: UIntType(Some(x))     -> UIntType(<string-to-int> x)
+  desugar: FixedType(MxN(m, n))  -> FixedType(MxN(mI, nI))
+    where
+    mI := <string-to-int> m;
+    nI := <string-to-int> n
+  desugar: UFixedType(MxN(m, n)) -> UFixedType(MxN(mI, nI))
+    where
+    mI := <string-to-int> m;
+    nI := <string-to-int> n
+
+  desugar: FixedBytesArrayType(s) -> FixedBytesArrayType(<string-to-int> s)
+
+  //Remove the some/none syntax from functiontype return types
+  desugar: FunctionType(args, vis, mut, None())                  -> FunctionType(args, vis, mut, [])
+  desugar: FunctionType(args, vis, mut, Some(ReturnsType(rets))) -> FunctionType(args, vis, mut, rets)
+  
+  

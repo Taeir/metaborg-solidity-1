@@ -6,8 +6,8 @@ imports
   pp
   outline
   analysis
-  expressions
-  statements
+  desugar/solidity
+  signatures/solidity-sig
 
 rules // Debugging
   
@@ -22,8 +22,3 @@ rules // Debugging
 	where
 	filename := <guarantee-extension(|"desugared.aterm")> path ;
 	text     := <desugar-all> selected
-
-strategies
-
-  desugar-all = innermost(desugar)
-

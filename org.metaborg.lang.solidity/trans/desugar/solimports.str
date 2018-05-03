@@ -1,0 +1,51 @@
+module desugar/solimports
+
+//Desugar imports into a standardized format to make it easier to work with.
+
+imports
+  signatures/solimports-sig
+  signatures/Common-sig
+
+signature
+  sorts
+    DImport
+    DImportItem
+  
+  constructors
+    //DImport.Import   = <<DImportItem*>>
+    
+    //DImportItem.Star = <* as <ImportName>>
+    //DImportItem.Item = <<ImportName> as <ImportName>>
+    
+    Import     : List(DImportItem) * ImportFile -> DImport
+    
+    ImportStar : ImportName -> DImportItem
+    ImportItem : ImportName * ImportName -> DImportItem
+
+rules
+  //Translate the "import file as name" import syntax into the other syntax
+  desugar: ImportFileAs(file, name) -> ImportItemFrom(Star(name), file)
+  
+  
+  desugar: ImportItemFrom(items, file) -> Import(items', file)
+    where
+    items' := <convimport> items
+    
+  //import * as a              -> [ImportItem(* as a)]
+  convimport: Star(name)       -> ImportStar(name)
+  
+  //import a                   -> [ImportItem(a as a)]
+  convimport: Single(name)     -> ImportItem(name, name)
+  
+  //import a as b              -> [ImportItem(a as b)]
+  convimport: SingleAs(n1, n2) -> [ImportItem(n1, n2)]
+  
+  //import {a, b as c, ...}    -> [ImportItem(a as a), ImportItem(b as c), ...] 
+  convimport: Multi(ns)        -> items
+    where
+    items := <mapconcat(convimport)> ns
+  
+  
+  
+  
+  

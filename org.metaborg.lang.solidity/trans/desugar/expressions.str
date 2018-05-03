@@ -1,8 +1,7 @@
-module expressions
+module desugar/expressions
 
 imports
   signatures/expressions-sig
-  
 
 signature
   sorts
@@ -104,15 +103,16 @@ rules
   desugar: Delete(e1)   -> UnExp(Delete(), e1)
   
   //Assignment
-  desugar: AddAssign(v, e1) -> Assign(v, BinExp(Plus(), v, e1))
-  desugar: SubAssign(v, e1) -> Assign(v, BinExp(Minus(), v, e1))
-  desugar: MulAssign(v, e1) -> Assign(v, BinExp(Mult(), v, e1))
-  desugar: DivAssign(v, e1) -> Assign(v, BinExp(Div(), v, e1))
-  desugar: ModAssign(v, e1) -> Assign(v, BinExp(Mod(), v, e1))
+  desugar: LValAssign(assignment) -> <remove_lval> assignment
+  remove_lval: AddAssign(v, e1) -> Assign(v, BinExp(Plus(), v, e1))
+  remove_lval: SubAssign(v, e1) -> Assign(v, BinExp(Minus(), v, e1))
+  remove_lval: MulAssign(v, e1) -> Assign(v, BinExp(Mult(), v, e1))
+  remove_lval: DivAssign(v, e1) -> Assign(v, BinExp(Div(), v, e1))
+  remove_lval: ModAssign(v, e1) -> Assign(v, BinExp(Mod(), v, e1))
   
-  desugar: BitOrAssign(v, e1)  -> Assign(v, BinExp(BitOr(), v, e1))
-  desugar: BitAndAssign(v, e1) -> Assign(v, BinExp(BitAnd(), v, e1))
-  desugar: BitXorAssign(v, e1) -> Assign(v, BinExp(BitXor(), v, e1))
+  remove_lval: BitOrAssign(v, e1)  -> Assign(v, BinExp(BitOr(), v, e1))
+  remove_lval: BitAndAssign(v, e1) -> Assign(v, BinExp(BitAnd(), v, e1))
+  remove_lval: BitXorAssign(v, e1) -> Assign(v, BinExp(BitXor(), v, e1))
   
-  desugar: LShiftAssign(v, e1) -> Assign(v, BinExp(LShift(), v, e1))
-  desugar: RShiftAssign(v, e1) -> Assign(v, BinExp(RShift(), v, e1))
+  remove_lval: LShiftAssign(v, e1) -> Assign(v, BinExp(LShift(), v, e1))
+  remove_lval: RShiftAssign(v, e1) -> Assign(v, BinExp(RShift(), v, e1))
