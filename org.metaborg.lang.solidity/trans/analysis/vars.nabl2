@@ -1,0 +1,17 @@
+module analysis/vars
+
+imports
+  signatures/-
+
+signature
+  namespaces
+    Var { origin : term }
+
+rules
+  [[ StructField(solType, name) ^ (structScope) ]] :=
+    [[ solType ^ (structScope) : ty ]],
+    
+    Var{name} <- structScope,
+    Var{name}.origin := StructField(),
+    Var{name} : ty !. 
+

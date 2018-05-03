@@ -1,0 +1,48 @@
+module analysis/solidity
+
+imports
+
+  signatures/-
+
+signature
+  name resolution
+  
+  namespaces
+    Import { iname : string }
+  
+  sorts
+    
+  
+  constructors
+    
+
+rules
+
+  init ^ (programScope) :=
+    new programScope.
+
+  [[ Program(elements) ^ (programScope) ]] :=
+    Map1 [[ elements ^ (programScope) ]],
+    
+    
+    distinct/name D(programScope)/Import   | error $[Two imports with the same name: [NAME]] @NAMES,
+    distinct/name D(programScope)/Contract | error $[Duplicate contract [NAME]] @NAMES.
+
+  //We can ignore pragmas
+  [[ Pragma(name, version) ^ (programScope) ]].
+  
+  //We cannot determine anything from a direct file import
+  [[ ImportFromFile(file) ^ (programScope) ]].
+    
+  
+  [[ Import(items, file) ^ (programScope) ]] :=
+    Map1 [[ items ^ (programScope) ]].
+    
+    
+  [[ ImportStar(name) ^ (programScope) ]] :=
+    Import{name} <- programScope,
+    Import{name}.iname := "*".
+  
+  [[ ImportItem(name, as) ^ (programScope) ]] :=
+    Import{as} <- programScope,
+    Import{as}.iname := name.

@@ -1,0 +1,57 @@
+module analysis/contracts
+
+imports
+
+  signatures/-
+
+signature
+  namespaces
+    Contract
+
+rules
+  [[ c@Contract(name, content) ^ (programScope) ]] :=
+    Contract{name} <- programScope,
+//    Contract{name} : contractType !,
+//    contractType == ContractType(Contract{name}),
+    
+    new contractScope,
+    contractScope -P-> programScope,
+    
+    // Create this in contract scope
+    This{"this" @c} <- contractScope,
+//    This{"this" @c} : contractType !,
+    
+    Map1 [[ content ^ (contractScope) ]],
+    
+    // Check contents for duplicate definitions (events and functions can be overloaded)
+    distinct/name D(contractScope)/StateVar         | error $[Duplicate state variable [NAME]] @NAMES,
+    distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
+    distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
+    distinct/name D(contractScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
+    
+    Contract{name} =I=> contractScope.
+  
+  [[ c@ContractInherits(name, inherits, content) ^ (programScope) ]] :=
+    Contract{name} <- programScope,
+//    Contract{name} : contractType !,
+//    contractType == ContractType(Contract{name}),
+    
+    new contractScope,
+    contractScope -P-> programScope,
+    
+    // Create this in contract scope
+    This{"this" @c} <- contractScope,
+//    This{"this" @c} : contractType !,
+    
+    Map1 [[ content ^ (contractScope) ]],
+    
+    // Check contents for duplicate definitions (events and functions can be overloaded)
+    distinct/name D(contractScope)/StateVar         | error $[Duplicate state variable [NAME]] @NAMES,
+    distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
+    distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
+    distinct/name D(contractScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
+    
+    Contract{name} =I=> contractScope,
+    
+    false | note $[Inherits not yet implemented].
+

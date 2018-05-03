@@ -1,0 +1,104 @@
+module analysis/types
+
+imports
+  signatures/-
+
+signature
+  sorts
+    Type
+  
+  constructors
+    //Numeric types
+    IntT       : INT -> Type
+    UIntT      : INT -> Type
+    FixedT     : INT * INT -> Type
+    UFixedT    : INT * INT -> Type
+    
+    //One word types
+    BoolT      : Type
+    AddressT   : Type
+//    ByteT      : Type //byte == bytes1
+    StringT    : Type
+    
+    //Byte arrays
+    FBytesT    : INT -> Type
+    DBytesT    : Type
+    
+    //Array types
+    FArrayT    : Type * INT -> Type
+    DArrayT    : Type -> Type
+    
+    //Function types
+    FunctionT  : list(Type) * list(Type) -> Type
+    
+    //Mapping types
+    MappingT   : Type * Type -> Type
+
+    //User defined types
+    EnumT      : occurrence -> Type
+    EventT     : occurrence -> Type
+    StructT    : occurrence -> Type
+    ContractT  : occurrence -> Type
+    InterfaceT : occurrence -> Type
+    LibraryT   : occurrence -> Type
+  
+  namespaces
+    //Something that can be referenced as a type.
+    //TODO Add origin-like field to distinguish between enums, events, etc.?
+    TypeReferrable
+
+rules
+  //Simple types
+  [[ BooleanType() ^ (s) : BoolT()    ]].
+  [[ AddressType() ^ (s) : AddressT() ]].
+  [[ StringType()  ^ (s) : StringT()  ]].
+
+  //-----------------------------------------------------------------------------------------------
+  //Numbers
+  [[ IntType(x)  ^ (s) : ty ]] := ty == IntT(x).
+  [[ UIntType(x) ^ (s) : ty ]] := ty == UIntT(x).
+  [[ FixedType(MxN(m, n))  ^ (s) : ty ]] := ty == FixedT(m, n).
+  [[ UFixedType(MxN(m, n)) ^ (s) : ty ]] := ty == UFixedT(m, n).
+  
+  //-----------------------------------------------------------------------------------------------
+  //Byte arrays
+  [[ FixedBytesArrayType(x)  ^ (s) : ty ]] := ty == FBytesT(x).
+  [[ DynamicBytesArrayType() ^ (s) : ty ]] := ty == DBytesT().
+  
+  //-----------------------------------------------------------------------------------------------
+  //Arrays
+  [[ FixedArrayType(base, sizeExp) ^ (s) : ty ]] :=
+    [[ base ^ (s) : baseTy ]],
+    //TODO Determine size from expression!
+    [[ sizeExp ^ (s) ]],
+    ty == FArrayT(baseTy, 1).
+  
+  [[ DynamicArrayType(base)        ^ (s) : ty ]] :=
+    [[ base ^ (s) : baseTy ]],
+    ty == DArrayT(baseTy).
+  
+  //-----------------------------------------------------------------------------------------------
+  //Functions
+  [[ FunctionType(args, vis, stateMut, rets) ^ (s) : ty ]] :=
+    Map1T [[ args ^ (s) : argTys ]],
+    Map1T [[ rets ^ (s) : retTys ]],
+    ty == FunctionT(argTys, retTys).
+    //TODO Store  visibility and mutability
+  
+  //-----------------------------------------------------------------------------------------------
+  //Mappings
+  [[ MappingType(from, to) ^ (s) : ty ]] :=
+    [[ from ^ (s) : fromTy ]],
+    [[ to   ^ (s) : toTy   ]],
+    ty == MappingT(fromTy, toTy).
+
+  //-----------------------------------------------------------------------------------------------
+  //User defined types
+  [[ UserDefinedType(x) ^ (s) : ty ]] :=
+    //TODO
+    //Lookup the type
+    TypeReferrable{x} -> s,
+    TypeReferrable{x} |-> ref | error $[Cannot find any user defined type [x]] @x,
+    ref : ty.
+  
+  

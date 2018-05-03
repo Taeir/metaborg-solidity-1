@@ -1,0 +1,28 @@
+module analysis/structs
+
+imports
+  signatures/-
+  analysis/vars
+
+signature
+  namespaces
+    Struct
+    StructField
+
+rules
+  [[ Struct(name, fields) ^ (clossScope) ]] :=
+    Struct{name} <- clossScope,
+    
+    new structScope,
+    structScope -P-> clossScope,
+    
+    Map1 [[ fields ^ (structScope) ]],
+    
+    distinct/name D(structScope)/Var | error $[Duplicate variable [NAME]] @NAMES.
+  
+  [[ StructField(solType, name) ^ (structScope) ]] :=
+    [[ solType ^ (structScope) : ty ]],
+    
+    Var{name} <- structScope,
+    Var{name}.origin := StructField(),
+    Var{name} : ty !. 

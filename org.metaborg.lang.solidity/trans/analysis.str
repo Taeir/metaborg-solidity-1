@@ -5,13 +5,25 @@ imports
   nabl2/api
   nabl2/runtime
 
-  static-semantics
+  desugar/-
+  analysis/-
 
   pp
 
+signature
+  constructors
+    StateVariable : Origin
+    Param         : Origin
+    ReturnParam   : Origin
+    Local         : Origin
+    StructField   : Origin
+    
+    TrueC         : Constant
+    FalseC        : Constant
+
 rules // Analysis
 
-  editor-analyze = nabl2-analyze(id)
+  editor-analyze = nabl2-analyze(desugar-all)
 
 rules // Debugging
   
