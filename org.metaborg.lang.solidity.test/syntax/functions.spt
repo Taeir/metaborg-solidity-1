@@ -1,0 +1,85 @@
+module functions
+
+language solidity
+
+start symbol Program
+
+//Test Param
+test funcnoparam[[
+	contract two {
+		function testone() public{ 
+		
+		}
+	}
+
+]] parse succeeds
+
+test funconeparam[[
+	contract two {
+		function testone(int x) public{ 
+		
+		}
+	}
+
+]] parse succeeds
+
+test funcmultiparam[[
+	contract two {
+		function testtwo(bool x, int y) public{ 
+		
+		}
+	}
+
+]] parse succeeds
+
+//Test Returns
+test funcintreturn[[
+	contract two {
+		function testone() public returns (int){ 
+			return 42;
+		}
+	}
+]] parse succeeds
+
+test funcboolreturn[[
+	contract two {
+		function testone() public returns (bool){ 
+			return true;
+		}
+	}
+]] parse succeeds
+
+test funccombireturn[[
+	contract two {
+		function testone(bool x, int y) public returns (bool){ 
+			return true;
+		}
+	}
+]] parse succeeds
+
+
+//Failing returns
+test funcwrongreturn[[
+	contract two {
+		function testone(bool x, int y) public{ 
+			return true;
+		}
+	}
+]] parse fails
+
+test funcwrongreturn2[[
+	contract two {
+		function testone(bool x, int y) public returns (bool){ 
+
+		}
+	}
+]] parse fails
+
+test funcwrongreturn3 [[
+	contract two {
+		function testone(bool x, int y) public returns (bool z){ 
+			z = x;
+			return true;
+		}
+	}
+]] parse fails
