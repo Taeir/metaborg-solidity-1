@@ -4,16 +4,20 @@ language solidity
 
 start symbol Type
 
-//Check "simple" types
+//---------------------------------------------------------------------------------------------------------------------
+//"simple" types
 test S: Simple bool    [[ bool    ]] parse to BooleanType()
 test S: Simple string  [[ string  ]] parse to StringType()
 test S: Simple address [[ address ]] parse to AddressType()
+test S: Simple byte    [[ byte    ]] parse to ByteType()
 
 test F: Type, bool:    space in name [[ bo ol    ]] parse fails
 test F: Type, string:  space in name [[ str ing  ]] parse fails
 test F: Type, address: space in name [[ add ress ]] parse fails
+test F: Type, byte:    space in name [[ byt e    ]] parse fails
 
-//Check ints and uints
+//---------------------------------------------------------------------------------------------------------------------
+//Ints and uints
 test S: Simple int     [[ int     ]] parse to IntType(_)
 test S: Simple int8    [[ int8    ]] parse to IntType(_)
 test S: Simple int152  [[ int152  ]] parse to IntType(_)
@@ -33,8 +37,8 @@ test Type, Int:  Verify higher than 256 becomes userdef   [[ int264  ]] parse to
 test Type, UInt: Verify non-multiple of 8 becomes userdef [[ uint15  ]] parse to UserDefinedType("uint15")
 test Type, UInt: Verify higher than 256 becomes userdef   [[ uint264 ]] parse to UserDefinedType("uint264")
 
-
-//Check fixed and ufixed
+//---------------------------------------------------------------------------------------------------------------------
+//Fixed and ufixed
 test S: Simple fixed        [[ fixed        ]] parse to FixedType(_)
 test S: Simple fixed8x0     [[ fixed8x0     ]] parse to FixedType(MxN("8", "0"))
 test S: Simple fixed16x9    [[ fixed16x9    ]] parse to FixedType(MxN("16", "9"))
@@ -60,7 +64,8 @@ test Type, UFixed: Verify m non-multiple of 8 becomes userdef [[ ufixed7x2    ]]
 test Type, UFixed: Verify m higher than 256 becomes userdef   [[ ufixed264x2  ]] parse to UserDefinedType("ufixed264x2")
 test Type, UFixed: Verify n higher than 80 becomes userdef    [[ ufixed128x81 ]] parse to UserDefinedType("ufixed128x81")
 
-//Check bytes
+//---------------------------------------------------------------------------------------------------------------------
+//Bytes
 test S: Simple bytes   [[ bytes   ]] parse to DynamicBytesArrayType()
 test S: Simple bytes1  [[ bytes1  ]] parse to FixedBytesArrayType("1")
 test S: Simple bytes9  [[ bytes9  ]] parse to FixedBytesArrayType("9")
@@ -74,3 +79,81 @@ test Type, Bytes: Verify higher than 32 becomes userdef [[ bytes33 ]] parse to U
 test F: Type, Bytes: Space in name       [[ byte s  ]] parse fails
 test F: Type, Bytes: Space before number [[ bytes 1 ]] parse fails
 
+//---------------------------------------------------------------------------------------------------------------------
+//Array types
+//Dynamic
+test S: Simple dynamic array of int         [[ int[]          ]] parse to DynamicArrayType(IntType(_))
+test S: Simple dynamic array of int16       [[ int16[]        ]] parse to DynamicArrayType(IntType(_))
+test S: Simple dynamic array of fixed120x79 [[ fixed120x79[]  ]] parse to DynamicArrayType(FixedType(MxN("120", "79")))
+test S: Simple dynamic array of bytes       [[ bytes[]        ]] parse to DynamicArrayType(DynamicBytesArrayType())
+test S: Dynamic array of dynamic array      [[ bool[][]       ]] parse to DynamicArrayType(DynamicArrayType(BooleanType()))
+test S: Dynamic array of fixed array        [[ bool[1][]      ]] parse to DynamicArrayType(FixedArrayType(BooleanType(), _))
+test S: Dynamic array of user type          [[ myType[]       ]] parse to DynamicArrayType(UserDefinedType("myType"))
+test S: Dynamic array of function type      [[ function()[]   ]] parse to DynamicArrayType(FunctionType(_, _, _, _))
+test S: Dynamic array of mapping type       [[ mapping(int => int)[] ]] parse to DynamicArrayType(MappingType(_, _))
+
+test S: Simple dynamic array: space before  [[ bool []        ]] parse to DynamicArrayType(BooleanType())
+test S: Simple dynamic array: space in      [[ bool[ ]        ]] parse to DynamicArrayType(BooleanType())
+
+//Fixed size
+test S: Simple fixed array of int           [[ int[1]         ]] parse to FixedArrayType(IntType(_), _)
+test S: Simple fixed array of int16         [[ int16[1]       ]] parse to FixedArrayType(IntType(_), _)
+test S: Simple fixed array of fixed120x79   [[ fixed120x79[1] ]] parse to FixedArrayType(FixedType(MxN("120", "79")), _)
+test S: Simple fixed array of bytes         [[ bytes[1]       ]] parse to FixedArrayType(DynamicBytesArrayType(), _)
+test S: Fixed array of fixed array          [[ bool[1][1]     ]] parse to FixedArrayType(FixedArrayType(BooleanType(), _), _)
+test S: Fixed array of dynamic array        [[ bool[][1]      ]] parse to FixedArrayType(DynamicArrayType(BooleanType()), _)
+test S: Fixed array of user type            [[ myType[1]      ]] parse to FixedArrayType(UserDefinedType("myType"), _)
+test S: Fixed array of function type        [[ function()[1]  ]] parse to FixedArrayType(FunctionType(_, _, _, _), _)
+test S: Fixed array of mapping type         [[ mapping(int => int)[1] ]] parse to FixedArrayType(MappingType(_, _), _)
+
+test S: Simple fixed array: space before    [[ bool [1]       ]] parse to FixedArrayType(BooleanType(), _)
+test S: Simple fixed array: space in        [[ bool[ 1 ]      ]] parse to FixedArrayType(BooleanType(), _)
+
+//---------------------------------------------------------------------------------------------------------------------
+//Function types
+test S: void function          [[ function()                 ]] parse to FunctionType([], _, _, _)
+test S: 1-arg function         [[ function(bool)             ]] parse to FunctionType([BooleanType()], _, _, _)
+test S: 3-arg function         [[ function(bool, int, uint)  ]] parse to FunctionType([BooleanType(), IntType(_), UIntType(_)], _, _, _)
+
+test S: void to 1-ret function [[ function() returns(int)    ]] parse to FunctionType([], _, _, _)
+test S: void to 3-ret function [[ function() returns(bool, int, uint) ]] parse to FunctionType([], _, _, _)
+
+test S: int to int function    [[ function(int) returns(int) ]] parse to FunctionType([IntType(_)], _, _, _)
+
+test S: function space 1       [[ function ()                ]] parse to FunctionType([], _, _, _)
+test S: function space 2       [[ function() returns (int)   ]] parse to FunctionType([], _, _, _)
+
+test F: Type, Function: Empty returns [[ function() returns() ]] parse fails
+
+//---------------------------------------------------------------------------------------------------------------------
+//Mapping types
+test S: mapping int to bool       [[ mapping(int => bool)    ]] parse to MappingType(IntType(_), BooleanType())
+test S: mapping int to bool array [[ mapping(int => bool[])  ]] parse to MappingType(IntType(_), DynamicArrayType(BooleanType()))
+test S: mapping string to bool    [[ mapping(string => bool) ]] parse to MappingType(StringType(), BooleanType())
+test S: mapping bool to mapping   [[
+  mapping(bool => mapping(int => uint))
+]] parse to MappingType(BooleanType(), MappingType(IntType(_), UIntType(_)))
+test S: mapping bool to function  [[
+  mapping(bool => function())
+]] parse to MappingType(BooleanType(), FunctionType(_, _, _, _))
+
+test S: mapping space before           [[ mapping (int => int)  ]] parse succeeds
+test S: mapping spaces in              [[ mapping( int => int ) ]] parse succeeds
+test S: mapping no spaces around arrow [[ mapping(int=>int)     ]] parse succeeds
+
+test F: Type, Mapping: no key type     [[ mapping( => bool) ]] parse fails
+test F: Type, Mapping: no value type   [[ mapping(int => )  ]] parse fails
+test F: Type, Mapping: array key type  [[ mapping(int[] => bool) ]] parse fails
+test F: Type, Mapping: space in arrow  [[ mapping(int = > int) ]] parse fails
+
+//---------------------------------------------------------------------------------------------------------------------
+//User defined types
+test S: simple user type [[ myType ]] parse to UserDefinedType("myType")
+test S: simple user type mixcase    [[ miXeDcaSE    ]] parse to UserDefinedType("miXeDcaSE")
+test S: simple user type lowercase  [[ alllowercase ]] parse to UserDefinedType("alllowercase")
+test S: simple user type uppercase  [[ ALLUPPERCASE ]] parse to UserDefinedType("ALLUPPERCASE")
+test S: simple user type underscore [[ _X0          ]] parse to UserDefinedType("_X0")
+
+test F: Type, User: keyword 1       [[ true   ]] parse fails
+test F: Type, User: keyword 2       [[ if     ]] parse fails
+test F: Type, User: reserved word   [[ switch ]] parse fails
