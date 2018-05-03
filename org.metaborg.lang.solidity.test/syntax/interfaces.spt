@@ -1,0 +1,59 @@
+module interfaces
+
+language solidity
+
+start symbol Program
+
+test S: Simple empty interface [[
+  interface myName { }
+]] parse to Program([Interface("myName", [])])
+
+test S: Simple interface with function [[
+  interface myName {
+    function myFun();
+  }
+]] parse to Program([Interface(_, [AbstractFunction(_, _, _, _)])])
+
+test S: Simple interface with multiple functions [[
+  interface myName {
+    function fun1();
+    function fun2();
+  }
+]] parse succeeds
+
+//Failures
+test F: Interface: no name [[
+  interface { }
+]] parse fails
+test F: Interface: non-abstract function [[
+  interface myName {
+    function fun1() { }
+  }
+]] parse fails
+test F: Interface: state variable [[
+  interface myName {
+    int x;
+  }
+]] parse fails
+test F: Interface: struct [[
+  interface myName {
+    struct x {
+      int y;
+    }
+  }
+]] parse fails
+test F: Interface: enum [[
+  interface myName {
+    enum x { X }
+  }
+]] parse fails
+test F: Interface: event [[
+  interface myName {
+    event x();
+  }
+]] parse fails
+test F: Interface: function modifier [[
+  interface myName {
+    modifier x { }
+  }
+]] parse fails

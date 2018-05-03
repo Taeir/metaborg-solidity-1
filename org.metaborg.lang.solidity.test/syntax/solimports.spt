@@ -1,0 +1,21 @@
+module solimports
+
+language solidity
+
+start symbol Import
+
+test S: Simple import        [[ import "file";                          ]] parse succeeds
+test S: Alternative syntax   [[ import "file" as X;                     ]] parse succeeds
+test S: Simple import from   [[ import A from "file";                   ]] parse succeeds
+test S: import from with as  [[ import A as X from "file";              ]] parse succeeds
+test S: import star          [[ import * as X from "file";              ]] parse succeeds
+test S: import from with as  [[ import Hello as Hey from "file";        ]] parse succeeds
+test S: Multi import 1       [[ import {A} from "file";                 ]] parse succeeds
+test S: Multi import 2       [[ import {A, B} from "file";              ]] parse succeeds
+test S: Multi import complex [[ import {A, B as X, * as Y} from "file"; ]] parse succeeds
+
+
+test F: Import: no from          [[ import A; ]] parse fails
+test F: Import: no file quotes 1 [[ import file; ]] parse fails
+test F: Import: no file quotes 2 [[ import A from file; ]] parse fails
+test F: Import: * without as      [[ import * from "file"; ]] parse fails

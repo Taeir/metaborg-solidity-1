@@ -1,0 +1,19 @@
+module pragmas
+
+language solidity
+
+start symbol Pragma
+
+test S: Simple pragma 0 [[ pragma solidity 0.4.0;   ]] parse to Pragma("solidity", "0.4.0")
+test S: Simple pragma 1 [[ pragma solidity ^0.4.0;  ]] parse succeeds
+test S: Simple pragma 2 [[ pragma solidity ~0.4.1;  ]] parse succeeds
+test S: Simple pragma 3 [[ pragma solidity >=0.4.2; ]] parse succeeds
+test S: Simple pragma 4 [[ pragma solidity >0.4.3;  ]] parse succeeds
+test S: Simple pragma 5 [[ pragma solidity <0.4.4;  ]] parse succeeds
+test S: Simple pragma 6 [[ pragma solidity <=0.4.5; ]] parse succeeds
+test S: Simple pragma 7 [[ pragma solidity =0.4.6;  ]] parse succeeds
+test S: Experimental pragma 1 [[ pragma experimental "v0.5.0";  ]] parse to Pragma("experimental", _) //TODO
+test S: Experimental pragma 2 [[ pragma experimental "AntlrV4"; ]] parse succeeds
+
+//The pragma syntax is purpously very permissive, to allow for future syntax changes.
+test F: pragma: no semicolon [[ pragma solidity ^0.4.0 ]] parse fails
