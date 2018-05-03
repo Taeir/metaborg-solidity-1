@@ -1,0 +1,76 @@
+module types
+
+language solidity
+
+start symbol Type
+
+//Check "simple" types
+test S: Simple bool    [[ bool    ]] parse to BooleanType()
+test S: Simple string  [[ string  ]] parse to StringType()
+test S: Simple address [[ address ]] parse to AddressType()
+
+test F: Type, bool:    space in name [[ bo ol    ]] parse fails
+test F: Type, string:  space in name [[ str ing  ]] parse fails
+test F: Type, address: space in name [[ add ress ]] parse fails
+
+//Check ints and uints
+test S: Simple int     [[ int     ]] parse to IntType(_)
+test S: Simple int8    [[ int8    ]] parse to IntType(_)
+test S: Simple int152  [[ int152  ]] parse to IntType(_)
+test S: Simple int256  [[ int256  ]] parse to IntType(_)
+test S: Simple uint    [[ uint    ]] parse to UIntType(_)
+test S: Simple uint8   [[ uint8   ]] parse to UIntType(_)
+test S: Simple uint152 [[ uint152 ]] parse to UIntType(_)
+test S: Simple uint256 [[ uint256 ]] parse to UIntType(_)
+
+test F: Type, Int:  Space in int        [[ in t   ]] parse fails
+test F: Type, Int:  Space before number [[ int 8  ]] parse fails
+test F: Type, UInt: Space in uint       [[ u int  ]] parse fails
+test F: Type, UInt: Space before number [[ uint 8 ]] parse fails
+
+test Type, Int:  Verify non-multiple of 8 becomes userdef [[ int7    ]] parse to UserDefinedType("int7")
+test Type, Int:  Verify higher than 256 becomes userdef   [[ int264  ]] parse to UserDefinedType("int264")
+test Type, UInt: Verify non-multiple of 8 becomes userdef [[ uint15  ]] parse to UserDefinedType("uint15")
+test Type, UInt: Verify higher than 256 becomes userdef   [[ uint264 ]] parse to UserDefinedType("uint264")
+
+
+//Check fixed and ufixed
+test S: Simple fixed        [[ fixed        ]] parse to FixedType(_)
+test S: Simple fixed8x0     [[ fixed8x0     ]] parse to FixedType(MxN("8", "0"))
+test S: Simple fixed16x9    [[ fixed16x9    ]] parse to FixedType(MxN("16", "9"))
+test S: Simple fixed256x80  [[ fixed256x80  ]] parse to FixedType(MxN("256", "80"))
+test S: Simple ufixed       [[ ufixed       ]] parse to UFixedType(_)
+test S: Simple ufixed8x0    [[ ufixed8x0    ]] parse to UFixedType(MxN("8", "0"))
+test S: Simple ufixed16x9   [[ ufixed16x9   ]] parse to UFixedType(MxN("16", "9"))
+test S: Simple ufixed256x80 [[ ufixed256x80 ]] parse to UFixedType(MxN("256", "80"))
+
+test F: Type, Fixed:  Space in fixed      [[ fixe d     ]] parse fails
+test F: Type, Fixed:  Space before number [[ fixed 8x2  ]] parse fails
+test F: Type, Fixed:  Space before x      [[ fixed8 x2  ]] parse fails
+test F: Type, Fixed:  Space after x       [[ fixed8x 2  ]] parse fails
+test F: Type, UFixed: Space in ufixed     [[ u fixed    ]] parse fails
+test F: Type, UFixed: Space before number [[ ufixed 8x2 ]] parse fails
+test F: Type, UFixed: Space before x      [[ ufixed8 x2 ]] parse fails
+test F: Type, UFixed: Space after x       [[ ufixed8x 2 ]] parse fails
+
+test Type, Fixed:  Verify m non-multiple of 8 becomes userdef [[ fixed7x2     ]] parse to UserDefinedType("fixed7x2")
+test Type, Fixed:  Verify m higher than 256 becomes userdef   [[ fixed264x2   ]] parse to UserDefinedType("fixed264x2")
+test Type, Fixed:  Verify n higher than 80 becomes userdef    [[ fixed128x81  ]] parse to UserDefinedType("fixed128x81")
+test Type, UFixed: Verify m non-multiple of 8 becomes userdef [[ ufixed7x2    ]] parse to UserDefinedType("ufixed7x2")
+test Type, UFixed: Verify m higher than 256 becomes userdef   [[ ufixed264x2  ]] parse to UserDefinedType("ufixed264x2")
+test Type, UFixed: Verify n higher than 80 becomes userdef    [[ ufixed128x81 ]] parse to UserDefinedType("ufixed128x81")
+
+//Check bytes
+test S: Simple bytes   [[ bytes   ]] parse to DynamicBytesArrayType()
+test S: Simple bytes1  [[ bytes1  ]] parse to FixedBytesArrayType("1")
+test S: Simple bytes9  [[ bytes9  ]] parse to FixedBytesArrayType("9")
+test S: Simple bytes16 [[ bytes16 ]] parse to FixedBytesArrayType("16")
+test S: Simple bytes25 [[ bytes25 ]] parse to FixedBytesArrayType("25")
+test S: Simple bytes32 [[ bytes32 ]] parse to FixedBytesArrayType("32")
+
+test Type, Bytes: Verify zero becomes userdef           [[ bytes0  ]] parse to UserDefinedType("bytes0")
+test Type, Bytes: Verify higher than 32 becomes userdef [[ bytes33 ]] parse to UserDefinedType("bytes33")
+
+test F: Type, Bytes: Space in name       [[ byte s  ]] parse fails
+test F: Type, Bytes: Space before number [[ bytes 1 ]] parse fails
+
