@@ -1,0 +1,39 @@
+module analysis/libraries
+
+imports
+
+  signatures/-
+  analysis/types
+
+signature
+  namespaces
+    Library
+
+rules
+  [[ c@Library(name, content) ^ (programScope) ]] :=
+    //Define library and type, also make it referrable
+    Library{name}        <- programScope,
+    TypeReferrable{name} <- programScope,
+    Library{name}        : libraryType !,
+    TypeReferrable{name} : libraryType !,
+    libraryType == UserDefT(Library{name}),
+    
+    //Create scope
+    new libraryScope,
+    libraryScope -P-> programScope,
+    
+    // Add this
+    This{"this" @c} <- libraryScope,
+    This{"this" @c} : libraryType !,
+    
+    // Resolve content
+    Map1 [[ content ^ (libraryScope) ]],
+    
+    // Check contents for duplicate definitions (events and functions can be overloaded)
+    distinct/name D(contractScope)/StateVar         | error $[Duplicate state variable [NAME]] @NAMES,
+    distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
+    distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
+    distinct/name D(contractScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
+    distinct/name D(contractScope)/TypeReferrable   | warning $[Duplicate type [NAME]] @NAMES,
+    
+    Library{name} =I=> libraryScope.

@@ -35,17 +35,21 @@ signature
     MappingT   : Type * Type -> Type
 
     //User defined types
+    UserDefT   : occurrence -> Type
     EnumT      : occurrence -> Type
     EventT     : occurrence -> Type
     StructT    : occurrence -> Type
     ContractT  : occurrence -> Type
     InterfaceT : occurrence -> Type
     LibraryT   : occurrence -> Type
+    
+    //Var type
+    VarT       : Type
   
   namespaces
     //Something that can be referenced as a type.
     //TODO Add origin-like field to distinguish between enums, events, etc.?
-    TypeReferrable
+    TypeReferrable { origin : occurrence }
 
 rules
   //Simple types
@@ -70,7 +74,8 @@ rules
   [[ FixedArrayType(base, sizeExp) ^ (s) : ty ]] :=
     [[ base ^ (s) : baseTy ]],
     //TODO Determine size from expression!
-    [[ sizeExp ^ (s) ]],
+    [[ sizeExp ^ (s) : sizeTy ]],
+    //TODO Check if size is an int?
     ty == FArrayT(baseTy, 1).
   
   [[ DynamicArrayType(base)        ^ (s) : ty ]] :=
@@ -101,4 +106,7 @@ rules
     TypeReferrable{x} |-> ref | error $[Cannot find any user defined type [x]] @x,
     ref : ty.
   
+  //-----------------------------------------------------------------------------------------------
+  //Var type
+  [[ Var() ^ (s) : VarT() ]].
   

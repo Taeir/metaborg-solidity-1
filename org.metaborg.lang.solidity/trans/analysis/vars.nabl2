@@ -15,3 +15,26 @@ rules
     Var{name}.origin := StructField(),
     Var{name} : ty !. 
 
+  [[ Param(solType, modLoc, name) ^ (s) : ty ]] :=
+    [[ solType ^ (s) : ty ]],
+    
+    Var{name} <- s,
+    Var{name}.origin := Param(),
+    Var{name} : ty !.
+  
+  
+  //Refs
+  //TODO Remove VarRef exp wrapper?
+  [[ VarRef(ref) ^ (s) : ty ]] :=
+    [[ ref ^ (s) : ty ]].
+    
+  [[ LocalRef(name) ^ (s) : ty ]] :=
+    Var{name} -> s,
+    Var{name} |-> var | error $[Cannot find variable with name [name]],
+    Var{name} : ty.
+  
+  //TODO FieldRef
+  //TODO FieldRef is actually a "member" instead, which is an <Exp> <ID> and not an <ID>.<PATH>. This should probably be removed from the grammar.
+//  [[ FieldRef(base, name) ^ (s) : ty ]] :=
+//    Var{base}
+//    Var{name}

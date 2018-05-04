@@ -1,0 +1,172 @@
+module analysis/expressions
+
+imports
+  signatures/-
+  analysis/types
+
+rules
+  //Literals
+  [[ True()  ^ (s) : BoolT() ]].
+  [[ False() ^ (s) : BoolT() ]].
+
+  [[ NumberLit(_, _) ^ (s) : ty ]] :=
+    //TODO add relation to check for any number, byte, whatever.
+    ty == IntT(256) | warning $[Literal numbers are a work in progress].
+  
+  [[ FractLit(_) ^ (s) : ty ]] :=
+    //TODO add relation to check for any fixed point number?
+    ty == FixedT(128, 80).
+  
+  [[ HexLit(_) ^ (s) : ty ]] :=
+    //TODO add relation to check conformance with string, array, etc.
+    ty == StringT().
+  
+  //TODO Add size in desugar step and use it for convertability?
+  [[ StringLit(_) ^ (s) : ty ]] :=
+    //TODO add relation to allow string, bytes, bytes1-bytes32 (based on size?), etc.
+    ty == StringT().
+    
+  [[ LitArray(exps) ^ (s) : ty ]] :=
+    //TODO Determine size and allow both fixed/dynamic?
+    ty == FArrayT(exTy, 1) | error $[Only fixed size arrays are currently supported, size is not checked],
+    CheckLitArrayType[[ exps ^ (s) : exTy ]].
+    
+  CheckLitArrayType[[ [x|xs] ^ (s) : ty ]] :=
+    [[ x ^ (s) : xTy ]],
+    xTy == ty | error $[All items in the array must have the same type] @x.
+
+
+  //TODO This
+  
+  //Cast
+  [[ Cast(stype, exp) ^ (s) : ty ]] :=
+    [[ stype ^ (s) : ty   ]],
+    [[ exp ^ (s)  : expTy ]].
+    //TODO Check if expTy can be cast to the given type.
+  
+  //Ternary if
+  [[ Ternary(condExp, aExp, bExp) ^ (s) : ty ]] :=
+    [[ condExp ^ (s) : BoolT() ]],
+    [[ aExp ^ (s) : ty ]],
+    [[ bExp ^ (s) : ty ]].
+    //TODO Less strict equality on exp types?
+  
+  
+  // Operators
+  [[ UnExp(UMinus(), e1) ^ (s) : numTy ]] :=
+    [[ e1 ^ (s) : numTy ]],
+    numTy != UIntT(_).
+    
+  [[ BinExp(Plus(), e1, e2) ^ (s) : ty ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2,
+    ty == ty2,
+    ty == IntT(_).
+  [[ BinExp(Minus(), e1, e2) ^ (s) : ty ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2,
+    ty == ty2,
+    ty == IntT(_).
+  [[ BinExp(Mult(), e1, e2) ^ (s) : ty ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2,
+    ty == ty2,
+    ty == IntT(_).
+  [[ BinExp(Div(), e1, e2) ^ (s) : ty ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2,
+    ty == ty2,
+    ty == IntT(_).
+  [[ BinExp(Mod(), e1, e2) ^ (s) : ty ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2,
+    ty == ty2,
+    ty == IntT(_).
+  [[ BinExp(Pow(), e1, e2) ^ (s) : ty ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2,
+    ty == ty2,
+    ty == IntT(_).
+  
+  //Shifts
+  //TODO
+  
+  //Bitwise
+  //TODO
+  
+  //Equality
+  //TODO
+  [[ BinExp(Lt(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2.
+  [[ BinExp(Eq(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2.
+  [[ BinExp(NEq(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : ty1 ]],
+    [[ e2 ^ (s) : ty2 ]],
+    ty1 == ty2.
+  
+  //Boolean operators
+  [[ BinExp(And(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : BoolT() ]],
+    [[ e2 ^ (s) : BoolT() ]].
+  [[ BinExp(Or(), e1, e2) ^ (s)  : BoolT() ]] :=
+    [[ e1 ^ (s) : BoolT() ]],
+    [[ e2 ^ (s) : BoolT() ]].
+  [[ UnExp(Not(), exp) ^ (s) : BoolT() ]] :=
+    [[ exp ^ (s) : BoolT() ]].
+  
+  
+  //Array access
+  [[ BinExp(Subscript(), exp, indexExp) ^ (s) : ty ]] :=
+    [[ exp ^ (s) : arrTy ]],
+    [[ indexExp ^ (s) : intTy ]],
+    arrTy == FArrayT(ty, _).
+  
+  //TODO Calls
+  //TODO New
+  
+  [[ UnExp(Delete(), exp) ^ (s) : ty ]] :=
+    [[ exp ^ (s) : eTy ]].
+  
+  //TODO Member
+  [[ Member(exp, name) ^ (s) : ty ]] :=
+    [[ exp ^ (s) : eTy ]],
+    eTy == UserDefT(occ),
+    
+    //Get the scope of the occurrence
+    occ ?===> typeScope,
+    
+    //Resolve in a temporary scope
+    new resolveScope,
+    resolveScope -P-> typeScope,
+    Var{name} -> resolveScope,
+    Var{name} |-> var | error $[Cannot find variable [name] in [occ]] @name,
+    var : ty.
+  
+  //TODO VarRef
+  [[ VarRef(LocalRef(name)) ^ (s) : ty ]] :=
+    //Lookup
+    Var{name} -> s,
+    Var{name} |-> var | error $[Cannot find variable with name [name]],
+    Var{name} : ty.
+    
+  [[ Assign(varRef, exp) ^ (s) : ty ]] :=
+    [[ varRef ^ (s) : vTy ]],
+    [[ exp ^ (s) : eTy ]],
+    
+    //TODO Subtyping relations
+//    eTy <? vTy | error $[Cannot assign expression of type [eTy] to a variable of type [vTy]] @exp,
+    eTy == vTy | error $[Cannot assign expression of type [eTy] to a variable of type [vTy]] @exp,
+    ty == vTy | error $[Expected type [ty] but was [vTy]].
+  
+  //TODO AssignArray

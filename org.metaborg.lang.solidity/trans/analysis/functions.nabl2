@@ -1,0 +1,62 @@
+module analysis/functions
+
+imports
+  signatures/-
+  analysis/vars
+
+signature
+  namespaces
+    Function
+
+rules
+  [[ Function(name, params, mods, retParams, body, returnExp) ^ (s) ]] :=
+	//Declare
+    Function{name} <- s,
+    Function{name} : FunctionT(paramTys, retTys) !,
+    
+    //Scope
+    new funScope,
+    funScope -P-> s,
+    
+    //Check duplicate variables
+    distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
+    
+    //Resolve parameters and body
+    Map1T [[ params    ^ (funScope) : paramTys ]],
+    Map1T [[ retParams ^ (funScope) : retTys   ]],
+    Map1  [[ body ^ (funScope) ]],
+    [[ returnExp ^ (funScope) : actualRetTys ]],
+    
+    //Check if return type matches
+    //TODO Turn into subtype relation?
+    actualRetTys == retTys | error $[[actualRetTys] is not a subtype of the specified return type [retTys]] @returnExp.
+  
+  [[ VoidFunction(name, params, mods, body) ^ (s) ]] :=
+	//Declare
+    Function{name} <- s,
+    Function{name} : FunctionT(paramTys, []) !,
+    
+    //Scope
+    new funScope,
+    funScope -P-> s,
+    
+    //Check duplicate variables
+    distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
+    
+    //Resolve parameters and body
+    Map1T [[ params    ^ (funScope) : paramTys ]],
+    Map1  [[ body ^ (funScope) ]].
+  
+  [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
+    //Declare
+    Function{name} <- s,
+    Function{name} : FunctionT(paramTys, retTys) !,
+    
+    //Scope
+    new funScope,
+    funScope -P-> s,
+    
+    //Resolve parameters and body
+    Map1T [[ params    ^ (funScope) : paramTys ]],
+    Map1T [[ retParams ^ (funScope) : retTys   ]].
+  

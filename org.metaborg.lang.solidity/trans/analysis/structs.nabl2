@@ -2,6 +2,7 @@ module analysis/structs
 
 imports
   signatures/-
+  analysis/types
   analysis/vars
 
 signature
@@ -12,13 +13,21 @@ signature
 rules
   [[ Struct(name, fields) ^ (clossScope) ]] :=
     Struct{name} <- clossScope,
+    Struct{name} : structType !,
+    structType == StructT(Struct{name}),
+    
+    TypeReferrable{name} <- clossScope,
+    TypeReferrable{name} : structType !,
     
     new structScope,
     structScope -P-> clossScope,
     
     Map1 [[ fields ^ (structScope) ]],
     
-    distinct/name D(structScope)/Var | error $[Duplicate variable [NAME]] @NAMES.
+    distinct/name D(structScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
+    
+    //Make scope importable
+    Struct{name} =I=> structScope.
   
   [[ StructField(solType, name) ^ (structScope) ]] :=
     [[ solType ^ (structScope) : ty ]],

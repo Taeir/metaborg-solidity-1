@@ -1,0 +1,28 @@
+module analysis/interfaces
+
+imports
+
+  signatures/-
+  analysis/types
+
+signature
+  namespaces
+    Interface
+
+rules
+  [[ c@Interface(name, functions) ^ (programScope) ]] :=
+    //Define interface and type, also make it referrable
+    Interface{name}      <- programScope,
+    TypeReferrable{name} <- programScope,
+    Interface{name}      : interfaceType !,
+    TypeReferrable{name} : interfaceType !,
+    interfaceType == UserDefT(Interface{name}),
+    
+    //Create scope
+    new interfaceScope,
+    interfaceScope -P-> programScope,
+    
+    // Resolve functions
+    Map1 [[ functions ^ (interfaceScope) ]],
+
+    Interface{name} =I=> interfaceScope.

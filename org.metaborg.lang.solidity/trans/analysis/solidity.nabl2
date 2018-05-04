@@ -24,9 +24,11 @@ rules
   [[ Program(elements) ^ (programScope) ]] :=
     Map1 [[ elements ^ (programScope) ]],
     
-    
-    distinct/name D(programScope)/Import   | error $[Two imports with the same name: [NAME]] @NAMES,
-    distinct/name D(programScope)/Contract | error $[Duplicate contract [NAME]] @NAMES.
+    distinct/name D(programScope)/Import         | error $[Two imports with the same name: [NAME]] @NAMES,
+    distinct/name D(programScope)/Contract       | error $[Duplicate contract [NAME]] @NAMES,
+    distinct/name D(programScope)/Interface      | error $[Duplicate interface [NAME]] @NAMES,
+    distinct/name D(programScope)/Library        | error $[Duplicate library [NAME]] @NAMES,
+    distinct/name D(programScope)/TypeReferrable | error $[Duplicate type [NAME]] @NAMES.
 
   //We can ignore pragmas
   [[ Pragma(name, version) ^ (programScope) ]].
@@ -40,9 +42,11 @@ rules
     
     
   [[ ImportStar(name) ^ (programScope) ]] :=
-    Import{name} <- programScope,
+    TypeReferrable{name} <- programScope,
+    Import{name}         <- programScope,
     Import{name}.iname := "*".
   
   [[ ImportItem(name, as) ^ (programScope) ]] :=
-    Import{as} <- programScope,
+    TypeReferrable{as} <- programScope,
+    Import{as}         <- programScope,
     Import{as}.iname := name.

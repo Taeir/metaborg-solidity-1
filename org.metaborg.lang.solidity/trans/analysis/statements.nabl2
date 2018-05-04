@@ -1,0 +1,87 @@
+module analysis/statements
+
+imports
+  signatures/-
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //Blocks
+  [[ Block(stmts) ^ (s) ]] :=
+    Map1 [[ stmts ^ (s) ]].
+
+  //-----------------------------------------------------------------------------------------------
+  //Control flow
+  [[ If(condExp, thenStmt, None()) ^ (s) ]] :=
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ thenStmt ^ (s) ]].
+    
+  [[ If(condExp, thenStmt, Else(elseStmt)) ^ (s) ]] :=
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ thenStmt ^ (s) ]],
+    [[ elseStmt ^ (s) ]].
+
+  [[ While(condExp, bodyStmt) ^ (s) ]] :=
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ bodyStmt ^ (s) ]].
+  
+  [[ DoWhile(bodyStmt, condExp) ^ (s) ]] :=
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ bodyStmt ^ (s) ]].
+  
+  //For(None/stmt, exp, None/Some(exp), stmt) (only one can be none) (see desugaring)
+  [[ For(None(), condExp, Some(loopExp), bodyStmt) ^ (s) ]] :=
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ loopExp  ^ (s) : lty]],
+    [[ bodyStmt ^ (s) ]].
+  
+  [[ For(preStmt, condExp, None(), bodyStmt) ^ (s) ]] :=
+    [[ preStmt  ^ (s) ]],
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ bodyStmt ^ (s) ]].
+  
+  [[ For(preStmt, condExp, Some(loopExp), bodyStmt) ^ (s) ]] :=
+    [[ preStmt  ^ (s) ]],
+    [[ condExp  ^ (s) : BoolT() ]],
+    [[ loopExp  ^ (s) : lty]],
+    [[ bodyStmt ^ (s) ]].
+  
+  [[ Break()      ^ (s) ]].
+  [[ Continue()   ^ (s) ]].
+  [[ Throw()      ^ (s) ]].
+  [[ Emit(call)   ^ (s) ]] :=
+    [[ call ^ (s) : ty ]].
+  
+  
+  //TODO Check if void return is allowed in method?
+  [[ VoidReturn() ^ (s) ]].
+  [[ ReturnStatement(exp) ^ (s) ]] :=
+    //TODO Check if return type matches expected function return type
+    [[ exp ^ (s) : actTy ]].
+  
+  //-----------------------------------------------------------------------------------------------
+  //Variable declarations
+  [[ DeclareVar(stype, name) ^ (s) ]] :=
+    [[ stype ^ (s) : ty ]],
+    Var{name} <- s,
+    Var{name}.origin := Local(),
+    Var{name} : ty !.
+  
+  [[ DeclareVarAssign(stype, name, exp) ^ (s) ]] :=
+    [[ stype ^ (s) : defTy  ]],
+    [[ exp   ^ (s) : initTy ]],
+    //TODO Assignable from relation for initializers
+    defTy <? initTy | error $[Initializer type [initTy] does not match defined type [defTy]] @exp,
+    
+    Var{name} <- s,
+    Var{name}.origin := Local(),
+    Var{name} : defTy !.
+
+  //-----------------------------------------------------------------------------------------------
+  //Expression statements
+  [[ ExpStmt(exp) ^ (s) ]] :=
+    [[ exp ^ (s) : ty ]].
+
+  //-----------------------------------------------------------------------------------------------
+  //Inline assembly
+  [[ Assembly(_, _) ^ (s) ]] :=
+    false | note $[Inline assembly is not checked].
