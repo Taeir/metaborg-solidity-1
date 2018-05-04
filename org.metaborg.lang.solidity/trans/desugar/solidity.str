@@ -2,8 +2,10 @@ module desugar/solidity
 
 imports
   desugar/expressions
-  desugar/statements
+  desugar/functions
   desugar/solimports
+  desugar/statements
+  desugar/types
 
 strategies
 

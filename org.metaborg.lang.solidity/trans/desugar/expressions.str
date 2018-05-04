@@ -48,7 +48,6 @@ signature
 	
 	//?
 	Integer : UnOp
-	Length : UnOp
 	Array : UnOp
 	Object : UnOp
 	
@@ -63,6 +62,7 @@ signature
 	UnExp : UnOp * INT -> Exp
 
 rules
+
   //Normal
   desugar: Add(e1, e2) -> BinExp(Plus(), e1, e2)
   desugar: Sub(e1, e2) -> BinExp(Minus(), e1, e2)
@@ -82,6 +82,8 @@ rules
   desugar: BitOr(e1, e2)  -> BinExp(BitOr(), e1, e2)
   desugar: BitXor(e1, e2) -> BinExp(BitXor(), e1, e2)
   desugar: BitNot(e1)     -> UnExp(BitNot(), e1)
+  
+  //TODO ++ and --
 
   //Equality
   desugar: Lt(e1, e2)   -> BinExp(Lt(), e1, e2)

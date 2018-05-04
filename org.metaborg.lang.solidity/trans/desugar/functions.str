@@ -1,0 +1,32 @@
+module desugar/functions
+
+imports
+  signatures/functions-sig
+
+signature
+//  sorts
+//    ConstructorFunction
+//  constructors
+//    Constructor          : List(Param) * Option(ConsMod) * List(Statement) -> ConstructorFunction
+//    ConstructorWithSuper : List(Param) * Option(ConsMod) * STRING * List(Exp) * List(Statement) -> ConstructorFunction
+
+rules
+  desugar: Function(name, params, mods, Returns(retParams), body, ReturnStatement(retExp)) ->
+             Function(name, params, mods, retParams, body, retExp)
+  
+  desugar: AbstractFunction(name, params, mods, Some(Returns(retParams))) ->
+             AbstractFunction(name, params, mods, retParams)
+  desugar: AbstractFunction(name, params, mods, None()) ->
+             AbstractFunction(name, params, mods, [])
+
+//For full function support:
+//  desugar: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods, retParams, body)
+//  desugar: VoidFunction(name, params, mods, body)                 -> Function(name, params, mods, [], body)
+  
+  
+//  desugar: ModSuperCall(mod, sName, args)
+//  desugar: SuperCallMod(sName, args, None/Some(mod))
+// Constructor(params, mod (Some/None), body)
+// Constructor(params, mod, superName, superCall, body)
+
+  //TODO Constructors
