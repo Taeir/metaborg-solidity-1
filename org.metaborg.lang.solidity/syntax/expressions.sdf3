@@ -94,7 +94,7 @@ context-free syntax
   Exp.False     = <false>
   Exp.This      = <this>
   Exp.LitArray  = < [<{Exp ", "}+>] >
-  Exp.VarRef    = VarRef
+  Exp           = VarRef
   
   //TODO TupleExp
   
@@ -107,7 +107,7 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Cast
-  Exp.Cast = < <Type>(<Exp>) >
+  Exp.Cast = < <Type>(<Exp>) > {right, avoid}
   
   //---------------------------------------------------------------------------
   //Tenary if statement
@@ -161,4 +161,5 @@ context-free priorities
   {non-assoc: Exp.And} >
   {non-assoc: Exp.Or} >
   {left: Exp.Ternary} >
-  {right: Exp.Assign Exp.AssignArray Exp.LValAssign}
+  {right: Exp.Assign Exp.AssignArray Exp.LValAssign},
+  {left: Exp.Call} > {right: Exp.Cast}

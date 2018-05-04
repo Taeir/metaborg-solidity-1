@@ -63,20 +63,19 @@ context-free syntax
     }>
   
   Constructor.ConstructorWithSuper = <
-    constructor(<{Param ", "}*>) <ModifierConSuper> {
+    constructor(<{Param ", "}*>) <ModifierCon?> <ModifierConSuper> <ModifierCon?> {
       <{StatementOrVoidReturn "\n"}*>
     }>
   
   //---------------------------------------------------------------------------
   //Params
-  Param.Param            = <<Type> <ModLocation?> <ParamName>>
-//  Param.ParamNameOmitted = <<Type>>
+  Param.Param             = <<Type> <ModLocation?> <ParamName?>>
+  ReturnParam.ReturnParam = <<Type> <ModLocation?> <ParamName?>>
   
-  ParamName.None = <>
-  ParamName      = ID
+  ParamName               = ID
   
   //Return Params
-  Returns.Returns = <returns (<{Param ", "}+>)>
+  Returns.Returns = <returns (<{ReturnParam ", "}+>)>
   
   //---------------------------------------------------------------------------
   //Modifiers
@@ -92,7 +91,5 @@ context-free syntax
   ModifierCon = Public
   
   //Calls to base constructors can be done with modifier like syntax
-  ModifierConSuper.ModSuperCall = <<ModifierCon> <ID>(<{Exp ", "}*>)>
-  ModifierConSuper.SuperCallMod = <<ID>(<{Exp ", "}*>) <ModifierCon?>>
-  ModifierConSuper              = ModifierCon
+  ModifierConSuper.ModSuperCall = <<ID>(<{Exp ", "}*>)>
   

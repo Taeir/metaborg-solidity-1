@@ -5,36 +5,41 @@ imports
 
 signature
   namespaces
-    Var { origin : term }
+    Var { origin : term, constant : term }
 
 rules
   [[ StructField(solType, name) ^ (structScope) ]] :=
     [[ solType ^ (structScope) : ty ]],
     
     Var{name} <- structScope,
-    Var{name}.origin := StructField(),
+    Var{name}.origin   := StructField(),
+    Var{name}.constant := FalseC(),
     Var{name} : ty !. 
+  
+  [[ Param(solType, modLoc, None()) ^ (s) : ty ]] :=
+    [[ solType ^ (s) : ty ]].
 
-  [[ Param(solType, modLoc, name) ^ (s) : ty ]] :=
+  [[ Param(solType, modLoc, Some(name)) ^ (s) : ty ]] :=
     [[ solType ^ (s) : ty ]],
     
     Var{name} <- s,
-    Var{name}.origin := Param(),
+    Var{name}.origin   := Param(),
+    Var{name}.constant := FalseC(),
     Var{name} : ty !.
   
+  [[ ReturnParam(solType, modLoc, None()) ^ (s) : ty ]] :=
+    [[ solType ^ (s) : ty ]].
+  
+  [[ ReturnParam(solType, modLoc, Some(name)) ^ (s) : ty ]] :=
+    [[ solType ^ (s) : ty ]],
+    
+    Var{name} <- s,
+    Var{name}.origin   := Param(),
+    Var{name}.constant := FalseC(),
+    Var{name} : ty !.
   
   //Refs
-  //TODO Remove VarRef exp wrapper?
-  [[ VarRef(ref) ^ (s) : ty ]] :=
-    [[ ref ^ (s) : ty ]].
-    
-  [[ LocalRef(name) ^ (s) : ty ]] :=
+  [[ VarRef(name) ^ (s) : ty ]] :=
     Var{name} -> s,
     Var{name} |-> var | error $[Cannot find variable with name [name]],
     Var{name} : ty.
-  
-  //TODO FieldRef
-  //TODO FieldRef is actually a "member" instead, which is an <Exp> <ID> and not an <ID>.<PATH>. This should probably be removed from the grammar.
-//  [[ FieldRef(base, name) ^ (s) : ty ]] :=
-//    Var{base}
-//    Var{name}

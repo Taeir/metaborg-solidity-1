@@ -154,11 +154,11 @@ rules
     var : ty.
   
   //TODO VarRef
-  [[ VarRef(LocalRef(name)) ^ (s) : ty ]] :=
-    //Lookup
-    Var{name} -> s,
-    Var{name} |-> var | error $[Cannot find variable with name [name]],
-    Var{name} : ty.
+//  [[ VarRef(name) ^ (s) : ty ]] :=
+//    //Lookup
+//    Var{name} -> s,
+//    Var{name} |-> var | error $[Cannot find variable with name [name]],
+//    Var{name} : ty.
     
   [[ Assign(varRef, exp) ^ (s) : ty ]] :=
     [[ varRef ^ (s) : vTy ]],

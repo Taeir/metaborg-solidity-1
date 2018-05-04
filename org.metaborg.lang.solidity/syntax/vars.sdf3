@@ -20,7 +20,4 @@ context-free syntax
   LocalVarDecl.LocalVarDecl       = <<LocalVar>;>
   LocalVarDecl.LocalVarDeclAssign = <<LocalVar> = <Exp>;>
   
-  //this.x
-  //x.item.item
-  VarRef.LocalRef = <<ID>>
-  VarRef.FieldRef = <<ID>.<PATH>>
+  VarRef.VarRef = ID
