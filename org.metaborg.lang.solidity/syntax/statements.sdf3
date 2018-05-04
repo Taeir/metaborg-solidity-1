@@ -11,15 +11,11 @@ template options
   tokenize : "({;."
 
 lexical syntax
-  Continue = "continue"
-  Break    = "break"
-  Throw    = "throw"
-  
   //Add keywords
   KEYWORD = STMTKEYWORD
-  STMTKEYWORD = Continue
-  STMTKEYWORD = Break
-  STMTKEYWORD = Throw
+  STMTKEYWORD = "continue"
+  STMTKEYWORD = "break"
+  STMTKEYWORD = "throw"
   STMTKEYWORD = "if"
   STMTKEYWORD = "else"
   STMTKEYWORD = "while"
@@ -53,9 +49,9 @@ context-free syntax
   ForStatement       = VarDeclStatement
   ForStatement       = ExpStatement
   
-  Statement.Continue = <<Continue>;>
-  Statement.Break    = <<Break>;>
-  Statement.Throw    = <<Throw>;>
+  Statement.Continue = <continue;>
+  Statement.Break    = <break;>
+  Statement.Throw    = <throw;>
   Statement.Emit     = <emit <FunctionCall>;>
   
   //-----------------------------------------------------------------

@@ -29,8 +29,15 @@ context-free syntax
   //Function declarations
   Function.Function = <
     function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
-      <{StatementOrReturn "\n"}*>
+      <{Statement "\n"}*>
+      <ReturnStatement>
     }>
+  
+// Full function
+//  Function.Function = <
+//    function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
+//      <{StatementOrReturn "\n"}*>
+//    }>
   
   Function.VoidFunction = <
     function <ID>(<{Param ", "}*>) <ModifiersFun*> {
