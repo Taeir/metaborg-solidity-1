@@ -3,10 +3,38 @@ module analysis/solidity
 imports
 
   signatures/-
+  analysis/globals
 
 signature
   name resolution
-  
+    labels
+      // P = Parent (method -> class, class -> program)
+      // I = Import (class -> super)
+      // M = Method Parent (method -> class)
+      // J = Method Import (class -> super)
+      P I M J
+
+    order
+      // Check local declarations over imports and parents
+      D < P,
+      D < I,
+      
+      // Check imports before parents
+      I < P,
+      
+      // J is used for method overriding
+      J < D,
+      J < I
+
+    well-formedness
+      // P* I*   gives: D < PD < PI+D       = Local (var/param) over parent (field/method/classname) over import (super field/super method)
+      //                PPD                 = Class lookup (Method -> Class -> Program -> Class Definition)
+      
+      // M J? I* gives: MJD < MD            = Look in direct super before using local
+      //                MJD < MIID          = We first check in the direct super class before looking further
+      //                MJI{n}D < MJI{n+1}D = Prefer closer super methods, check all the way
+      (P* . I*) | (M . J? . I*)
+
   namespaces
     Import { iname : string }
   
@@ -21,7 +49,9 @@ rules
   init ^ (programScope) :=
     new programScope.
 
-  [[ Program(elements) ^ (programScope) ]] :=
+  [[ p@Program(elements) ^ (programScope) ]] :=
+    Globals [[ p ^ (programScope) ]],
+    
     Map1 [[ elements ^ (programScope) ]],
     
     distinct/name D(programScope)/Import         | error $[Two imports with the same name: [NAME]] @NAMES,

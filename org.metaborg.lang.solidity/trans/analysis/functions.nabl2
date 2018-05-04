@@ -61,9 +61,10 @@ rules
     Map1T [[ retParams ^ (funScope) : retTys   ]].
   
   [[ Constructor(params, mod, body) ^ (s) ]] :=
+    //TODO Determine name of the constructor for name and return type
     //Declare
-    Function{name} <- s,
-    Function{name} : FunctionT(paramTys, retTy) !,
+    Function{"constructor"} <- s,
+    Function{"constructor"} : FunctionT(paramTys, retTy) !,
     
     //Scope
     new funScope,
@@ -71,7 +72,6 @@ rules
     
     //Resolve parameters and body
     Map1T [[ params ^ (funScope) : paramTys ]],
-    //TODO I need the constructor name for the retTy!
     Map1 [[ body ^ (funScope) ]].
     //...
   

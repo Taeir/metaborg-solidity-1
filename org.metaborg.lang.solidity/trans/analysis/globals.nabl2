@@ -1,0 +1,136 @@
+module analysis/globals
+
+imports
+  analysis/types
+
+rules
+  Globals [[ p ^ (programScope) ]] :=
+    //---------------------------------------------------------------------------------------------
+    //abi: encode(...), encodePacked(...), encodeWithSelector(selector, ...), encodeWithSignature(signature, ...)
+    new abiScope,
+    abiScope -P-> programScope,
+    Var{"abi" @p} <- programScope,
+    Var{"abi" @p} : tyAbi,
+    Var{"abi" @p} =I=> abiScope,
+    tyAbi == BuiltInT(Var{"abi" @p}),
+    
+    //TODO Abi functions (with variable argument counts)
+    
+    //---------------------------------------------------------------------------------------------
+    //msg: data, gas, sender, value
+    new msgScope,
+    msgScope -P-> programScope,
+    Var{"msg" @p} <- programScope,
+    Var{"msg" @p} : tyMsg,
+    Var{"msg" @p} =I=> msgScope,
+    tyMsg == BuiltInT(Var{"msg" @p}),
+    
+    Var{"data"} <- msgScope,
+    Var{"data"} : DBytesT() !!,
+    
+    Var{"gas"} <- msgScope,
+    Var{"gas"} : UIntT(256) !!,
+    
+    Var{"sender"} <- msgScope,
+    Var{"sender"} : AddressT() !!,
+    
+    Var{"value"} <- msgScope,
+    Var{"value"} : UIntT(256) !!,
+    
+    //---------------------------------------------------------------------------------------------
+    //block: coinbase, difficulty, gaslimit, number, timestamp, blockhash(nr)
+    new blockScope,
+    blockScope -P-> programScope,
+    Var{"block" @p} <- programScope,
+    Var{"block" @p} : tyBlock,
+    Var{"block" @p} =I=> blockScope,
+    tyBlock == BuiltInT(Var{"block" @p}),
+    
+    Var{"coinbase"} <- blockScope,
+    Var{"coinbase"} : AddressT() !!,
+    
+    Var{"difficulty"} <- blockScope,
+    Var{"difficulty"} : UIntT(256) !!,
+    
+    Var{"gaslimit"} <- blockScope,
+    Var{"gaslimit"} : UIntT(256) !!,
+    
+    Var{"number"} <- blockScope,
+    Var{"number"} : UIntT(256) !!,
+    
+    Var{"timestamp"} <- blockScope,
+    Var{"timestamp"} : UIntT(256) !!,
+    
+    Function{"blockhash"} <- blockScope,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    
+    //tx: gasprice, origin
+    new txScope,
+    txScope -P-> programScope,
+    Var{"tx" @p} <- programScope,
+    Var{"tx" @p} : tyTx,
+    Var{"tx" @p} =I=> txScope,
+    tyTx == BuiltInT(Var{"tx" @p}),
+    
+    Var{"gasprice"} <- txScope,
+    Var{"gasprice"} : UIntT(256) !!,
+    
+    Var{"origin"} <- txScope,
+    Var{"origin"} : AddressT() !!,
+    
+    //---------------------------------------------------------------------------------------------
+    //Global functions and variables
+    Function{"assert"} <- programScope,
+    Function{"assert"} : FunctionT([ BoolT() ], []) !!,
+    
+    //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
+//    Function{"blockhash"} <- programScope,
+//    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    
+    Function{"gasleft"} <- programScope,
+    Function{"gasleft"} : FunctionT([], [ UIntT(256) ]) !!,
+    
+    Var{"now"} <- programScope,
+    Var{"now"} : UIntT(256) !!,
+    
+    //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
+//    Function{"require"} <- programScope,
+//    Function{"require"} : FunctionT([ BoolT() ], []) !!,
+    
+    Function{"require"} <- programScope,
+    Function{"require"} : FunctionT([ BoolT(), StringT() ], []) !!,
+    
+    //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
+//    Function{"revert"} <- programScope,
+//    Function{"revert"} : FunctionT([], []) !!,
+    
+    Function{"revert"} <- programScope,
+    Function{"revert"} : FunctionT([ StringT() ], []) !!,
+    
+    //---------------------------------------------------------------------------------------------
+    //Hashing functions
+    //TODO keccak256, sha3, sha256 and ripemd160 accepts tightly-packed arguments, determine type of this
+    Function{"keccak256"} <- programScope,
+    Function{"keccak256"} : tyHashFun !!,
+    tyHashFun == FunctionT([ VarT() ], [ FBytesT(32) ]),
+    
+    Function{"sha3"} <- programScope,
+    Function{"sha3"} : tyHashFun !!,
+    
+    Function{"sha256"} <- programScope,
+    Function{"sha256"} : tyHashFun !!,
+    
+    Function{"ripemd160"} <- programScope,
+    Function{"ripemd160"} : tyHashFun !!,
+    
+    Function{"selfdestruct"} <- programScope,
+    Function{"selfdestruct"} : tyDestruct !!,
+    tyDestruct == FunctionT([ AddressT() ], []),
+    
+    Function{"suicide"} <- programScope,
+    Function{"suicide"} : tyDestruct !!.
+    
+    //TODO erecover, addmod, mulmod
+    
+    //TODO address balance, send, transfer
+    
