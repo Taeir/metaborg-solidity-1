@@ -1,0 +1,54 @@
+module codegen/program
+
+imports
+  //TODO Import from evmbytecode project
+//  signatures/evmbytecode-sig
+
+  signatures/expressions-sig
+  signatures/functions-sig
+  signatures/statements-sig
+
+//TODO These are temporary until I manage to import the other project
+signature
+  sorts
+    Instr
+
+  constructors
+    RETURN : Instr
+    ADD    : Instr
+    PUSH   : int * string -> Instr
+
+rules
+  program-to-ebc: [] -> []
+  
+  fun-to-ebc: Function(_, params, _, retParams, body, retExp) -> instr
+    where
+    instr := <concat> [
+      //TODO params
+      <mapconcat(stmt-to-ebc)> body,
+      <exp-to-ebc> retExp,
+      [ RETURN() ]
+    ]
+  
+  fun-to-ebc: VoidFunction(_, params, _, body) -> instr
+    where
+    instr := <concat> [
+      //TODO params
+      <mapconcat(stmt-to-ebc)> body,
+      [ RETURN() ]
+    ]
+  
+  stmt-to-ebc: ExpStmt(e1) -> <exp-to-ebc> e1
+  
+  exp-to-ebc: Add(e1, e2) -> instr
+    where
+    instr := <concat> [
+      <exp-to-ebc> e1,
+      <exp-to-ebc> e2,
+      [ ADD() ]
+    ]
+  
+  exp-to-ebc: True()  -> [ PUSH(1, "1") ]
+  exp-to-ebc: False() -> [ PUSH(1, "0") ]
+  
+  
