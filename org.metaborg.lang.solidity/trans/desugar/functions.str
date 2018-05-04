@@ -19,6 +19,8 @@ rules
   desugar: AbstractFunction(name, params, mods, None()) ->
              AbstractFunction(name, params, mods, [])
 
+//  desugar: Add class name to constructor.
+
 //For full function support:
 //  desugar: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods, retParams, body)
 //  desugar: VoidFunction(name, params, mods, body)                 -> Function(name, params, mods, [], body)
