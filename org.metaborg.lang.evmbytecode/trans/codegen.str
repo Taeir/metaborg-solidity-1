@@ -1,0 +1,119 @@
+module codegen
+
+imports
+  signatures/evmbytecode-sig
+
+rules
+  /**
+   * Converts an int to a hexidecimal string (without 0x).
+   */
+  int-to-hex: n -> h
+    where
+    (
+      (<lt> (n, 10); h := <int-to-string> n) <+
+      (<eq> (n, 10); h := "a") <+
+      (<eq> (n, 11); h := "b") <+
+      (<eq> (n, 12); h := "c") <+
+      (<eq> (n, 13); h := "d") <+
+      (<eq> (n, 14); h := "e") <+
+      (<eq> (n, 15); h := "f") <+
+      (h := <conc-strings> (<int-to-hex> <divi> (n, 16), <int-to-hex> <mod> (n, 16)))
+    )
+  
+  /**
+   * Converts a list of ebc instructions to a hexadecimal string.
+   */
+  ebc-to-hex-string: instructions -> hex
+    where
+    hexinstructions := <map(instr-to-hex)> instructions;
+    hexstring := <concat-strings> hexinstructions;
+    hex := <conc-strings> ("0x", hexstring)
+  
+  instr-to-hex: STOP()         -> "00"
+  instr-to-hex: ADD()          -> "01"
+  instr-to-hex: MUL()          -> "02"
+  instr-to-hex: SUB()          -> "03"
+  instr-to-hex: DIV()          -> "04"
+  instr-to-hex: SDIV()         -> "05"
+  instr-to-hex: MOD()          -> "06"
+  instr-to-hex: SMOD()         -> "07"
+  instr-to-hex: ADDMOD()       -> "08"
+  instr-to-hex: MULMOD()       -> "09"
+  instr-to-hex: EXP()          -> "0a"
+  instr-to-hex: SIGNEXTEND()   -> "0b"
+
+
+  instr-to-hex: LT()           -> "10"
+  instr-to-hex: GT()           -> "11"
+  instr-to-hex: SLT()          -> "12"
+  instr-to-hex: SGT()          -> "13"
+  instr-to-hex: EQ()           -> "14"
+  instr-to-hex: ISZERO()       -> "15"
+  instr-to-hex: AND()          -> "16"
+  instr-to-hex: OR()           -> "17"
+  instr-to-hex: XOR()          -> "18"
+  instr-to-hex: NOT()          -> "19"
+  instr-to-hex: BYTE()         -> "1a"
+
+  instr-to-hex: SHA3()         -> "20"
+
+  instr-to-hex: ADDRESS()      -> "30"
+  instr-to-hex: BALANCE()      -> "31"
+  instr-to-hex: ORIGIN()       -> "32"
+  instr-to-hex: CALLER()       -> "33"
+  instr-to-hex: CALLVALUE()    -> "34"
+  instr-to-hex: CALLDATALOAD() -> "35"
+  instr-to-hex: CALLDATASIZE() -> "36"
+  instr-to-hex: CALLDATACOPY() -> "37"
+  instr-to-hex: CODESIZE()     -> "38"
+  instr-to-hex: CODECOPY()     -> "39"
+  instr-to-hex: GASPRICE()     -> "3a"
+  instr-to-hex: EXTCODESIZE()  -> "3b"
+  instr-to-hex: EXTCODECOPY()  -> "3c"
+
+  instr-to-hex: BLOCKHASH()    -> "40"
+  instr-to-hex: COINBASE()     -> "41"
+  instr-to-hex: TIMESTAMP()    -> "42"
+  instr-to-hex: NUMBER()       -> "43"
+  instr-to-hex: DIFFICULTY()   -> "44"
+  instr-to-hex: GASLIMIT()     -> "45"
+
+  instr-to-hex: POP()          -> "50"
+  instr-to-hex: MLOAD()        -> "51"
+  instr-to-hex: MSTORE()       -> "52"
+  instr-to-hex: MSTORE8()      -> "53"
+  instr-to-hex: SLOAD()        -> "54"
+  instr-to-hex: SSTORE()       -> "55"
+  instr-to-hex: JUMP()         -> "56"
+  instr-to-hex: JUMPI()        -> "57"
+  instr-to-hex: PC()           -> "58"
+  instr-to-hex: MSIZE()        -> "59"
+  instr-to-hex: GAS()          -> "5a"
+  instr-to-hex: JUMPDEST()     -> "5b"
+
+  //TODO Possibly need to convert hexnr from an int to hex for flexibility
+  instr-to-hex: PUSH(n, hexnr) -> s
+    where
+    opcode := <int-to-hex> <addi> (95, <string-to-int> n);
+    s      := <conc-strings> (opcode, hexnr)
+
+  instr-to-hex: DUP(n) -> opcode
+    where
+    opcode := <int-to-hex> <addi> (127, <string-to-int> n)
+
+  instr-to-hex: SWAP(n) -> opcode
+    where
+    opcode := <int-to-hex> <addi> (143, <string-to-int> n)
+
+  instr-to-hex: LOG(n) -> opcode
+    where
+    opcode := <conc-strings> ("a", n)
+
+  instr-to-hex: CREATE()       -> "f0"
+  instr-to-hex: CALL()         -> "f1"
+  instr-to-hex: CALLCODE()     -> "f2"
+  instr-to-hex: RETURN()       -> "f3"
+  instr-to-hex: DELEGATECALL() -> "f4"
+  instr-to-hex: SELFDESTRUCT() -> "ff"
+  
+  

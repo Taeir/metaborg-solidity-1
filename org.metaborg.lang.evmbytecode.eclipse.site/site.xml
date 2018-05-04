@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.metaborg.lang.evmbytecode.eclipse.feature_0.1.0.qualifier.jar" id="org.metaborg.lang.evmbytecode.eclipse.feature" version="0.1.0.qualifier">
+      <category name="evmbytecode"/>
+   </feature>
+   <category-def name="evmbytecode" label="evmbytecode language Eclipse plugin">
+      <description>
+         evmbytecode language Eclipse plugin.
+      </description>
+   </category-def>
+</site>
