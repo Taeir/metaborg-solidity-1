@@ -1,0 +1,13 @@
+module ebc/desugar
+
+imports
+  signatures/ebc/EBC-sig
+
+//strategies
+//  desugar-all = innermost(desugar)
+//
+//rules
+//  desugar: EBCHex(hex) -> hex'
+//    where
+//    hex' := 
+  

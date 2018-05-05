@@ -1,0 +1,12 @@
+module ebc/ebcshared/analysis
+
+imports
+  
+  nabl2/api
+  nabl2/runtime
+
+  ebc/ebcshared/static-semantics
+
+rules // Analysis
+
+  editor-analyze = nabl2-analyze(id)

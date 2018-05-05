@@ -1,0 +1,21 @@
+module ebc/Layout
+
+lexical syntax
+  EBCCommentChar   = [\*] 
+  LAYOUT           = [\ \t\n\r]
+  LAYOUT           = "/*" EBCInsideComment* "*/" 
+  EBCInsideComment = ~[\*] 
+  EBCInsideComment = EBCCommentChar 
+  LAYOUT           = "//" ~[\n\r]* EBCNewLineEOF 
+  EBCNewLineEOF    = [\n\r] 
+  EBCNewLineEOF    = EBCEOF 
+  EBCEOF           =  
+
+lexical restrictions
+  EBCCommentChar -/- [\/]
+  EBCEOF         -/- ~[]
+
+context-free restrictions
+  LAYOUT? -/- [\ \t\n\r]
+  LAYOUT? -/- [\/].[\/]
+  LAYOUT? -/- [\/].[\*]

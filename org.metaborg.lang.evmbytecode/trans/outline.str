@@ -2,7 +2,7 @@ module outline
 
 imports
   
-  signatures/evmbytecode-sig
+  signatures/ebc/-
   libspoofax/editor/outline
 
 rules

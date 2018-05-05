@@ -1,0 +1,7 @@
+module ebc/ebcshared/main
+
+imports
+  ebc/ebcshared/analysis
+  ebc/ebcshared/codegen
+  ebc/ebcshared/desugar
+  ebc/ebcshared/static-semantics

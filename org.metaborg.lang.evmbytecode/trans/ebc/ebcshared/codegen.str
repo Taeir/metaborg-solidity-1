@@ -1,7 +1,7 @@
-module codegen
+module ebc/ebcshared/codegen
 
 imports
-  signatures/evmbytecode-sig
+  signatures/ebc/EBC-sig
 
 rules
   /**
@@ -91,11 +91,11 @@ rules
   instr-to-hex: GAS()          -> "5a"
   instr-to-hex: JUMPDEST()     -> "5b"
 
-  //TODO Possibly need to convert hexnr from an int to hex for flexibility
   instr-to-hex: PUSH(n, hexnr) -> s
     where
-    opcode := <int-to-hex> <addi> (95, <string-to-int> n);
-    s      := <conc-strings> (opcode, hexnr)
+    ((<is-string> n; n2 := <string-to-int> n) <+ (n2 := n));
+    opcode := <int-to-hex> <addi> (95, n2);
+    s      := <conc-strings> (opcode, <lower-case> hexnr)
 
   instr-to-hex: DUP(n) -> opcode
     where

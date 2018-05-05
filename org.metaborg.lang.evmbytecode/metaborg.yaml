@@ -11,6 +11,37 @@ dependencies:
   - org.metaborg:meta.lib.spoofax:${metaborgVersion}
   - org.metaborg:org.metaborg.meta.nabl2.shared:${metaborgVersion}
   - org.metaborg:org.metaborg.meta.nabl2.runtime:${metaborgVersion}
+
+exports:
+
+  ## Stratego
+- language: Stratego-Sugar
+  directory: trans
+  includes:
+  - "evmbytecode.str"
+  - "ebc/**/*.str"
+
+  ## SDF3
+- language: TemplateLang
+  directory: syntax
+  includes:
+  - "ebc/*.sdf3"
+- language: ATerm
+  directory: src-gen/syntax
+  includes:
+  - "**/*.aterm"
+- language: EditorService
+  directory: src-gen
+  includes:
+  - "completion/colorer/ebc/*.esv"
+- language: Stratego-Sugar
+  directory: src-gen
+  includes:
+  - "completion/ebc/*.str"
+  - "pp/ebc/*.str"
+  - "signatures/ebc/*.str"
+
+
 pardonedLanguages:
 - EditorService
 - Stratego-Sugar

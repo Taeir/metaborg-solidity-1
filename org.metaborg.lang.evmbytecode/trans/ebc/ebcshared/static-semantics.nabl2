@@ -1,0 +1,13 @@
+module ebc/ebcshared/static-semantics
+
+imports
+
+  signatures/ebc/-
+
+rules
+
+  init ^ (s) := new s.
+
+  //There is not really any type checking that we can do.
+  [[ Empty() ^ (s) ]].
+  [[ Code(_) ^ (s) ]].

@@ -1,0 +1,4 @@
+module ebc/ebcshared
+
+imports
+  ebc/ebcshared/main

@@ -4,14 +4,11 @@ imports
   
   nabl2/api
   nabl2/runtime
-
-  static-semantics
+  
+  ebc/ebcshared/analysis
+  ebc/ebcshared/static-semantics
 
   pp
-
-rules // Analysis
-
-  editor-analyze = nabl2-analyze(id)
 
 rules // Debugging
   
