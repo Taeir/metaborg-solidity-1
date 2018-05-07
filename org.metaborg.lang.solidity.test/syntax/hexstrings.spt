@@ -1,0 +1,41 @@
+module syntax_hexstrings
+language solidity
+start symbol HEXSTRING
+
+//Double quoted hexstrings
+test S: HEXDSTRING: normal 1            [[ hex"00"               ]]
+test S: HEXDSTRING: normal 2            [[ hex"0FDD"             ]]
+test S: HEXDSTRING: normal 3            [[ hex"F0E1D2C3B4A59687" ]]
+test S: HEXDSTRING: check lower letters [[ hex"abcdef"           ]]
+test S: HEXDSTRING: check upper letters [[ hex"ABCDEF"           ]]
+test S: HEXDSTRING: check numbers       [[ hex"0123456789"       ]]
+ 
+test F: HEXDSTRING: uneven number       [[ hex"010" ]] parse fails
+test F: HEXDSTRING: non hex char        [[ hex"1G" ]] parse fails
+test F: HEXDSTRING: no start hex        [[ "12"     ]] parse fails
+test F: HEXDSTRING: no start quote      [[ hex12"   ]] parse fails
+test F: HEXDSTRING: no end quote        [[ hex"12   ]] parse fails
+test F: HEXDSTRING: no quotes           [[ hex12    ]] parse fails
+test F: HEXDSTRING: newline in string   [[ hex"12
+34" ]] parse fails
+
+//Single quoted hexstrings
+test S: HEXSSTRING: normal 1            [[ hex'00'               ]]
+test S: HEXSSTRING: normal 2            [[ hex'0FDD'             ]]
+test S: HEXSSTRING: normal 3            [[ hex'F0E1D2C3B4A59687' ]]
+test S: HEXSSTRING: check lower letters [[ hex'abcdef'           ]]
+test S: HEXSSTRING: check upper letters [[ hex'ABCDEF'           ]]
+test S: HEXSSTRING: check numbers       [[ hex'0123456789'       ]]
+ 
+test F: HEXSSTRING: uneven number       [[ hex'010' ]] parse fails
+test F: HEXDSTRING: non hex char        [[ hex'1G' ]] parse fails
+test F: HEXSSTRING: no start hex        [[ '12'     ]] parse fails
+test F: HEXSSTRING: no start quote      [[ hex12'   ]] parse fails
+test F: HEXSSTRING: no end quote        [[ hex'12   ]] parse fails
+test F: HEXSSTRING: no quotes           [[ hex12    ]] parse fails
+test F: HEXSSTRING: newline in string   [[ hex'12
+34' ]] parse fails
+
+//Mixed quotes
+test F: HEXSTRING: mixed quotes 1 [[ hex"12' ]] parse fails
+test F: HEXSTRING: mixed quotes 2 [[ hex'12" ]] parse fails
