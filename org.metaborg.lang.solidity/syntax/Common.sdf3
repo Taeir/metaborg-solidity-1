@@ -1,5 +1,9 @@
 module Common
 
+context-free start-symbols
+  STRING
+  HEXSTRING
+
 lexical syntax
 
   ID             = [a-zA-Z\_\$] [a-zA-Z0-9\_\$]*
