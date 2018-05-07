@@ -11,7 +11,7 @@ lexical syntax
   
   INT            = [0-9]+ 
   FRACT          = [0-9]* "." [0-9]*
-  DECIMAL        = INT ("." [0-9]*)? ('e' INT)?
+  DECIMAL        = ((INT ("." [0-9]*)?) | ("." INT)) ('e' INT)?
   HEXINT         = "0x" [0-9a-fA-F]+
   
   NumberUnit     = "wei" | "szabo" | "finney" | "ether" | "seconds" | "minutes" | "hours" | "days" | "weeks" | "years"

@@ -1,0 +1,31 @@
+module syntax_numbers
+
+language solidity
+
+start symbol LitNumber
+
+//Integers
+test S: int: simple       [[ 10   ]]
+test S: int: scientific 1 [[ 2e10 ]]
+test S: int: scientific 2 [[ 3E5  ]]
+
+//Decimal numbers (considered integers?)
+test S: decimal: decimal 1    [[ 1.    ]]
+test S: decimal: decimal 2    [[ .5    ]]
+test S: decimal: decimal 3    [[ 2.0   ]]
+test S: decimal: scientific 1 [[ .5e3  ]]
+test S: decimal: scientific 2 [[ 1.e4  ]]
+test S: decimal: scientific 3 [[ 1.5e6 ]]
+
+test F: decimal: two dots 1 [[ 1..0 ]] parse fails
+test F: decimal: two dots 2 [[ 1.0. ]] parse fails
+
+//Hexadecimal integers
+test S: hexint: simple 1 [[ 0x1C  ]]
+test S: hexint: simple 2 [[ 0x12B ]]
+test S: hexint: simple 2 [[ 0x12B ]]
+
+test F: hexint: invalid  [[ 0x1G  ]] parse fails
+test F: hexint: spaces 1 [[ 0x 1E ]] parse fails
+test F: hexint: spaces 2 [[ 0 x1E ]] parse fails
+test F: hexint: no 0x    [[ 2B    ]] parse fails
