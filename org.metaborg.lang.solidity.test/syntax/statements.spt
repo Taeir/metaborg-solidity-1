@@ -1,0 +1,74 @@
+module syntax_statements
+
+language solidity
+
+start symbol Statement
+
+//Blocks
+test S: Empty Block  [[ {}                     ]] parse to Block([])
+test S: Block with 1 [[ { true; }              ]] parse to Block([_])
+test S: Block with 3 [[ { true; false; true; } ]] parse to Block([_, _, _])
+
+test S: Block spaces [[ {true;} ]] parse succeeds
+
+test F: Block no close [[ { true; ]] parse fails
+test F: Block no open  [[ false; } ]] parse fails
+
+//Ifs
+test S: If without else [[ if (true) {}         ]] parse to If(True(), Block([]), None())
+test S: If with else    [[
+  if (true) {
+    false;
+  } else {
+    true;
+  } ]] parse to If(True(), Block([ExpStmt(False())]), Else(Block([ExpStmt(True())])))
+
+test F: If without condition [[ if () {} ]] parse fails
+test F: Only else            [[ else {} ]] parse fails
+
+//While
+test S: While true   [[ while (true) {} ]] parse to While(True(), Block([]))
+test S: While spaces [[ while( true ){} ]] parse succeeds
+
+test F: While no condition [[ while () {} ]] parse fails
+
+//Do while
+test S: Do while        [[ do {} while (true); ]] parse to DoWhile(Block([]), True())
+test S: Do while spaces [[ do{}while( true ) ; ]] parse succeeds
+
+test F: Do while no condition [[ do {} while ();    ]] parse fails
+test F: Do while no semicolon [[ do {} while (true) ]] parse fails
+test F: Do while no body      [[ do while (true);   ]] parse fails
+test F: Do while no while     [[ do {}              ]] parse fails
+
+//For
+test S: For: Empty           [[ for (;;) {}          ]] parse to For(None(), None(), None(), Block([]))
+test S: For with initializer [[ for (int i = 1;;) {} ]] parse to For(_, None(), None(), Block([]))
+test S: For with condition   [[ for (; true;) {}     ]] parse to For(None(), Some(True()), None(), Block([]))
+test S: For with loop        [[ for (;; true) {}     ]] parse to For(None(), None(), Some(True()), Block([]))
+test S: Simple for           [[
+  for (int i = 0; i < 10; i++) {
+    true;
+  }
+]] parse succeeds
+
+test S: For spaces [[ for( ; ; ){} ]] parse succeeds
+
+test F: For without semicolon 1  [[ for (;) {} ]] parse fails
+test F: For without semicolon 2  [[ for () {}  ]] parse fails
+test F: For invalid initializer  [[ for (if (true) {};;) {}  ]] parse fails
+test F: For: statement condition [[ for (; if (true) {};) {} ]] parse fails
+test F: For: statement loop      [[ for (;; if (true) {}) {} ]] parse fails
+
+//Control flow
+test S: Break    [[ break;    ]]
+test S: Continue [[ continue; ]]
+test S: Throw    [[ throw;    ]]
+test S: Emit     [[ emit k(); ]] parse to Emit(FunctionCall(_,[]))
+
+//Variable declaration
+test S: variable declaration [[ int x; ]] parse to DeclareVar(IntType(_), "x")
+test S: variable declaration with assignment [[ int x = 10; ]] parse to DeclareVarAssign(IntType(_), "x", _)
+
+test F: VarDec: no semicolon  [[ int x     ]] parse fails
+test F: VarDec: no assignment [[ int x = ; ]] parse fails

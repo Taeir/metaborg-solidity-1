@@ -1,0 +1,30 @@
+module syntax_statements2
+
+language solidity
+
+start symbol Program
+
+fixture [[
+  contract X {
+    [[...]]
+  }
+]]
+
+//Return statements
+test S: void return statement [[
+  function k() {
+    return;
+  }
+]] parse succeeds
+
+test S: return statement [[
+  function k() returns (int) {
+    return 10;
+  }
+]] parse succeeds
+
+test F: void return in non-void function [[
+  function k() returns (int) {
+    return;
+  }
+]] parse fails
