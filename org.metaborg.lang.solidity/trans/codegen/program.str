@@ -1,22 +1,11 @@
 module codegen/program
 
 imports
-  //TODO Import from evmbytecode project
-//  signatures/evmbytecode-sig
+  signatures/ebc/-
 
   signatures/expressions-sig
   signatures/functions-sig
   signatures/statements-sig
-
-//TODO These are temporary until I manage to import the other project
-signature
-  sorts
-    Instr
-
-  constructors
-    RETURN : Instr
-    ADD    : Instr
-    PUSH   : int * string -> Instr
 
 rules
   program-to-ebc: [] -> []
