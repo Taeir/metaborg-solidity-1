@@ -34,12 +34,12 @@ rules
     [[ loopExp  ^ (s) : lty]],
     [[ bodyStmt ^ (s) ]].
   
-  [[ For(preStmt, condExp, None(), bodyStmt) ^ (s) ]] :=
+  [[ For(Some(preStmt), condExp, None(), bodyStmt) ^ (s) ]] :=
     [[ preStmt  ^ (s) ]],
     [[ condExp  ^ (s) : BoolT() ]],
     [[ bodyStmt ^ (s) ]].
   
-  [[ For(preStmt, condExp, Some(loopExp), bodyStmt) ^ (s) ]] :=
+  [[ For(Some(preStmt), condExp, Some(loopExp), bodyStmt) ^ (s) ]] :=
     [[ preStmt  ^ (s) ]],
     [[ condExp  ^ (s) : BoolT() ]],
     [[ loopExp  ^ (s) : lty]],

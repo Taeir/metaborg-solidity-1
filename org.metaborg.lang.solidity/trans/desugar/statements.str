@@ -8,11 +8,21 @@ imports
   desugar/expressions
 
 rules
-  //for (;;;) -> while (true) 
-  desugar: For(None(), None(), None(), body)     -> While(True(), body)
-  desugar: For(None(), Some(cond), None(), body) -> While(cond, body)
-  
-  desugar: For(a, None(), b, body)               -> For(a, True(), b, body)
+  //---------------------------------------------------------------------------
+  //For loops
+  //Convert SomeA and SomeB into Some.
+  desugar: For(SomeA(a), b, c, body) -> For(Some(a), b, c, body)
+  desugar: For(SomeB(a), b, c, body) -> For(Some(a), b, c, body)
 
+  //No condition to true, e.g. for(a; ; b) -> for(a; true; b)
+  desugar: For(a, None(), c, body) -> For(a, Some(True()), c, body)
+  
+  //For with only condition to while, e.g. for(; c;) -> while (c) 
+  desugar: For(None(), cond, None(), body) -> While(cond', body)
+    where
+    <?Some(cond')> cond <+ cond' := cond
+  
+  //Remove the middle "Some"
+  desugar: For(a, Some(b), c, body) -> For(a, b, c, body)
   
   

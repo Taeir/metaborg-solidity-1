@@ -46,8 +46,8 @@ context-free syntax
   //The first statement of for can be either ";", a variable declaration or an expression statement
   Statement.For      = < for (<ForStatement> <Exp?>; <Exp?>) <Statement> >
   ForStatement.None  = <;>
-  ForStatement       = VarDeclStatement
-  ForStatement       = ExpStatement
+  ForStatement.SomeA = VarDeclStatement
+  ForStatement.SomeB = ExpStatement
   
   Statement.Continue = <continue;>
   Statement.Break    = <break;>
