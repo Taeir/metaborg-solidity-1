@@ -1,0 +1,37 @@
+module syntax_strings
+language solidity
+start symbol STRING
+
+//Double quoted strings
+test S: DSTRING: normal 1                 [[ "hello"        ]]
+test S: DSTRING: normal 2                 [[ "Hello world!" ]]
+test S: DSTRING: check lower letters      [[ "abcdefghijklmnopqrstuvwxyz" ]]
+test S: DSTRING: check upper letters      [[ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" ]]
+test S: DSTRING: check numbers            [[ "0123456789" ]]
+test S: DSTRING: check special characters [[ "`~!@#$%^&*()-_=+[{]}\\|;:',<.>/? 	" ]]
+test S: DSTRING: check escaped dquote     [[ "\"" ]]
+ 
+test F: DSTRING: unescaped dquote  [[ """  ]] parse fails
+test F: DSTRING: no start quote    [[ hey" ]] parse fails
+test F: DSTRING: no end quote      [[ "hey ]] parse fails
+test F: DSTRING: newline in string [[ "
+" ]] parse fails
+
+//Single quoted strings
+test S: SSTRING: normal 1                 [[ 'hello'        ]]
+test S: SSTRING: normal 2                 [[ 'Hello world!' ]]
+test S: SSTRING: check lower letters      [[ 'abcdefghijklmnopqrstuvwxyz' ]]
+test S: SSTRING: check upper letters      [[ 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' ]]
+test S: SSTRING: check numbers            [[ '0123456789' ]]
+test S: SSTRING: check special characters [[ '`~!@#$%^&*()-_=+[{]}\\|;:",<.>/? 	' ]]
+test S: SSTRING: check escaped squote     [[ '\'' ]]
+
+test F: SSTRING: unescaped squote  [[ '''  ]] parse fails
+test F: SSTRING: no start quote    [[ hey' ]] parse fails
+test F: SSTRING: no end quote      [[ 'hey ]] parse fails
+test F: SSTRING: newline in string [[ '
+' ]] parse fails
+
+//Both
+test F: STRING: mix start and end quote 1 [[ "hey' ]] parse fails
+test F: STRING: mix start and end quote 2 [[ 'hey" ]] parse fails
