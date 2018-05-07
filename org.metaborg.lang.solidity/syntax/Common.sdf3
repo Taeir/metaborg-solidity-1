@@ -34,7 +34,7 @@ lexical syntax
   //Hex strings
   HEXSTRING      = "hex" "\"" (HexStringChar HexStringChar)* "\""
   HEXSTRING      = "hex" "'" (HexStringChar HexStringChar)* "'"
-  HexStringChar  = [0-9A-F]
+  HexStringChar  = [0-9A-Fa-f]
   
   //Comments
   LAYOUT         = [\ \t\n\r] 

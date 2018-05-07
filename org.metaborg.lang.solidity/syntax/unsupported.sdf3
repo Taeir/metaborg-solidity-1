@@ -10,12 +10,4 @@ module unsupported
 //Returning multiple values
 
 
-//Using assignment as expression, e.g.
-//  if (a = b)
-//  if (a += b)
-
-
-//Using directive
-
-
 //Inline assembly (it is parsed but ignored)
