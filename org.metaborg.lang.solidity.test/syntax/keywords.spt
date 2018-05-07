@@ -1,0 +1,112 @@
+module syntax_keywords
+
+language solidity
+
+start symbol ID
+
+//Reserved words (unused, but may be used in the futurel, disallowed by spec)
+test F: reserved keyword abstract    [[ abstract    ]] parse fails
+test F: reserved keyword after       [[ after       ]] parse fails
+test F: reserved keyword case        [[ case        ]] parse fails
+test F: reserved keyword catch       [[ catch       ]] parse fails
+test F: reserved keyword default     [[ default     ]] parse fails
+test F: reserved keyword final       [[ final       ]] parse fails
+test F: reserved keyword in          [[ in          ]] parse fails
+test F: reserved keyword inline      [[ inline      ]] parse fails
+test F: reserved keyword let         [[ let         ]] parse fails
+test F: reserved keyword match       [[ match       ]] parse fails
+test F: reserved keyword null        [[ null        ]] parse fails
+test F: reserved keyword of          [[ of          ]] parse fails
+test F: reserved keyword relocatable [[ relocatable ]] parse fails
+test F: reserved keyword static      [[ static      ]] parse fails
+test F: reserved keyword switch      [[ switch      ]] parse fails
+test F: reserved keyword try         [[ try         ]] parse fails
+test F: reserved keyword type        [[ type        ]] parse fails
+test F: reserved keyword typeof      [[ typeof      ]] parse fails
+
+//-----------------------------------------------------------------------------
+//General
+test F: keyword pragma  [[ pragma ]] parse fails
+test F: keyword import  [[ import ]] parse fails
+test F: keyword as      [[ as     ]] parse fails
+test F: keyword from    [[ from   ]] parse fails
+
+
+//-----------------------------------------------------------------------------
+//Classlike
+test F: keyword contract  [[ contract  ]] parse fails
+test F: keyword interface [[ interface ]] parse fails
+test F: keyword library   [[ library   ]] parse fails
+test F: keyword enum      [[ enum      ]] parse fails
+test F: keyword event     [[ event     ]] parse fails
+test F: keyword struct    [[ struct    ]] parse fails
+test F: keyword is        [[ is        ]] parse fails
+
+//-----------------------------------------------------------------------------
+//Functions
+test F: function keyword function    [[ function    ]] parse fails
+test F: function keyword constructor [[ constructor ]] parse fails
+test F: function keyword returns     [[ returns     ]] parse fails
+
+//-----------------------------------------------------------------------------
+//Modifiers
+test F: keyword modifier [[ modifier ]] parse fails
+
+//Visibility
+test F: modifier keyword internal  [[ internal ]] parse fails
+test F: modifier keyword external  [[ external ]] parse fails
+test F: modifier keyword public    [[ public   ]] parse fails
+test F: modifier keyword private   [[ private  ]] parse fails
+
+//State mutability
+test F: modifier keyword constant  [[ constant ]] parse fails
+test F: modifier keyword pure      [[ pure     ]] parse fails
+test F: modifier keyword view      [[ view     ]] parse fails
+test F: modifier keyword payable   [[ payable  ]] parse fails
+
+//Location
+test F: modifier keyword memory    [[ memory   ]] parse fails
+test F: modifier keyword storage   [[ storage  ]] parse fails
+
+//Event modifiers
+test F: modifier keyword anonymous [[ anonymous ]] parse fails
+test F: modifier keyword indexed   [[ indexed   ]] parse fails
+
+//-----------------------------------------------------------------------------
+//Expressions
+test F: expression keyword true   [[ true   ]] parse fails
+test F: expression keyword false  [[ false  ]] parse fails
+test F: expression keyword this   [[ this   ]] parse fails
+test F: expression keyword new    [[ new    ]] parse fails
+test F: expression keyword delete [[ delete ]] parse fails
+
+//-----------------------------------------------------------------------------
+//Statements
+test F: statement keyword continue [[ continue ]] parse fails
+test F: statement keyword break    [[ break    ]] parse fails
+test F: statement keyword throw    [[ throw    ]] parse fails
+test F: statement keyword if       [[ if       ]] parse fails
+test F: statement keyword else     [[ else     ]] parse fails
+test F: statement keyword while    [[ while    ]] parse fails
+test F: statement keyword do       [[ do       ]] parse fails
+test F: statement keyword for      [[ for      ]] parse fails
+test F: statement keyword emit     [[ emit     ]] parse fails
+test F: statement keyword return   [[ return   ]] parse fails
+
+//-----------------------------------------------------------------------------
+//Other
+test F: keyword using [[ using ]] parse fails
+test F: keyword for   [[ for   ]] parse fails
+
+//-----------------------------------------------------------------------------
+//Standard Types
+test F: type keyword bool    [[ bool    ]] parse fails
+test F: type keyword int     [[ int     ]] parse fails
+test F: type keyword uint    [[ uint    ]] parse fails
+test F: type keyword fixed   [[ fixed   ]] parse fails
+test F: type keyword ufixed  [[ ufixed  ]] parse fails
+test F: type keyword address [[ address ]] parse fails
+test F: type keyword bytes   [[ bytes   ]] parse fails
+test F: type keyword byte    [[ byte    ]] parse fails
+test F: type keyword string  [[ string  ]] parse fails
+test F: type keyword var     [[ var     ]] parse fails

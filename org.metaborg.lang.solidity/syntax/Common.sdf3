@@ -50,6 +50,7 @@ lexical syntax
   KEYWORD = "catch"
   KEYWORD = "default"
   KEYWORD = "final"
+  KEYWORD = "in"
   KEYWORD = "inline"
   KEYWORD = "let"
   KEYWORD = "match"
