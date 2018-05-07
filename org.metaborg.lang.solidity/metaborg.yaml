@@ -17,6 +17,9 @@ pardonedLanguages:
 - EditorService
 - Stratego-Sugar
 - SDF
+runtime:
+  nabl2:
+    debug: analysis # add 'collection' to enable console logging of constraint collection
 debug:
   typesmart: false
 language:
