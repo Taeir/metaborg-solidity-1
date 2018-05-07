@@ -1,0 +1,95 @@
+module optimizer/statements
+
+imports
+  
+  signatures/expressions-sig
+  signatures/statements-sig
+  signatures/vars-sig
+
+rules
+  //---------------------------------------------------------------------------
+  //Helper functions
+  
+  //Extract only variable declarations
+  extract-vardecls: s -> Block(<extract-vardecls2> s)
+  
+  //Keep variable declarations
+  extract-vardecls2: s@DeclareVar(_, _)        -> [s]
+  extract-vardecls2: DeclareVarAssign(t, n, _) -> [DeclareVar(t, n)]
+  
+  //Check in other constructs
+  extract-vardecls2: Block(ss)                 -> <mapconcat(extract-vardecls2)> ss
+  extract-vardecls2: If(_, tBody, None())      -> <extract-vardecls2> tBody
+  extract-vardecls2: If(_, tBody, Else(eBody)) -> <mapconcat(extract-vardecls2)> [tBody, eBody]
+  extract-vardecls2: For(a, _, _, body)        -> <mapconcat(extract-vardecls2)> [a, body]
+  extract-vardecls2: While(_, body)            -> <extract-vardecls2> body
+  extract-vardecls2: DoWhile(body, _)          -> <extract-vardecls2> body
+
+  //Remove everything else
+  extract-vardecls2: s -> []
+    where
+    not(<?DeclareVar(_, _)> s);
+    not(<?DeclareVarAssign(_, _, _)> s);
+    not(<?Block(_)> s);
+    not(<?If(_, _, _)> s);
+    not(<?For(_, _, _, _)> s);
+    not(<?While(_, _)> s);
+    not(<?DoWhile(_, _)> s)
+    
+  //Flatten blocks into one block
+  flatten-blocks: Block(ss) -> <mapconcat(flatten-blocks)> ss
+  flatten-blocks: s -> s
+    where
+    not(<?Block(_)> s)
+  
+  //Removes all empty blocks
+  remove-empty-blocks: [] -> []
+  remove-empty-blocks: [head | tail] -> s'
+    where
+    //if empty block, then recurse on tail
+    (<?Block([])> head; s' := <remove-empty-blocks> tail) <+
+    //else if block with content
+    (<?Block(x)> head; x' := <remove-empty-blocks> x;
+      //if content is empty, recurse on tail
+      ((<?[]> x'; s' := <remove-empty-blocks> tail) <+
+      //else, retain block and recurse on tail
+      (s' := [Block(x') | <remove-empty-blocks> tail]))) <+
+    //else, retain head and recurse on tail
+    (                   s' := [head | <remove-empty-blocks> tail])
+  
+  //---------------------------------------------------------------------------
+  //Blocks
+  
+  //Remove all empty blocks
+//TODO Can be applied an infinite number of times, so should be done only once, after the complete optimization
+//  optimize: Block(ss) -> Block(<remove-empty-blocks> ss)
+
+  //---------------------------------------------------------------------------
+  //For loops
+
+  //Remove false for loops
+  optimize: For(a, False(), _, body) -> body'
+    where
+    (<?Some(a')> a; body' := <extract-vardecls> Block([a' | [body]])) <+
+    (<?None()> a;   body' := <extract-vardecls> body)
+
+
+  //---------------------------------------------------------------------------
+  //While loops
+  
+  //Remove false while loops
+  optimize: While(False(), body) -> <extract-vardecls> body
+  
+  //---------------------------------------------------------------------------
+  //If statements
+  
+  //Convert "if (true) ..." and "if (false) else ..." to the appropriate bodies
+  optimize: If(True(),  tBody, None())      -> Block([tBody])
+  optimize: If(True(),  tBody, Else(eBody)) -> Block([tBody | eVars])
+    where
+    <?Block(eVars)> <extract-vardecls> eBody
+  optimize: If(False(), tBody, None())      -> <extract-vardecls> tBody
+  optimize: If(False(), tBody, Else(eBody)) -> Block([tVars | [eBody]])
+    where
+    tVars := <extract-vardecls> tBody
+  
