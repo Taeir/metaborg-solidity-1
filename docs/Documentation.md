@@ -124,5 +124,9 @@ Unused variables in functions can be removed. However, care should be taken if t
 Idea: convert memory variables to local variables where possible?
 Idea: turn storage variables that are never assigned into memory?
 
-#### Expression simplification
-Idea: reduce expressions, e.g. 1+3 -> 4
+#### Constant folding
+Actually happens in the desugaring, because the type checker needs this information.
+
+### Constant propagation
+https://en.wikipedia.org/wiki/Constant_propagation
+

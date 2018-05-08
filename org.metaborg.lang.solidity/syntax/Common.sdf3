@@ -3,6 +3,7 @@ module Common
 context-free start-symbols
   STRING
   HEXSTRING
+  NUMBER
 
 lexical syntax
 
@@ -10,9 +11,12 @@ lexical syntax
   PATH           = ID ("." ID)*
   
   INT            = [0-9]+ 
-  FRACT          = [0-9]* "." [0-9]*
+  FRACT          = ("." [0-9]+) | ([0-9]+ ".") | ([0-9]+ "." [0-9]+)
   DECIMAL        = ((INT ("." [0-9]*)?) | ("." INT)) ('e' INT)?
-  HEXINT         = "0x" [0-9a-fA-F]+
+  HEXINT         = [0-9a-fA-F]+ //"0x" [0-9a-fA-F]+
+  
+  INTSCIENCE     = INT 'e' INT
+  DECIMALSCIENCE = FRACT 'e' INT
   
   NumberUnit     = "wei" | "szabo" | "finney" | "ether" | "seconds" | "minutes" | "hours" | "days" | "weeks" | "years"
   
@@ -94,3 +98,17 @@ context-free restrictions
   LAYOUT? -/- [\ \t\n\r]
   LAYOUT? -/- [\/].[\/]
   LAYOUT? -/- [\/].[\*]
+
+syntax
+  NUMBER-CF.Int            = INT-CF
+  NUMBER-CF.Decimal        = FRACT-CF
+  NUMBER-CF.IntScience     = INTSCIENCE-CF //INT-CF 'e' INT-CF
+  NUMBER-CF.DecimalScience = DECIMALSCIENCE-CF //FRACT-CF 'e' INT-CF
+  NUMBER-CF.HexInt         = "0x" HEXINT-CF
+  
+//constructors
+//  Int            : INT -> NUMBER
+//  Decimal        : FRACT -> NUMBER
+//  IntScience     : INT * INT -> NUMBER
+//  DecimalScience : FRACT * INT -> NUMBER
+//  HexInt         : HEXINT -> NUMBER

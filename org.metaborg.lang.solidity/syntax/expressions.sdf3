@@ -24,7 +24,7 @@ sorts
 
 context-free start-symbols
   Exp
-  LitNumber
+  //LitNumber
   
 context-free syntax
   Exp = < (<Exp>) > {bracket}
@@ -84,10 +84,10 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Literals
-  LitNumber = <<DECIMAL>>
-  LitNumber = <<HEXINT>>
+//  LitNumber.Decimal = <<DECIMAL>>
+//  LitNumber.HexInt  = <<HEXINT>>
   
-  Exp.NumberLit = <<LitNumber> <NumberUnit?>>
+  Exp.NumberLit = <<NUMBER> <NumberUnit?>>
   Exp.FractLit  = <<FRACT>>
   Exp.HexLit    = <<HEXSTRING>>
   Exp.StringLit = <<STRING>>

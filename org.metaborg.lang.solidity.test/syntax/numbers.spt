@@ -2,7 +2,7 @@ module syntax_numbers
 
 language solidity
 
-start symbol LitNumber
+start symbol NUMBER
 
 //Integers
 test S: int: simple       [[ 10   ]]

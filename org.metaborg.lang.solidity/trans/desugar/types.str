@@ -2,11 +2,13 @@ module desugar/types
 
 imports
   signatures/types-sig
+  signatures/expressions-sig
+  signatures/Common-sig
+  utils/externals
 
 signature
   sorts
-  
-  constructors
+
 
 rules
   //TODO Smarter strategy to be faster (first desugar types (only once on each term), then do the rest (innermost))
@@ -30,10 +32,9 @@ rules
     mI := <string-to-int> m;
     nI := <string-to-int> n
 
+
   desugar: FixedBytesArrayType(s) -> FixedBytesArrayType(<string-to-int> s)
 
   //Remove the some/none syntax from functiontype return types
   desugar: FunctionType(args, vis, mut, None())                  -> FunctionType(args, vis, mut, [])
   desugar: FunctionType(args, vis, mut, Some(ReturnsType(rets))) -> FunctionType(args, vis, mut, rets)
-  
-  

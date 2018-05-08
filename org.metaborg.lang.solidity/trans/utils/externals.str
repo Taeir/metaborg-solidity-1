@@ -1,0 +1,50 @@
+module utils/externals
+
+rules
+  external sol-nearest-int-multiple(|)
+  external sol-nearest-uint-multiple(|)
+  external sol-bigint-mult(|)
+  external sol-bigint2-mult(|)
+  
+  external sol-bigdec-mult(|)
+  external sol-bigdec2-mult(|)
+
+  /**
+   * Converts a big decimal number to a bigint number.
+   * 
+   * This strategy fails if the given number is not an integer (whole number).
+   */  
+  external sol-bigdec-to-bigint(|)
+  
+  /**
+   * Converts an integer in scientific notation to a bigint.
+   */
+  external sol-scientific-int-to-bigint(|)
+  
+  /**
+   * Converts a decimal with optional scientific notation to a bigdecimal.
+   */
+  external sol-scientific-decimal-to-bigdec(|)
+  
+  /**
+   * Converts a hexadecimal integer to a bigint.
+   */
+  external sol-hexadecimal-int-to-bigint(|)
+
+ //Big decimal operations
+//  external sol-bigdec-uminus(|)
+//  external sol-bigdec-add(|)
+//  external sol-bigdec-sub(|)
+//  external sol-bigdec-mult(|)
+//  external sol-bigdec-div(|)
+//  external sol-bigdec-mod(|)
+//  external sol-bigdec-pow(|)
+//  
+//  external sol-bigdec-lshift(|)
+//  external sol-bigdec-rshift(|)
+//  
+//  external sol-bigdec-bitor(|)
+//  external sol-bigdec-bitand(|)
+//  external sol-bigdec-bitxor(|)
+//  external sol-bigdec-bitnot(|)
+  

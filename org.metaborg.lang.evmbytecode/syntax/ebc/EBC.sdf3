@@ -113,7 +113,6 @@ context-free syntax
   //0xA*: Log
   Instr.LOG          = <<EBCLog>>		//A0-A4: Append log record with n topics
 
-context-free syntax
   //0xF*: System operations
   Instr.CREATE       = <CREATE>			//0xF0: Create a new account with associated code
   Instr.CALL         = <CALL>			//0xF1: Message-call into an account

@@ -1,12 +1,14 @@
 module desugar/solidity
 
 imports
+  desugar/contracts
   desugar/expressions
   desugar/functions
+  desugar/numbers
   desugar/solimports
   desugar/statements
   desugar/types
 
 strategies
-
-  desugar-all = innermost(desugar)
+  //Desugar, fold constants
+  desugar-all = innermost(desugar); constant-fold

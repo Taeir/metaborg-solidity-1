@@ -33,7 +33,7 @@ signature
       // M J? I* gives: MJD < MD            = Look in direct super before using local
       //                MJD < MIID          = We first check in the direct super class before looking further
       //                MJI{n}D < MJI{n+1}D = Prefer closer super methods, check all the way
-      (P* . I*) | (M . J? . I*)
+      (P* I*) | (M J? I*)
 
   namespaces
     Import { iname : string }
