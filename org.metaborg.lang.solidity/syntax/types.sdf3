@@ -54,6 +54,7 @@ lexical restrictions
   ZeroTo80 -/- [0-9]
   MxN      -/- [0-9]
   OneTo32  -/- [0-9]
+  Type     -/- [a-zA-Z]
 
 context-free syntax
   //Distinguish between different sorts of types

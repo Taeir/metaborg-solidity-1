@@ -134,7 +134,18 @@ rules
     Function{"suicide"} <- programScope,
     Function{"suicide"} : tyDestruct !!.
     
-    //TODO erecover, addmod, mulmod
-    
-    //TODO address balance, send, transfer
+//    Globals2 [[ p ^ (programScope) ]].
+//    
+//    //TODO erecover, addmod, mulmod
+//    
+//    //TODO address balance, send, transfer
+//  Globals2 [[ p ^ (programScope) ]] :=
+//    Function{"blockhash"} <- programScope,
+//    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!.
+//    
+////    Function{"require"} <- programScope,
+////    Function{"require"} : FunctionT([ BoolT() ], []) !!,
+////    
+////    Function{"revert"} <- programScope,
+////    Function{"revert"} : FunctionT([], []) !!.
     

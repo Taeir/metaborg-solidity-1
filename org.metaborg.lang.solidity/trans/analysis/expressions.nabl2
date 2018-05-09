@@ -13,16 +13,22 @@ rules
   [[ True()  ^ (s) : BoolT() ]].
   [[ False() ^ (s) : BoolT() ]].
 
-  [[ IntLiteral(_, min) ^ (s) : tyIntLiteral ]] :=
-    //TODO add relation to check for any number, byte, whatever.
+//  [[ IntLiteral(_, min) ^ (s) : tyIntLiteral ]] :=
+//    //TODO add relation to check for any number, byte, whatever.
+//    tyIntLiteral == IntT(min).
+  
+  // Int literal that is positive, can be either int or uint
+  [[ IntLiteral(_, min, Some(umin)) ^ (s) : tyIntLiteral ]] :=
+    tyIntLiteral == NrT(min, umin).
+//    tyIntLiteral == IntT(min).
+  
+  // Int literal that is negative, cannot be uint
+  [[ IntLiteral(_, min, None()) ^ (s) : tyIntLiteral ]] :=
     tyIntLiteral == IntT(min).
   
   [[ BigDec(nr) ^ (s) : ty ]] :=
+    //TODO Fixed point numbers
     false | error $[This expression yields "[nr]", but only integer numbers are supported.].
-  
-  [[ FractLit(_) ^ (s) : tyFractLiteral ]] :=
-    //TODO add relation to check for any fixed point number?
-    tyFractLiteral == FixedT(128, 80).
   
   [[ HexLit(_) ^ (s) : tyHexStringLiteral ]] :=
     //TODO add relation to check conformance with string, array, etc.
@@ -125,14 +131,16 @@ rules
   [[ BinExp(Pow(), e1, e2) ^ (s) : tyPow ]] :=
     [[ e1 ^ (s) : tyPowExp1 ]],
     [[ e2 ^ (s) : tyPowExp2 ]],
-    tyPowExp1_2 is simplifyType of tyPowExp1,
-    tyPowExp2_2 is simplifyType of tyPowExp2,
-    tyPowExp1_2 <test? CanPow(),
+    tyPowExp1_2 is toUnsigned of tyPowExp1,
+    tyPowExp2_2 is toUnsigned of tyPowExp2,
+    tyPowExp1_3 is simplifyType of tyPowExp1_2,
+    tyPowExp2_3 is simplifyType of tyPowExp1_3,
+    tyPowExp1_3 <test? CanPow() | error $[Values of the type [tyPowExp1] cannot be used as exponent],
 //    tyPowExp2_2 <test? CanArithBasic(),
 //TODO Only works on UInt
 //TODO Check exponent is non-negative
     NaBLTrue() is notNegativeConst of e2 | error $[Exponent cannot be negative (when the original is non-literal)],
-    tyPow is sub.lub of (tyPowExp1, tyPowExp2),
+    tyPow is sub.lub of (tyPowExp1_2, tyPowExp2_2),
     tyPow == UIntT(_) | error $[Operator ** only works with unsigned integers, not with [tyPow]].
   
   //-----------------------------------------------------------------------------------------------

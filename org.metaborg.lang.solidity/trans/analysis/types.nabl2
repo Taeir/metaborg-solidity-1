@@ -57,6 +57,12 @@ signature
     FixedTS  : Type
     UFixedTS : Type
     FArrayTS : Type -> Type
+    
+    //More general types for constants
+    NrT      : INT * INT -> Type
+    FractT   : INT * INT * INT * INT -> Type
+    
+    InvalidType : Type
   
   namespaces
     //Something that can be referenced as a type.
