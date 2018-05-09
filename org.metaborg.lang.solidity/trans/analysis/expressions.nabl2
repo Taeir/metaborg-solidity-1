@@ -1,30 +1,38 @@
 module analysis/expressions
 
-imports
-  signatures/-
-  analysis/types
+//imports
+//  signatures/-
+//  desugar/numbers
+//  analysis/types
+//  analysis/solidity
+  
 
 rules
+  //-----------------------------------------------------------------------------------------------
   //Literals
   [[ True()  ^ (s) : BoolT() ]].
   [[ False() ^ (s) : BoolT() ]].
 
-  [[ NumberLit(_, _) ^ (s) : ty ]] :=
+  [[ IntLiteral(_, min) ^ (s) : tyIntLiteral ]] :=
     //TODO add relation to check for any number, byte, whatever.
-    ty == IntT(256) | warning $[Literal numbers are a work in progress].
+    tyIntLiteral == IntT(min).
   
-  [[ FractLit(_) ^ (s) : ty ]] :=
+  [[ BigDec(nr) ^ (s) : ty ]] :=
+    false | error $[This expression yields "[nr]", but only integer numbers are supported.].
+  
+  [[ FractLit(_) ^ (s) : tyFractLiteral ]] :=
     //TODO add relation to check for any fixed point number?
-    ty == FixedT(128, 80).
+    tyFractLiteral == FixedT(128, 80).
   
-  [[ HexLit(_) ^ (s) : ty ]] :=
+  [[ HexLit(_) ^ (s) : tyHexStringLiteral ]] :=
     //TODO add relation to check conformance with string, array, etc.
-    ty == StringT().
+    tyHexStringLiteral == StringT().
   
   //TODO Add size in desugar step and use it for convertability?
-  [[ StringLit(_) ^ (s) : ty ]] :=
+  [[ StringLit(_) ^ (s) : tyStringLiteral ]] :=
     //TODO add relation to allow string, bytes, bytes1-bytes32 (based on size?), etc.
-    ty == StringT().
+    //TODO Distinguish between string (pointer) and literal string (byte array-like)?
+    tyStringLiteral == StringT().
     
   [[ LitArray(exps) ^ (s) : ty ]] :=
     //TODO Determine size and allow both fixed/dynamic?
@@ -35,86 +43,220 @@ rules
     [[ x ^ (s) : xTy ]],
     xTy == ty | error $[All items in the array must have the same type] @x.
 
-
+  //-----------------------------------------------------------------------------------------------
   //TODO This
   
+  //-----------------------------------------------------------------------------------------------
   //Cast
-  [[ Cast(stype, exp) ^ (s) : ty ]] :=
-    [[ stype ^ (s) : ty   ]],
-    [[ exp ^ (s)  : expTy ]].
-    //TODO Check if expTy can be cast to the given type.
+  [[ Cast(stype, exp) ^ (s) : tyCastType ]] :=
+    [[ stype ^ (s) : tyCastType ]],
+    [[ exp ^ (s)   : tyCastExp  ]],
+    //TODO Cast to self should also be allowed right?
+    tyCastType_2 is simplifyType of tyCastType,
+    tyCastExp_2  is simplifyType of tyCastExp,
+    tyCastType_2 <cast? tyCastExp_2.
   
+  //-----------------------------------------------------------------------------------------------
   //Ternary if
-  [[ Ternary(condExp, aExp, bExp) ^ (s) : ty ]] :=
+  [[ Ternary(condExp, e1, e2) ^ (s) : tyTernary ]] :=
     [[ condExp ^ (s) : BoolT() ]],
-    [[ aExp ^ (s) : ty ]],
-    [[ bExp ^ (s) : ty ]].
-    //TODO Less strict equality on exp types?
+    [[ e1 ^ (s) : tyTernaryExp1 ]],
+    [[ e2 ^ (s) : tyTernaryExp2 ]],
+    //TODO Confirm that this works as intended
+    tyTernary is sub.lub of (tyTernaryExp1, tyTernaryExp2),
+    tyTernary_2 is simplifyType of tyTernary,
+    tyTernary_2 <? IsType() | error $[No common subtype between branches! Found types: [tyTernaryExp1] and [tyTernaryExp2]].
   
-  
+  //-----------------------------------------------------------------------------------------------
   // Operators
-  [[ UnExp(UMinus(), e1) ^ (s) : numTy ]] :=
-    [[ e1 ^ (s) : numTy ]],
-    numTy != UIntT(_).
+  [[ UnExp(UMinus(), exp) ^ (s) : tyUMin ]] :=
+    [[ exp ^ (s) : tyUMinExp ]],
+    //TODO Confirm this is correct
+    tyUMin is sub.lub of (IntT(8), tyUMinExp).
     
-  [[ BinExp(Plus(), e1, e2) ^ (s) : ty ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2,
-    ty == ty2,
-    ty == IntT(_).
-  [[ BinExp(Minus(), e1, e2) ^ (s) : ty ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2,
-    ty == ty2,
-    ty == IntT(_).
-  [[ BinExp(Mult(), e1, e2) ^ (s) : ty ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2,
-    ty == ty2,
-    ty == IntT(_).
-  [[ BinExp(Div(), e1, e2) ^ (s) : ty ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2,
-    ty == ty2,
-    ty == IntT(_).
-  [[ BinExp(Mod(), e1, e2) ^ (s) : ty ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2,
-    ty == ty2,
-    ty == IntT(_).
-  [[ BinExp(Pow(), e1, e2) ^ (s) : ty ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2,
-    ty == ty2,
-    ty == IntT(_).
+  [[ BinExp(Plus(), e1, e2) ^ (s) : tyPlus ]] :=
+    [[ e1 ^ (s) : tyPlusExp1 ]],
+    [[ e2 ^ (s) : tyPlusExp2 ]],
+    tyPlusExp1_2 is simplifyType of tyPlusExp1,
+    tyPlusExp2_2 is simplifyType of tyPlusExp1,
+    tyPlusExp1_2 <test? CanArithBasic(),
+//    tyPlusExp2_2 <test? CanArithBasic(),
+    tyPlus is sub.lub of (tyPlusExp1, tyPlusExp2). //Smallest integer that fits
+    
+  [[ BinExp(Minus(), e1, e2) ^ (s) : tySub ]] :=
+    [[ e1 ^ (s) : tySubExp1 ]],
+    [[ e2 ^ (s) : tySubExp2 ]],
+    tySubExp1_2 is simplifyType of tySubExp1,
+    tySubExp2_2 is simplifyType of tySubExp2,
+    tySubExp1_2 <test? CanArithBasic(),
+//    tySubExp2_2 <test? CanArithBasic(),
+    tySub is sub.lub of (tySubExp1, tySubExp2).
+  [[ BinExp(Mult(), e1, e2) ^ (s) : tyMult ]] :=
+    [[ e1 ^ (s) : tyMultExp1 ]],
+    [[ e2 ^ (s) : tyMultExp2 ]],
+    tyMultExp1_2 is simplifyType of tyMultExp1,
+    tyMultExp2_2 is simplifyType of tyMultExp2,
+    tyMultExp1_2 <test? CanArithBasic(),
+//    tyMultExp2_2 <test? CanArithBasic(),
+    tyMult is sub.lub of (tyMultExp1, tyMultExp2).
   
+  //e2 must be non-zero
+  [[ BinExp(Div(), e1, e2) ^ (s) : tyDiv ]] :=
+    [[ e1 ^ (s) : tyDivExp1 ]],
+    [[ e2 ^ (s) : tyDivExp2 ]],
+    tyDivExp1_2 is simplifyType of tyDivExp1,
+    tyDivExp2_2 is simplifyType of tyDivExp2,
+    tyDivExp1_2 <test? CanArithBasic(),
+//    tyDivExp2_2 <test? CanArithBasic(),
+    NaBLTrue() is notZeroConst of e2 | error $[Division by zero is not allowed],
+    tyDiv is sub.lub of (tyDivExp1, tyDivExp2).
+  
+  [[ BinExp(Mod(), e1, e2) ^ (s) : tyMod ]] :=
+    [[ e1 ^ (s) : tyModExp1 ]],
+    [[ e2 ^ (s) : tyModExp2 ]],
+    tyModExp1_2 is simplifyType of tyModExp1,
+    tyModExp2_2 is simplifyType of tyModExp2,
+    tyModExp1_2 <test? CanArithBasic(),
+//    tyModExp2_2 <test? CanArithBasic(),
+    NaBLTrue() is notZeroConst of e2 | error $[Modulo zero is not allowed],
+    tyMod is sub.lub of (tyModExp1, tyModExp2).
+  
+  //Exponent must be unsigned
+  [[ BinExp(Pow(), e1, e2) ^ (s) : tyPow ]] :=
+    [[ e1 ^ (s) : tyPowExp1 ]],
+    [[ e2 ^ (s) : tyPowExp2 ]],
+    tyPowExp1_2 is simplifyType of tyPowExp1,
+    tyPowExp2_2 is simplifyType of tyPowExp2,
+    tyPowExp1_2 <test? CanPow(),
+//    tyPowExp2_2 <test? CanArithBasic(),
+//TODO Only works on UInt
+//TODO Check exponent is non-negative
+    NaBLTrue() is notNegativeConst of e2 | error $[Exponent cannot be negative (when the original is non-literal)],
+    tyPow is sub.lub of (tyPowExp1, tyPowExp2),
+    tyPow == UIntT(_) | error $[Operator ** only works with unsigned integers, not with [tyPow]].
+  
+  //-----------------------------------------------------------------------------------------------
   //Shifts
-  //TODO
+  [[ BinExp(LShift(), e1, e2) ^ (s) : tyLShift ]] :=
+    [[ e1 ^ (s) : tyLShiftExp1 ]],
+    [[ e2 ^ (s) : tyLShiftExp2 ]],
+    tyLShiftExp1_2 is simplifyType of tyLShiftExp1,
+    tyLShiftExp2_2 is simplifyType of tyLShiftExp2,
+    tyLShiftExp1_2 <test? CanBitwiseOps(),
+//    tyLShiftExp2_2 <test? IsNumeric(),
+//tyLShiftExp2 can  be any number
+//TODO tyLShiftExp2 can not be literally negative
+    NaBLTrue() is notNegativeConst of e2 | error $[Cannot shift with a negative number],
+    tyLShift == tyLShiftExp1.
   
+  [[ BinExp(RShift(), e1, e2) ^ (s) : tyRShift ]] :=
+    [[ e1 ^ (s) : tyRShiftExp1 ]],
+    [[ e2 ^ (s) : tyRShiftExp2 ]],
+    tyRShiftExp1_2 is simplifyType of tyRShiftExp1,
+    tyRShiftExp2_2 is simplifyType of tyRShiftExp2,
+    tyRShiftExp1_2 <test? CanBitwiseOps(),
+//    tyRShiftExp2_2 <test? IsNumeric(),
+//tyRShiftExp2 can  be any number
+//TODO tyRShiftExp2 can not be literally negative
+    NaBLTrue() is notNegativeConst of e2 | error $[Cannot shift with a negative number],
+    tyRShift == tyRShiftExp1.
+  
+  //-----------------------------------------------------------------------------------------------
   //Bitwise
-  //TODO
-  
+  [[ UnExp(BitNot(), exp) ^ (s) : tyBitNot ]] :=
+    [[ exp ^ (s) : tyBitNotExp ]],
+    tyBitNotExp_2 is simplifyType of tyBitNotExp,
+    tyBitNotExp_2 <test? CanBitwiseOps(),
+    tyBitNot == tyBitNotExp.
+  [[ BinExp(BitOr(), e1, e2) ^ (s) : tyBitOr ]] :=
+    [[ e1 ^ (s) : tyBitOrExp1 ]],
+    [[ e2 ^ (s) : tyBitOrExp2 ]],
+    tyBitOrExp1_2 is simplifyType of tyBitOrExp1,
+    tyBitOrExp1_2 <test? CanBitwiseOps(),
+    //TODO Must be same type [[int(_) int(_)] or [uint(_) uint(_)] (any size)] OR [Uint(X) Int(X+8)]
+    tyBitOr is sub.lub of (tyBitOrExp1, tyBitOrExp2).
+  [[ BinExp(BitAnd(), e1, e2) ^ (s) : tyBitAnd ]] :=
+    [[ e1 ^ (s) : tyBitAndExp1 ]],
+    [[ e2 ^ (s) : tyBitAndExp2 ]],
+    tyBitAndExp1_2 is simplifyType of tyBitAndExp1,
+    tyBitAndExp1_2 <test? CanBitwiseOps(),
+    //TODO Must be same type [[int(_) int(_)] or [uint(_) uint(_)] (any size)] OR [Uint(X) Int(X+8)]
+    tyBitAnd is sub.lub of (tyBitAndExp1, tyBitAndExp2).
+  [[ BinExp(BitXor(), e1, e2) ^ (s) : tyBitXor ]] :=
+    [[ e1 ^ (s) : tyBitXorExp1 ]],
+    [[ e2 ^ (s) : tyBitXorExp2 ]],
+    tyBitXorExp1_2 is simplifyType of tyBitXorExp1,
+    tyBitXorExp1_2 <test? CanBitwiseOps(),
+    //TODO Must be same type [[int(_) int(_)] or [uint(_) uint(_)] (any size)] OR [Uint(X) Int(X+8)]
+    tyBitXor is sub.lub of (tyBitXorExp1, tyBitXorExp2).
+
+  //-----------------------------------------------------------------------------------------------
   //Equality
-  //TODO
   [[ BinExp(Lt(), e1, e2) ^ (s) : BoolT() ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2.
+    [[ e1 ^ (s) : tyLtExp1 ]],
+    [[ e2 ^ (s) : tyLtExp2 ]],
+    tyLtExp1_2 is simplifyType of tyLtExp1,
+    tyLtExp1_2 <test? CanCompareOrdered(),
+    //TODO Confirm that this works
+    //TODO This is not enough to determine if the types are comparable!
+    tyLt is sub.lub of (tyLtExp1, tyLtExp2),
+    tyLt2 is simplifyType of tyLt,
+    tyLt2 <test? IsType() | error $[Incomparable types [tyLtExp1] [tyLtExp2]]. //Make sure that it evaluates to something
+  [[ BinExp(LtEq(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : tyLtEqExp1 ]],
+    [[ e2 ^ (s) : tyLtEqExp2 ]],
+    tyLtEqExp1_2 is simplifyType of tyLtEqExp1,
+    tyLtEqExp1_2 <test? CanCompareOrdered(),
+    //TODO Confirm that this works
+    //TODO This is not enough to determine if the types are comparable!
+    tyLtEq is sub.lub of (tyLtEqExp1, tyLtEqExp2),
+    tyLtEq2 is simplifyType of tyLtEq,
+    tyLtEq2 <test? IsType() | error $[Incomparable types [tyLtEqExp1] [tyLtEqExp2]]. //Make sure that it evaluates to something
+  [[ BinExp(Gt(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : tyGtExp1 ]],
+    [[ e2 ^ (s) : tyGtExp2 ]],
+    tyGtExp1_2 is simplifyType of tyGtExp1,
+    tyGtExp1_2 <test? CanCompareOrdered(),
+    //TODO Confirm that this works
+    //TODO This is not enough to determine if the types are comparable!
+    tyGt is sub.lub of (tyGtExp1, tyGtExp2),
+    tyGt2 is simplifyType of tyGt,
+    tyGt2 <test? IsType() | error $[Incomparable types [tyGtExp1] [tyGtExp2]]. //Make sure that it evaluates to something
+  [[ BinExp(GtEq(), e1, e2) ^ (s) : BoolT() ]] :=
+    [[ e1 ^ (s) : tyGtEqExp1 ]],
+    [[ e2 ^ (s) : tyGtEqExp2 ]],
+    tyGtEqExp1_2 is simplifyType of tyGtEqExp1,
+    tyGtEqExp1_2 <test? CanCompareOrdered(),
+    //TODO Confirm that this works
+    //TODO This is not enough to determine if the types are comparable!
+    tyGtEq is sub.lub of (tyGtEqExp1, tyGtEqExp2),
+    tyGtEq2 is simplifyType of tyGtEq,
+    tyGtEq2 <test? IsType() | error $[Incomparable types [tyGtEqExp1] [tyGtEqExp2]]. //Make sure that it evaluates to something
+
+
+
   [[ BinExp(Eq(), e1, e2) ^ (s) : BoolT() ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2.
+    [[ e1 ^ (s) : tyEqExp1 ]],
+    [[ e2 ^ (s) : tyEqExp2 ]],
+    tyEqExp1_2 is simplifyType of tyEqExp1,
+    tyEqExp1_2 <test? CanCompare(),
+    //TODO Confirm that this works
+    //TODO This is not enough to determine if the types are comparable!
+    tyEq is sub.lub of (tyEqExp1, tyEqExp2),
+    tyEq2 is simplifyType of tyEq,
+    tyEq2 <test? IsType() | error $[Incomparable types [tyEqExp1] [tyEqExp2]]. //Make sure that it evaluates to something
   [[ BinExp(NEq(), e1, e2) ^ (s) : BoolT() ]] :=
-    [[ e1 ^ (s) : ty1 ]],
-    [[ e2 ^ (s) : ty2 ]],
-    ty1 == ty2.
+    [[ e1 ^ (s) : tyNEqExp1 ]],
+    [[ e2 ^ (s) : tyNEqExp2 ]],
+    tyNEqExp1_2 is simplifyType of tyNEqExp1,
+    tyNEqExp1_2 <test? CanCompare(),
+    //TODO Confirm that this works
+    //TODO This is not enough to determine if the types are comparable!
+    tyNEq is sub.lub of (tyNEqExp1, tyNEqExp2),
+    tyNEq2 is simplifyType of tyNEq,
+    tyNEq2 <test? IsType() | error $[Incomparable types [tyNEqExp1] [tyNEqExp2]]. //Make sure that it evaluates to something
   
+  //-----------------------------------------------------------------------------------------------
   //Boolean operators
   [[ BinExp(And(), e1, e2) ^ (s) : BoolT() ]] :=
     [[ e1 ^ (s) : BoolT() ]],
@@ -125,23 +267,30 @@ rules
   [[ UnExp(Not(), exp) ^ (s) : BoolT() ]] :=
     [[ exp ^ (s) : BoolT() ]].
   
-  
+  //-----------------------------------------------------------------------------------------------
   //Array access
   [[ BinExp(Subscript(), exp, indexExp) ^ (s) : ty ]] :=
     [[ exp ^ (s) : arrTy ]],
     [[ indexExp ^ (s) : intTy ]],
     arrTy == FArrayT(ty, _).
   
+  //-----------------------------------------------------------------------------------------------
   //TODO Calls
+  
+  //-----------------------------------------------------------------------------------------------
   //TODO New
   
   [[ UnExp(Delete(), exp) ^ (s) : ty ]] :=
-    [[ exp ^ (s) : eTy ]].
+    [[ exp ^ (s) : tyDeleteExp ]],
+    tyDeleteExp_2 is simplifyType of tyDeleteExp,
+    tyDeleteExp_2 <? IsType() | warning $[Unable to determine type of expression] @exp.
   
+  //-----------------------------------------------------------------------------------------------
   //TODO Member
   [[ Member(exp, name) ^ (s) : ty ]] :=
     [[ exp ^ (s) : eTy ]],
-    eTy == UserDefT(occ),
+    //TODO Support member calls on addresses, etc.
+    eTy == UserDefT(occ) | error $[You can only perform calls on user defined types],
     
     //Get the scope of the occurrence
     occ ?===> typeScope,
@@ -153,20 +302,20 @@ rules
     Var{name} |-> var | error $[Cannot find variable [name] in [occ]] @name,
     var : ty.
   
+  //-----------------------------------------------------------------------------------------------
   //TODO VarRef
 //  [[ VarRef(name) ^ (s) : ty ]] :=
 //    //Lookup
 //    Var{name} -> s,
 //    Var{name} |-> var | error $[Cannot find variable with name [name]],
 //    Var{name} : ty.
-    
-  [[ Assign(varRef, exp) ^ (s) : ty ]] :=
-    [[ varRef ^ (s) : vTy ]],
-    [[ exp ^ (s) : eTy ]],
-    
-    //TODO Subtyping relations
-//    eTy <? vTy | error $[Cannot assign expression of type [eTy] to a variable of type [vTy]] @exp,
-    eTy == vTy | error $[Cannot assign expression of type [eTy] to a variable of type [vTy]] @exp,
-    ty == vTy | error $[Expected type [ty] but was [vTy]].
+  
+  //-----------------------------------------------------------------------------------------------
+  //Assignments
+  [[ Assign(varRef, exp) ^ (s) : tyAssign ]] :=
+    [[ varRef ^ (s) : tyAssignVar ]],
+    [[ exp ^ (s)    : tyAssignExp ]],
+    tyAssignExp <sub? tyAssignVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyAssignVar]] @exp,
+    tyAssign == tyAssignVar.
   
   //TODO AssignArray

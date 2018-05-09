@@ -29,7 +29,7 @@ rules
     
     //Check if return type matches
     //TODO Turn into subtype relation?
-    actualRetTys == retTys | error $[[actualRetTys] is not a subtype of the specified return type [retTys]] @returnExp.
+    [actualRetTys] == retTys | error $[[actualRetTys] is not a subtype of the specified return type [retTys]] @returnExp.
   
   [[ VoidFunction(name, params, mods, body) ^ (s) ]] :=
 	//Declare

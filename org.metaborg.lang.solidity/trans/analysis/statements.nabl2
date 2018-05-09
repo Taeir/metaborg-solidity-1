@@ -61,20 +61,20 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Variable declarations
   [[ DeclareVar(stype, name) ^ (s) ]] :=
-    [[ stype ^ (s) : ty ]],
+    [[ stype ^ (s) : tyVarDecl ]],
     Var{name} <- s,
     Var{name}.origin := Local(),
-    Var{name} : ty !.
+    Var{name} : tyVarDecl !.
   
   [[ DeclareVarAssign(stype, name, exp) ^ (s) ]] :=
-    [[ stype ^ (s) : defTy  ]],
-    [[ exp   ^ (s) : initTy ]],
+    [[ stype ^ (s) : tyVarDecl ]],
+    [[ exp   ^ (s) : tyVarInit ]],
     //TODO Assignable from relation for initializers
-    defTy <? initTy | error $[Initializer type [initTy] does not match defined type [defTy]] @exp,
+    tyVarInit <sub? tyVarDecl | error $[Initializer type [tyVarInit] does not match defined type [tyVarDecl]] @exp,
     
     Var{name} <- s,
     Var{name}.origin := Local(),
-    Var{name} : defTy !.
+    Var{name} : tyVarDecl !.
 
   //-----------------------------------------------------------------------------------------------
   //Expression statements

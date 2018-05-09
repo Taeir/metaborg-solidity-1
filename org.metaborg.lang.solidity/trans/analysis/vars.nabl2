@@ -39,7 +39,7 @@ rules
     Var{name} : ty !.
   
   //Refs
-  [[ VarRef(name) ^ (s) : ty ]] :=
+  [[ VarRef(name) ^ (s) : tyVarRef ]] :=
     Var{name} -> s,
     Var{name} |-> var | error $[Cannot find variable with name [name]],
-    Var{name} : ty.
+    var : tyVarRef.

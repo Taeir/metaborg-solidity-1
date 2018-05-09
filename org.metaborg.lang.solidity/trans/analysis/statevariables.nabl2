@@ -9,22 +9,22 @@ signature
 
 rules
   [[ StateVariable(solty, mod, name, assignment) ^ (s) ]] :=
-    [[ solty ^ (s) : ty ]],
+    [[ solty ^ (s) : tyStateVar ]],
     
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
     Var{name}.constant := FalseC(),
-    Var{name} : ty !.
+    Var{name} : tyStateVar !.
     //TODO modifier
     //TODO assignment
   
   [[ ConstantStateVariable(solty, mod1, _, mod2, name, assignment) ^ (s) ]] :=
-    [[ solty ^ (s) : ty ]],
+    [[ solty ^ (s) : tyStateVar ]],
     
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
     Var{name}.constant := TrueC(),
-    Var{name} : ty !.
+    Var{name} : tyStateVar !.
     //TODO modifier
     //TODO assignment
     //TODO constant

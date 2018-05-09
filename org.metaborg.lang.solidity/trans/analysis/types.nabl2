@@ -44,8 +44,19 @@ signature
     LibraryT   : occurrence -> Type
     BuiltInT   : occurrence -> Type
     
+    //Named type
+    NamedT     : occurrence * Type -> Type
+    
     //Var type
     VarT       : Type
+    
+    //Simplified type
+    IntTS    : Type
+    UIntTS   : Type
+    FBytesTS : Type
+    FixedTS  : Type
+    UFixedTS : Type
+    FArrayTS : Type -> Type
   
   namespaces
     //Something that can be referenced as a type.

@@ -9,9 +9,9 @@ public class InteropRegisterer extends JavaInteropRegisterer {
         		sol_nearest_int_multiple_0_0.instance,
         		sol_nearest_uint_multiple_0_0.instance,
         		sol_bigint_mult_0_1.instance,
-        		sol_bigint2_mult_0_2.instance,
+        		sol_bigintz_mult_0_2.instance,
         		sol_bigdec_mult_0_1.instance,
-        		sol_bigdec2_mult_0_2.instance,
+        		sol_bigdecz_mult_0_2.instance,
         		
         		sol_bigdec_to_bigint_0_0.instance,
         		sol_scientific_int_to_bigint_0_0.instance,

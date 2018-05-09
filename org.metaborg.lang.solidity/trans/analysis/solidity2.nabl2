@@ -86,15 +86,6 @@ signature
       IntLiteral(i, _) -> NaBLTrue(),
       exp              -> NaBLTrue()
     }
-    
-    simplifyType: Type -> Type {
-      IntT(i)       -> IntTS(),
-      UIntT(i)      -> UIntTS(),
-      FBytesT(i)    -> FBytesTS(),
-      FixedT(m, n)  -> FixedTS(),
-      UFixedT(m, n) -> UFixedTS(),
-      other         -> other
-    }
 
 rules
 
@@ -234,50 +225,47 @@ rules
     UIntT(248) <sub! FBytesT(31),
     UIntT(256) <sub! FBytesT(32),
     
-    //The following section is generated out of these rules.
-    //Basically, since NaBL does not allow wildcards in the different sides,
-    //I replace all the wildcards with the possible instantiations.
-    
     //Casting int -> int/uint ; uint -> int/uint
-    IntTS()  <cast! IntTS(),
-    UIntTS() <cast! IntTS(),
-    IntTS()  <cast! UIntTS(),
-    UIntTS() <cast! UIntTS(),
+    IntT(_)  <cast! IntT(_),
+    UIntT(_) <cast! IntT(_),
+    IntT(_)  <cast! UIntT(_),
+    UIntT(_) <cast! UIntT(_),
     
     //Casting string -> bytes
     DBytesT() <cast! StringT(),
     
     //Type testing
     //Int: arithbasic: +-*/% bit: &|^~<<>> comp2: <!=>
-    IntTS()  <test! IsType(),
-    IntTS()  <test! IsNumeric(),
-    IntTS()  <test! CanCompare(),
-    IntTS()  <test! CanCompareOrdered(),
-    IntTS()  <test! CanArithBasic(),
-    IntTS()  <test! CanBitwiseOps(),
+    IntT(_)  <test! IsType(),
+    IntT(_)  <test! IsNumeric(),
+    IntT(_)  <test! CanCompare(),
+    IntT(_)  <test! CanCompareOrdered(),
+    IntT(_)  <test! CanArithBasic(),
+    IntT(_)  <test! CanBitwiseOps(),
     
     //Uint: arithbasic: +-*/%** bit: &|^~<<>> comp2: <!=>
-    UIntTS() <test! IsType(),
-    UIntTS() <test! IsNumeric(),
-    UIntTS() <test! CanCompare(),
-    UIntTS() <test! CanCompareOrdered(),
-    UIntTS() <test! CanArithBasic(),
-    UIntTS() <test! CanPow(),
-    UIntTS() <test! CanBitwiseOps(),
- 
-    //Fixed: arithbasic: +-*/% comp2: <!=>
-    FixedTS()  <test! IsType(),
-    FixedTS()  <test! IsNumeric(),
-    FixedTS()  <test! CanCompare(),
-    FixedTS()  <test! CanCompareOrdered(),
-    FixedTS()  <test! CanArithBasic(),
-    
-    //UFixed: arithbasic: +-*/% comp2: <!=>
-    UFixedTS() <test! IsType(),
-    UFixedTS() <test! IsNumeric(),
-    UFixedTS() <test! CanCompare(),
-    UFixedTS() <test! CanCompareOrdered(),
-    UFixedTS() <test! CanArithBasic(),
+    UIntT(_) <test! IsType(),
+    UIntT(_) <test! IsNumeric(),
+    UIntT(_) <test! CanCompare(),
+    UIntT(_) <test! CanCompareOrdered(),
+    UIntT(_) <test! CanArithBasic(),
+    UIntT(_) <test! CanPow(),
+    UIntT(_) <test! CanBitwiseOps(),
+
+//Writing this out would take 32*80*10 = 25.600 lines    
+//    //Fixed: arithbasic: +-*/% comp2: <!=>
+//    FixedT(_, _)  <test! IsType(),
+//    FixedT(_, _)  <test! IsNumeric(),
+//    FixedT(_, _)  <test! CanCompare(),
+//    FixedT(_, _)  <test! CanCompareOrdered(),
+//    FixedT(_, _)  <test! CanArithBasic(),
+//    
+//    //UFixed: arithbasic: +-*/% comp2: <!=>
+//    UFixedT(_, _) <test! IsType(),
+//    UFixedT(_, _) <test! IsNumeric(),
+//    UFixedT(_, _) <test! CanCompare(),
+//    UFixedT(_, _) <test! CanCompareOrdered(),
+//    UFixedT(_, _) <test! CanArithBasic(),
     
     //Address: comp2: <!=>
     AddressT() <test! IsType(),
@@ -285,16 +273,14 @@ rules
     AddressT() <test! CanCompareOrdered(),
     
     //BytesN: bit: &|^~<<>> comp2: <!=> index: []
-    FBytesTS() <test! IsType(),
-    FBytesTS() <test! CanBitwiseOps(),
-    FBytesTS() <test! CanCompare(),
-    FBytesTS() <test! CanCompareOrdered(),
-    FBytesTS() <test! CanIndex(),
+    FBytesT(_) <test! IsType(),
+    FBytesT(_) <test! CanBitwiseOps(),
+    FBytesT(_) <test! CanCompare(),
+    FBytesT(_) <test! CanCompareOrdered(),
+    FBytesT(_) <test! CanIndex(),
     
-    //Casting string -> bytes
     StringT() <test! IsType()
     .
-
 
   [[ p@Program(elements) ^ (programScope) ]] :=
     Globals [[ p ^ (programScope) ]],
