@@ -9,7 +9,7 @@ imports
 signature
     
   constructors
-    IntLiteral : String * INT -> Exp
+    IntLiteral : String * INT * Option(INT) -> Exp
     BigDec     : String -> Exp
 
 strategies
@@ -37,29 +37,31 @@ rules
   
     //Convert number literals to bigint and bigdecimal
   convertnr: Int(nr)            -> nr
-  convertnr: Decimal(nr)        -> <sol-scientific-decimal-to-bigdec> nr
-  convertnr: IntScience(nr)     -> <sol-scientific-int-to-bigint> nr
-  convertnr: DecimalScience(nr) -> <sol-scientific-decimal-to-bigdec> nr
+  convertnr: Decimal(nr)        -> <sol-parse-bigdec> nr
+  convertnr: Scientific(nr)     -> <sol-parse-bigdec> nr
   convertnr: HexInt(nr)         -> <sol-hexadecimal-int-to-bigint> nr
   
   //Phase 1: keep reducing expressions to numbers, innermost(constant-fold1)
-//  constant-fold1: UnExp( UMinus(), BigDec(a))            -> BigDec(<sol-bigdec-uminus> a)
-//  constant-fold1: BinExp(Plus(),   BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-add>    (a, b))
-//  constant-fold1: BinExp(Minus(),  BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-sub>    (a, b))
+  constant-fold1: UnExp( UMinus(), BigDec(a))            -> BigDec(<sol-bigdec-uminus> a)
+  constant-fold1: BinExp(Plus(),   BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-add>    (a, b))
+  constant-fold1: BinExp(Minus(),  BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-sub>    (a, b))
   constant-fold1: BinExp(Mult(),   BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-mult>   (a, b))
-//  constant-fold1: BinExp(Div(),    BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-div>    (a, b))
-//  constant-fold1: BinExp(Mod(),    BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-mod>    (a, b))
-//  constant-fold1: BinExp(Pow(),    BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-pow>    (a, b))
-//  
-//  constant-fold1: BinExp(LShift(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-lshift> (a, b))
-//  constant-fold1: BinExp(RShift(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-rshift> (a, b))
-//  
-//  constant-fold1: BinExp(BitOr(),  BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-bitor>  (a, b))
-//  constant-fold1: BinExp(BitAnd(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-bitand> (a, b))
-//  constant-fold1: BinExp(BitXor(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-bitxor> (a, b))
-//  constant-fold1: UnExp( BitNot(), BigDec(a))            -> BigDec(<sol-bigdec-bitnot> a)
+  constant-fold1: BinExp(Div(),    BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-div>    (a, b))
+  constant-fold1: BinExp(Mod(),    BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-mod>    (a, b))
+  constant-fold1: BinExp(Pow(),    BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-pow>    (a, b))
+  
+  constant-fold1: BinExp(LShift(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-lshift> (a, b))
+  constant-fold1: BinExp(RShift(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-rshift> (a, b))
+  
+  constant-fold1: BinExp(BitOr(),  BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-bitor>  (a, b))
+  constant-fold1: BinExp(BitAnd(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-bitand> (a, b))
+  constant-fold1: BinExp(BitXor(), BigDec(a), BigDec(b)) -> BigDec(<sol-bigdec-bitxor> (a, b))
+  constant-fold1: UnExp( BitNot(), BigDec(a))            -> BigDec(<sol-bigdec-bitnot> a)
   
   //Phase 2: convert to integer literal number where possible
-  constant-fold2: BigDec(a) -> IntLiteral(a', <sol-nearest-int-multiple> a')
+  constant-fold2: BigDec(a) -> IntLiteral(a', <sol-nearest-int-multiple> a', uint')
     where
-    a' := <sol-bigdec-to-bigint> a
+    a' := <sol-bigdec-to-bigint> a;
+    uint := <sol-nearest-uint-multiple> a';
+    ((<?0> uint; uint' := None()) <+
+    (            uint' := Some(uint)))

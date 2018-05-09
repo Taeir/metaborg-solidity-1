@@ -84,11 +84,7 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Literals
-//  LitNumber.Decimal = <<DECIMAL>>
-//  LitNumber.HexInt  = <<HEXINT>>
-  
   Exp.NumberLit = <<NUMBER> <NumberUnit?>>
-  Exp.FractLit  = <<FRACT>>
   Exp.HexLit    = <<HEXSTRING>>
   Exp.StringLit = <<STRING>>
   Exp.True      = <true>

@@ -1,50 +1,203 @@
 module utils/externals
 
 rules
+  //-----------------------------------------------------------------------------------------------
+  /**
+   * Determines the number of bits that would be required for representing a signed integer.
+   *
+   * The return value will always be > 0.
+   *
+   * @param  Int / Real / String (BigDecimal)
+   * @return Int
+   */
   external sol-nearest-int-multiple(|)
-  external sol-nearest-uint-multiple(|)
-  external sol-bigint-mult(|)
-  external sol-bigint2-mult(|)
   
-  external sol-bigdec-mult(|)
-  external sol-bigdec2-mult(|)
+  /**
+   * Determines the number of bits that would be required for representing an unsigned integer.
+   *
+   * The return value will be 0 if the given number is negative.
+   *
+   * @param  Int / Real / String (BigDecimal)
+   * @return Int
+   */
+  external sol-nearest-uint-multiple(|)
 
+  //-----------------------------------------------------------------------------------------------
   /**
    * Converts a big decimal number to a bigint number.
    * 
    * This strategy fails if the given number is not an integer (whole number).
+   *
+   * @param  Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
    */  
   external sol-bigdec-to-bigint(|)
   
+  //-----------------------------------------------------------------------------------------------
   /**
-   * Converts an integer in scientific notation to a bigint.
+   * Parses the given number as a big decimal.
+   *
+   * Examples of valid inputs:
+   *   10
+   *   -5
+   *   200.0
+   *   1.57
+   *   "200"
+   *   "-20.0"
+   *   ".2e3"
+   *   "2e5"
+   *   "2E5"
+   *   "2.5E1"
+   *   "2.5"
+   *   "0.5E0"
+   *
+   * @param  Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
    */
-  external sol-scientific-int-to-bigint(|)
+  external sol-parse-bigdec(|)
   
   /**
-   * Converts a decimal with optional scientific notation to a bigdecimal.
-   */
-  external sol-scientific-decimal-to-bigdec(|)
-  
-  /**
-   * Converts a hexadecimal integer to a bigint.
+   * Converts a hexadecimal integer to a big integer.
+   *
+   * @param  String (Hex)
+   * @return String (BigInteger)
    */
   external sol-hexadecimal-int-to-bigint(|)
 
- //Big decimal operations
-//  external sol-bigdec-uminus(|)
-//  external sol-bigdec-add(|)
-//  external sol-bigdec-sub(|)
-//  external sol-bigdec-mult(|)
-//  external sol-bigdec-div(|)
-//  external sol-bigdec-mod(|)
-//  external sol-bigdec-pow(|)
-//  
-//  external sol-bigdec-lshift(|)
-//  external sol-bigdec-rshift(|)
-//  
-//  external sol-bigdec-bitor(|)
-//  external sol-bigdec-bitand(|)
-//  external sol-bigdec-bitxor(|)
-//  external sol-bigdec-bitnot(|)
+  //-----------------------------------------------------------------------------------------------
+  //Big decimal operations
+  /**
+   * = -nr
+   *
+   * @param  Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-uminus(|)
+  
+  /**
+   * = a + b
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-add(|)
+  
+  /**
+   * = a - b
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-sub(|)
+  
+  /**
+   * = a * b
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-mult(|)
+  
+  /**
+   * = a / b
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-div(|)
+  
+  /**
+   * = a % b
+   *
+   * TODO Currently does not give actual modulo if the modulus (b) is negative.
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-mod(|)
+  
+  /**
+   * = a ** b
+   *
+   * Exponent (b) must be an INTEGER (1, 2.00, 3.0E2) between -999.999.999 and +999.999.999.
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigDecimal)
+   */
+  external sol-bigdec-pow(|)
+  
+  /**
+   * = a << b
+   *
+   * a must be an INTEGER (1, 2.00, 3.0E2)
+   * b must be an INTEGER between 0 and 2^31 - 1 (inclusive)
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
+   */
+  external sol-bigdec-lshift(|)
+  
+  /**
+   * = a >> b
+   *
+   * a must be an INTEGER (1, 2.00, 3.0E2)
+   * b must be an INTEGER between 0 and 2^31 - 1 (inclusive)
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
+   */
+  external sol-bigdec-rshift(|)
+  
+  /**
+   * = a | b
+   *
+   * a and b must be INTEGERs (1, 2.00, 3.0E2)
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
+   */
+  external sol-bigdec-bitor(|)
+  
+  /**
+   * = a & b
+   *
+   * a and b must be INTEGERs (1, 2.00, 3.0E2)
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
+   */
+  external sol-bigdec-bitand(|)
+  
+  /**
+   * = a ^ b
+   *
+   * a and b must be INTEGERs (1, 2.00, 3.0E2)
+   *
+   * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
+   */
+  external sol-bigdec-bitxor(|)
+  
+  /**
+   * = ~nr
+   *
+   * nr must be an INTEGER (1, 2.00, 3.0E2)
+   *
+   * @param  Int / Real / String (BigDecimal)
+   * @return String (BigInteger)
+   */
+  external sol-bigdec-bitnot(|)
+  
+  //-----------------------------------------------------------------------------------------------
+  //BIG INTEGERS
+  //-----------------------------------------------------------------------------------------------
+  external sol-bigint-mult(|)
+  
+  /**
+   * Converts a big integer to a hexadecimal string (no prefix).
+   *
+   * @param  Int / String (BigInteger)
+   * @return String (Hex)
+   */
+  external sol-bigint-to-hex(|)
   
