@@ -1,0 +1,11 @@
+module Menus
+
+menus
+  menu: "Syntax" (openeditor)
+    action: "Format"             = editor-format (source)
+    action: "Show parsed AST"    = debug-show-aterm (source)
+    action: "Show desugared AST" = editor-desugar (source)
+    action: "Resugar"            = editor-resugar (source)
+  
+//  menu: "Optimize" (openeditor)
+//    action: "Constant Folding" = editor-resugar (source)
