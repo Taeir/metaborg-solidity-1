@@ -118,3 +118,31 @@ rules
   
   remove_lval: LShiftAssign(v, e1) -> Assign(v, BinExp(LShift(), v, e1))
   remove_lval: RShiftAssign(v, e1) -> Assign(v, BinExp(RShift(), v, e1))
+
+  //---------------------------------------------------------------------------
+  //Convert back to original AST
+  resugar: BinExp(Plus(),      e1, e2) -> Add(e1, e2)
+  resugar: BinExp(Minus(),     e1, e2) -> Sub(e1, e2)
+  resugar: BinExp(Mult(),      e1, e2) -> Mul(e1, e2)
+  resugar: BinExp(Div(),       e1, e2) -> Div(e1, e2)
+  resugar: BinExp(Mod(),       e1, e2) -> Mod(e1, e2)
+  resugar: BinExp(Pow(),       e1, e2) -> Pow(e1, e2)
+  resugar: UnExp(UMinus(),     e1)     -> UMin(e1)
+  resugar: BinExp(LShift(),    e1, e2) -> LShift(e1, e2)
+  resugar: BinExp(RShift(),    e1, e2) -> RShift(e1, e2)
+  resugar: BinExp(BitAnd(),    e1, e2) -> BitAnd(e1, e2)
+  resugar: BinExp(BitOr(),     e1, e2) -> BitOr(e1, e2)
+  resugar: BinExp(BitXor(),    e1, e2) -> BitXor(e1, e2)
+  resugar: UnExp(BitNot(),     e1)     -> BitNot(e1)
+  //TODO ++ and --
+  resugar: BinExp(Lt(),        e1, e2) -> Lt(e1, e2)
+  resugar: BinExp(LtEq(),      e1, e2) -> LtEq(e1, e2)
+  resugar: BinExp(Gt(),        e1, e2) -> Gt(e1, e2)
+  resugar: BinExp(GtEq(),      e1, e2) -> GtEq(e1, e2)
+  resugar: BinExp(Eq(),        e1, e2) -> Eq(e1, e2)
+  resugar: BinExp(NEq(),       e1, e2) -> NEq(e1, e2)
+  resugar: BinExp(And(),       e1, e2) -> And(e1, e2)
+  resugar: BinExp(Or(),        e1, e2) -> Or(e1, e2)
+  resugar: UnExp(Not(),        e1)     -> Not(e1)
+  resugar: BinExp(Subscript(), e1, e2) -> Subscript(e1, e2)
+  resugar: UnExp(Delete(),     e1)     -> Delete(e1)

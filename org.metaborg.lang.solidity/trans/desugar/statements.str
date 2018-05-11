@@ -25,4 +25,11 @@ rules
   //Remove the middle "Some"
   desugar: For(a, Some(b), c, body) -> For(a, b, c, body)
   
-  
+  //-----------------------------------------------------------------------------------------------
+  //Convert back to original AST
+  resugar: For(Some(ExpStmt(e)), b, c, body)                -> For(SomeA(ExpStmt(e)), b, c, body)
+  resugar: For(Some(DeclareVar(t, v)), b, c, body)          -> For(SomeB(DeclareVar(t, v)), b, c, body)
+  resugar: For(Some(DeclareVarAssign(t, v, a)), b, c, body) -> For(SomeB(DeclareVarAssign(t, v, a)), b, c, body)
+  resugar: For(a, b, c, body)                               -> For(a, Some(b), c, body)
+    where
+    not(<?Some(_)> b)

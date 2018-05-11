@@ -27,21 +27,21 @@ context-free start-symbols
 
 context-free syntax
   //Function declarations
-  Function.Function = <
-    function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
-      <{Statement "\n"}*>
-      <ReturnStatement>
-    }>
-  
-// Full function
 //  Function.Function = <
 //    function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
-//      <{StatementOrReturn "\n"}*>
+//      <{Statement "\n"}*>
+//      <ReturnStatement>
 //    }>
+  
+// Full function
+  Function.Function = <
+    function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
+      <{StatementOrAnyReturn "\n"}*>
+    }>
   
   Function.VoidFunction = <
     function <ID>(<{Param ", "}*>) <ModifiersFun*> {
-      <{StatementOrVoidReturn "\n"}*>
+      <{StatementOrAnyReturn "\n"}*>
     }>
   
   //Fallback function has no name, no parameters and no returns.

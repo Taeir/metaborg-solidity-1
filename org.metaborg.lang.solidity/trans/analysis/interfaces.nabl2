@@ -16,7 +16,7 @@ rules
     TypeReferrable{name} <- programScope,
     Interface{name}      : interfaceType !,
     TypeReferrable{name} : interfaceType !,
-    interfaceType == UserDefT(Interface{name}),
+    interfaceType == NamedT(Interface{name}, InterfaceT()),
     
     //Create scope
     new interfaceScope,
@@ -25,4 +25,5 @@ rules
     // Resolve functions
     Map1 [[ functions ^ (interfaceScope) ]],
 
-    Interface{name} =I=> interfaceScope.
+    Interface{name}      =I=> interfaceScope,
+    TypeReferrable{name} =I=> interfaceScope.

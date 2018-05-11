@@ -2,33 +2,133 @@ module desugar/functions
 
 imports
   signatures/functions-sig
+  signatures/contracts-sig
+  signatures/libraries-sig
+  signatures/statements-sig
+  signatures/modifiers-sig
+  
+  desugar/solidity
 
 signature
-//  sorts
-//    ConstructorFunction
-//  constructors
-//    Constructor          : List(Param) * Option(ConsMod) * List(Statement) -> ConstructorFunction
-//    ConstructorWithSuper : List(Param) * Option(ConsMod) * STRING * List(Exp) * List(Statement) -> ConstructorFunction
+  constructors
+    Function             : String * List(Param) * List(ModifiersFun) * List(ReturnParam) * Statement -> Function
+  
+    Constructor          : String * List(Param) * Option(ConsMod) * Statement -> Function
+    ConstructorWithSuper : String * List(Param) * Option(ConsMod) * String * List(Exp) * Statement -> Function
+    
+    //Add function name to return statements
+    VoidReturn      : String -> VoidReturnStatement
+    ReturnStatement : String * Exp -> ReturnStatement
+
+strategies
+  name-constructors = topdown(try(name-constructors1))
+  normalize-functions = topdown(try(normalize-fun))
 
 rules
-  desugar: Function(name, params, mods, Returns(retParams), body, ReturnStatement(retExp)) ->
-             Function(name, params, mods, retParams, body, retExp)
+  //-----------------------------------------------------------------------------------------------
+  //Helper functions
+  /**
+   * Fixes constructor modifiers.
+   */
+  fix-constructor-modifiers: (mod1, mod2) -> mod
+    where
+    //Fix modifiers
+    (
+      (<?None()> mod1; mod := mod2) <+ //First modifier is absent
+      (<?None()> mod2; mod := mod1) <+ //Second modifier is absent
+      (mod := InvalidMod())            //Only one modifier may be present -> Invalid
+    )
   
-  desugar: AbstractFunction(name, params, mods, Some(Returns(retParams))) ->
-             AbstractFunction(name, params, mods, retParams)
-  desugar: AbstractFunction(name, params, mods, None()) ->
-             AbstractFunction(name, params, mods, [])
-
-//  desugar: Add class name to constructor.
-
-//For full function support:
-//  desugar: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods, retParams, body)
-//  desugar: VoidFunction(name, params, mods, body)                 -> Function(name, params, mods, [], body)
+  //TODO Fix function modifiers
+  
+  //-----------------------------------------------------------------------------------------------
+  /**
+   * Adds the name of the contract/library to all the constructors in it.
+   */
+  name-constructors1: Contract(name, content) -> Contract(name, content')
+    where
+    content' := <map(add-name-to-constructor(|name))> content
+  name-constructors1: ContractInherits(name, i, content) -> ContractInherits(name, i, content')
+    where
+    content' := <map(add-name-to-constructor(|name))> content
+  name-constructors1: Library(name, content) -> Library(name, content')
+    where
+    content' := <map(add-name-to-constructor(|name))> content
+  
+  /**
+   * Adds the given name to constructors.
+   */
+  add-name-to-constructor(|contractName): Constructor(params, mod, body) ->
+                                            Constructor(contractName, params, mod, body)
+  add-name-to-constructor(|contractName): ConstructorWithSuper(params, mod1, modCon, mod2, body) ->
+                                            ConstructorWithSuper(contractName, params, mod1, modCon, mod2, body)
+  add-name-to-constructor(|contractName): x -> x
+    where
+    not(<?Constructor(_, _, _)> x); not(<?ConstructorWithSuper(_, _, _, _, _)> x)
   
   
-//  desugar: ModSuperCall(mod, sName, args)
-//  desugar: SuperCallMod(sName, args, None/Some(mod))
-// Constructor(params, mod (Some/None), body)
-// Constructor(params, mod, superName, superCall, body)
+  //-----------------------------------------------------------------------------------------------
+  //Unpack returns for abstract functions
+  normalize-fun: AbstractFunction(name, params, mods, Some(Returns(retParams))) ->
+                   AbstractFunction(name, params, mods, retParams)
+  normalize-fun: AbstractFunction(name, params, mods, None()) ->
+                   AbstractFunction(name, params, mods, [])
+  
+  /**
+   * Normalize functions
+   * - Return params are unpacked (Returns(x) -> x)
+   * - Body is wrapped in a block
+   * - Fallback is turned into a function named "*fallback"
+   * - Fixes super constructor modifiers
+   */
+  normalize-fun: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods, retParams, body')
+    where
+    body' := Block(<map(add-function-name-to-return(|name))> body)
+  normalize-fun: VoidFunction(name, params, mods, body) -> Function(name, params, mods, [], body')
+    where
+    body' := Block(<map(add-function-name-to-return(|name))> body)
+  normalize-fun: FallBackFunction(mods, body) -> Function(name, [], mods, [], body')
+    where
+    name := "*fallback";
+    body' := Block(<map(add-function-name-to-return(|name))> body)
+  
+  //For constuctors, only do the block / modifier fix. Return statements are allowed in the constructor.
+  normalize-fun: Constructor(name, params, mod, body) -> Constructor(name, params, mod, Block(body))
+  normalize-fun: ConstructorWithSuper(name, params, mod1, ModSuperCall(superName, superCall), mod2, body) ->
+                   ConstructorWithSuper(name, params, mod, superName, superCall, Block(body))
+    where
+    mod := <fix-constructor-modifiers> (mod1, mod2)
+  
+  /**
+   * Adds the given name of the function to all the return statements in it.
+   * This allows us to type check the return statements in NaBL2.
+   */
+  add-function-name-to-return(|funName): Block(stmts) -> Block(stmts')
+    where
+    stmts' := <map(add-function-name-to-return(|funName))> stmts
+  add-function-name-to-return(|funName): ReturnStatement(e) -> ReturnStatement(funName, e)
+  add-function-name-to-return(|funName): VoidReturn()       -> VoidReturn(funName)
+  add-function-name-to-return(|funName): x -> x
+    where
+    not(<?Block(_)> x); not(<?ReturnStatement(_)> x); not(<?VoidReturn()> x)
 
-  //TODO Constructors
+
+  //Unpack returns and returnstatement
+//  desugar: Function(name, params, mods, Returns(retParams), body, ReturnStatement(retExp)) ->
+//             Function(name, params, mods, retParams, body', retExp)
+
+  //-----------------------------------------------------------------------------------------------
+  //Convert back to original AST
+  resugar: Function(n, [], m, [], Block(s))         -> FallBackFunction(m, s)            where <?"*fallback"> n
+  resugar: Function(n, p, m, [], Block(s))          -> VoidFunction(n, p, m, s)          where not(<?"*fallback"> n)
+  resugar: Function(n, p, m, [], Block(s))          -> Function(n, p, m, None(), s)      where not(<?"*fallback"> n)
+  resugar: Function(n, p, m, rp@[_ | _], Block(s))  -> Function(n, p, m, Returns(rp), s) where not(<?"*fallback"> n)
+//  resugar: Function(n, p, m, rp@[_ | _], b, re)     -> Function(n, p, m, Returns(rp), b, ReturnStatement(re))
+  resugar: AbstractFunction(n, p, m, [])            -> AbstractFunction(n, p, m, None())
+  resugar: AbstractFunction(n, p, m, rp@[_ | _])    -> AbstractFunction(n, p, m, Some(Returns(rp)))
+  resugar: Constructor(_, p, m, Block(s))                  -> Constructor(p, m, s)
+  resugar: ConstructorWithSuper(_, p, m, sn, sc, Block(s)) -> ConstructorWithSuper(p, m, ModSuperCall(sn, sc), None(), s)
+  
+  //Restore return statements
+  resugar: ReturnStatement(_, e) -> ReturnStatement(e)
+  resugar: VoidReturn(_)         -> VoidReturn()

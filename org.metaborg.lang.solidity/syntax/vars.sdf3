@@ -21,3 +21,4 @@ context-free syntax
   LocalVarDecl.LocalVarDeclAssign = <<LocalVar> = <Exp>;>
   
   VarRef.VarRef = ID
+  VarRef.Member = < <Exp>.<ID> > {left}

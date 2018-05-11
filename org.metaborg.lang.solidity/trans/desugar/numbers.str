@@ -65,3 +65,8 @@ rules
     uint := <sol-nearest-uint-multiple> a';
     ((<?0> uint; uint' := None()) <+
     (            uint' := Some(uint)))
+  
+  //-----------------------------------------------------------------------------------------------
+  //Convert back to original AST
+  resugar: IntLiteral(nr, _, _) -> NumberLit(Int(nr), None())
+  resugar: BigDec(nr)           -> NumberLit(Scientific(nr), None())

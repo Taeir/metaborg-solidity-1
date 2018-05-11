@@ -38,3 +38,13 @@ rules
   //Remove the some/none syntax from functiontype return types
   desugar: FunctionType(args, vis, mut, None())                  -> FunctionType(args, vis, mut, [])
   desugar: FunctionType(args, vis, mut, Some(ReturnsType(rets))) -> FunctionType(args, vis, mut, rets)
+
+  //-----------------------------------------------------------------------------------------------
+  //Convert back to original AST
+  resugar: IntType(n)                       -> IntType(Some(<int-to-string> n))
+  resugar: UIntType(n)                      -> UIntType(Some(<int-to-string> n))
+  resugar: FixedType(MxN(m, n))             -> FixedType(MxN(<int-to-string> m, <int-to-string> n))
+  resugar: UFixedType(MxN(m, n))            -> UFixedType(MxN(<int-to-string> m, <int-to-string> n))
+  resugar: FixedBytesArrayType(s)           -> FixedBytesArrayType(<int-to-string> s)
+  resugar: FunctionType(a, v, m, [])        -> FunctionType(a, v, m, None())
+  resugar: FunctionType(a, v, m, r@[_ | _]) -> FunctionType(a, v, m, Some(ReturnsType(r)))

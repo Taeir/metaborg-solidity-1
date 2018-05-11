@@ -75,7 +75,7 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Member access
-  Exp.Member = < <Exp>.<ID> > {left}
+//  Exp.Member = < <Exp>.<ID> > {left}
   
   //---------------------------------------------------------------------------
   //Function calls
@@ -104,7 +104,7 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Cast
-  Exp.Cast = < <Type>(<Exp>) > {right, avoid}
+  Exp.Cast        = < <SimpleCastType>(<Exp>) > {right}
   
   //---------------------------------------------------------------------------
   //Tenary if statement
@@ -113,7 +113,7 @@ context-free syntax
   //-----------------------------------------------------------------
   //Assignment
   Exp.Assign      = <<VarRef> = <Exp>>        {right}
-  Exp.AssignArray = <<VarRef>[<Exp>] = <Exp>> 
+  Exp.AssignArray = <<Exp>[<Exp>] = <Exp>> {right}
   
   //-----------------------------------------------------------------
   //LValue shorthands
@@ -139,8 +139,9 @@ context-free priorities
     Exp.RetInc Exp.RetDec
     Exp.NewObject
     Exp.Subscript
-    Exp.Member
-    Exp.Call} >
+    VarRef.Member
+    Exp.Call
+    FunctionCall.FunctionCall} >
   {right:
     Exp.IncRet Exp.DecRet
     Exp.UMin Exp.UPlus
@@ -159,4 +160,5 @@ context-free priorities
   {non-assoc: Exp.Or} >
   {left: Exp.Ternary} >
   {right: Exp.Assign Exp.AssignArray Exp.LValAssign},
-  {left: Exp.Call} > {right: Exp.Cast}
+  //TODO Solve problems between casts and calls by only making the distinction in the desugaring/nabl?
+  {right: Exp.Cast} > {left: Exp.Call FunctionCall.FunctionCall}

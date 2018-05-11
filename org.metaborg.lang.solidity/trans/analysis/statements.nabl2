@@ -1,7 +1,8 @@
 module analysis/statements
 
 imports
-  signatures/-
+  signatures/statements-sig
+  signatures/assembly-sig
 
 rules
   //-----------------------------------------------------------------------------------------------
@@ -51,12 +52,27 @@ rules
   [[ Emit(call)   ^ (s) ]] :=
     [[ call ^ (s) : ty ]].
   
-  
-  //TODO Check if void return is allowed in method?
+  //Return statements in constructor
   [[ VoidReturn() ^ (s) ]].
   [[ ReturnStatement(exp) ^ (s) ]] :=
-    //TODO Check if return type matches expected function return type
-    [[ exp ^ (s) : actTy ]].
+    [[ exp ^ (s) : actTy ]],
+    false | error $[Only "return;" is allowed in constructors!].
+  
+  //Return statements in function
+  [[ VoidReturn(funName) ^ (s) ]] :=
+    //Check if corresponding function doesn't have a return type
+    Function{funName} -> s,
+    Function{funName} |-> fun | error $[Unable to find function corresponding to this return statement. Name: [funName]],
+    fun : FunctionT(paramTys, retTys) | warning $[Actual return type (void) does not match expected return type [retTys]!],
+    retTys == [] | warning $[Actual return type (void) does not match expected return type [retTys]!].
+  [[ ReturnStatement(funName, exp) ^ (s) ]] :=
+    [[ exp ^ (s) : expRetTy ]],
+    //Check if corresponding function has a matching return type
+    Function{funName} -> s,
+    Function{funName} |-> fun | error $[Unable to find function corresponding to this return statement. Name: [funName]],
+    fun : tyFun,
+    tyFun == FunctionT(paramTys, retTys),
+    [expRetTy] <sub? retTys | warning $[Actual return type [expRetTy] does not match expected return type [retTys]].
   
   //-----------------------------------------------------------------------------------------------
   //Variable declarations

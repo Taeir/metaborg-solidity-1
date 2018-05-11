@@ -1,0 +1,32 @@
+module desugar/statevariables
+
+imports
+  signatures/statevariables-sig
+  signatures/modifiers-sig
+  
+  desugar/solidity
+
+signature
+  constructors
+    ConstantStateVariable : Type * ModifiersStateVarVis * String * Option(Exp) -> ConstantStateVariable
+    
+rules
+  fix-statevar-mods: (mod1, mod2) -> mod
+    where
+    (<?None()> mod1; mod := mod2) <+ //First modifier is absent -> use second
+    (<?None()> mod2; mod := mod1) <+ //Second modifier is absent -> use first
+    (mod := InvalidMod())            //Both are present -> invalid
+
+  desugar: StateVariable(ty, mod, name, StateVarAssignment(e))                   -> StateVariable(ty, mod, name, Some(e))
+  desugar: ConstantStateVariable(ty, mod1, _, mod2, name, None())                -> ConstantStateVariable(ty, mod, name, None())
+    where
+    mod := <fix-statevar-mods> (mod1, mod2)
+  desugar: ConstantStateVariable(ty, mod1, _, mod2, name, StateVarAssignment(e)) -> ConstantStateVariable(ty, mod, name, Some(e))
+    where
+    mod := <fix-statevar-mods> (mod1, mod2)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Convert back to original AST
+  resugar: StateVariable(t, m, n, Some(e))         -> StateVariable(t, m, n, StateVarAssignment(e))
+  resugar: ConstantStateVariable(t, m, n, None())  -> ConstantStateVariable(t, m, "constant", None(), n, None())
+  resugar: ConstantStateVariable(t, m, n, Some(e)) -> ConstantStateVariable(t, m, "constant", None(), n, StateVarAssignment(e))

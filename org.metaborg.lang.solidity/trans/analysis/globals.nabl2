@@ -12,7 +12,7 @@ rules
     Var{"abi" @p} <- programScope,
     Var{"abi" @p} : tyAbi,
     Var{"abi" @p} =I=> abiScope,
-    tyAbi == UserDefT(Var{"abi" @p}),
+    tyAbi == NamedT(Var{"abi" @p}, BuiltInT()),
 //    tyAbi == BuiltInT(Var{"abi" @p}),
     
     //TODO Abi functions (with variable argument counts)
@@ -24,7 +24,7 @@ rules
     Var{"msg" @p} <- programScope,
     Var{"msg" @p} : tyMsg,
     Var{"msg" @p} =I=> msgScope,
-    tyMsg == UserDefT(Var{"msg" @p}),
+    tyMsg == NamedT(Var{"msg" @p}, BuiltInT()),
 //    tyMsg == BuiltInT(Var{"msg" @p}),
     
     Var{"data"} <- msgScope,
@@ -46,7 +46,7 @@ rules
     Var{"block" @p} <- programScope,
     Var{"block" @p} : tyBlock,
     Var{"block" @p} =I=> blockScope,
-    tyBlock == UserDefT(Var{"block" @p}),
+    tyBlock == NamedT(Var{"block" @p}, BuiltInT()),
 //    tyBlock == BuiltInT(Var{"block" @p}),
     
     Var{"coinbase"} <- blockScope,
@@ -73,7 +73,7 @@ rules
     Var{"tx" @p} <- programScope,
     Var{"tx" @p} : tyTx,
     Var{"tx" @p} =I=> txScope,
-    tyTx == UserDefT(Var{"tx" @p}),
+    tyTx == NamedT(Var{"tx" @p}, BuiltInT()),
 //    tyTx == BuiltInT(Var{"tx" @p}),
     
     Var{"gasprice"} <- txScope,

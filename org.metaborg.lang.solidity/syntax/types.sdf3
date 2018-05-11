@@ -71,6 +71,11 @@ context-free syntax
   ElementaryType                  = FAType
   ElementaryType                  = DAType
   
+  //Types without [], that can be easility identified as casts
+  SimpleCastType = SimpleType
+  SimpleCastType = FAType
+  SimpleCastType = DAType
+  
   //Simple types
   SimpleType.BooleanType = <bool>    {prefer}
   SimpleType.AddressType = <address> {prefer}

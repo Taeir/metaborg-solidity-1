@@ -9,37 +9,56 @@ signature
 
 rules
   [[ StructField(solType, name) ^ (structScope) ]] :=
-    [[ solType ^ (structScope) : ty ]],
+    [[ solType ^ (structScope) : tyStructField ]],
     
     Var{name} <- structScope,
     Var{name}.origin   := StructField(),
     Var{name}.constant := FalseC(),
-    Var{name} : ty !. 
+    Var{name} : tyStructField !. 
   
-  [[ Param(solType, modLoc, None()) ^ (s) : ty ]] :=
-    [[ solType ^ (s) : ty ]].
+  [[ Param(solType, modLoc, None()) ^ (s) : tyParam ]] :=
+    [[ solType ^ (s) : tyParam ]].
 
-  [[ Param(solType, modLoc, Some(name)) ^ (s) : ty ]] :=
-    [[ solType ^ (s) : ty ]],
+  [[ Param(solType, modLoc, Some(name)) ^ (s) : tyParam ]] :=
+    [[ solType ^ (s) : tyParam ]],
     
     Var{name} <- s,
     Var{name}.origin   := Param(),
     Var{name}.constant := FalseC(),
-    Var{name} : ty !.
+    Var{name} : tyParam !.
   
-  [[ ReturnParam(solType, modLoc, None()) ^ (s) : ty ]] :=
-    [[ solType ^ (s) : ty ]].
+  [[ ReturnParam(solType, modLoc, None()) ^ (s) : tyRetParam ]] :=
+    [[ solType ^ (s) : tyRetParam ]].
   
-  [[ ReturnParam(solType, modLoc, Some(name)) ^ (s) : ty ]] :=
-    [[ solType ^ (s) : ty ]],
+  [[ ReturnParam(solType, modLoc, Some(name)) ^ (s) : tyRetParam ]] :=
+    [[ solType ^ (s) : tyRetParam ]],
     
     Var{name} <- s,
     Var{name}.origin   := Param(),
     Var{name}.constant := FalseC(),
-    Var{name} : ty !.
+    Var{name} : tyRetParam !.
   
   //Refs
   [[ VarRef(name) ^ (s) : tyVarRef ]] :=
     Var{name} -> s,
     Var{name} |-> var | error $[Cannot find variable with name [name]],
     var : tyVarRef.
+
+  [[ Member(exp, name) ^ (s) : tyMemberRef ]] :=
+    //TODO Support member calls on addresses, etc.
+    
+    //Determine scope of what we are calling on
+    [[ exp ^ (s) : tyMemberExp ]],
+    tyMemberExp_2 is simplifyType of tyMemberExp | error $[Type [tyMemberExp] does not have fields!] @exp,
+    tyMemberExp_2 <test? IsType()                | error $[Type [tyMemberExp] does not have fields!] @exp,
+    tyMemberExp == NamedT(occ, tyNamed)          | error $[Type [tyMemberExp] does not have fields!] @exp,
+    occ ?=I=> typeScope,
+    
+    //Resolve in a temporary scope
+    new resolveScope,
+    resolveScope -P-> typeScope,
+    
+    //Resolve variable
+    Var{name} -> resolveScope,
+    Var{name} |-> var | error $[Cannot find variable with name [name] in [occ]] @name,
+    var : tyMemberRef.

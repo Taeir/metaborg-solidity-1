@@ -17,7 +17,7 @@ rules
     TypeReferrable{name} <- programScope,
     Contract{name}       : contractType !,
     TypeReferrable{name} : contractType !,
-    contractType == UserDefT(Contract{name}),
+    contractType == NamedT(Contract{name}, ContractT()),
     
     //Create scope
     new contractScope,
@@ -37,7 +37,8 @@ rules
     distinct/name D(contractScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
     distinct/name D(contractScope)/TypeReferrable   | warning $[Duplicate type [NAME]] @NAMES,
     
-    Contract{name} =I=> contractScope.
+    Contract{name}       =I=> contractScope,
+    TypeReferrable{name} =I=> contractScope.
   
   [[ c@ContractInherits(name, inherits, content) ^ (programScope) ]] :=
     //Define contract and type, also make it referrable
@@ -45,17 +46,14 @@ rules
     TypeReferrable{name} <- programScope,
     Contract{name}       : contractType !,
     TypeReferrable{name} : contractType !,
-    contractType == UserDefT(Contract{name}),
-    
-    TypeReferrable{name} <- programScope,
-    TypeReferrable{name} : contractType !,
+    contractType == NamedT(Contract{name}, ContractT()),
     
     new contractScope,
     contractScope -P-> programScope,
     
     // Create this in contract scope
     This{"this" @c} <- contractScope,
-//    This{"this" @c} : contractType !,
+    This{"this" @c} : contractType !,
     
     Map1 [[ content ^ (contractScope) ]],
     
@@ -64,8 +62,10 @@ rules
     distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
     distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
     distinct/name D(contractScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
+    distinct/name D(contractScope)/TypeReferrable   | warning $[Duplicate type [NAME]] @NAMES,
     
-    Contract{name} =I=> contractScope,
+    Contract{name}       =I=> contractScope,
+    TypeReferrable{name} =I=> contractScope,
     
     false | note $[Inherits not yet implemented].
 

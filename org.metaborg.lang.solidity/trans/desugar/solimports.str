@@ -32,10 +32,10 @@ rules
     items' := <convimport> items
     
   //import * as a              -> [ImportItem(* as a)]
-  convimport: Star(name)       -> ImportStar(name)
+  convimport: Star(name)       -> [ImportStar(name)]
   
   //import a                   -> [ImportItem(a as a)]
-  convimport: Single(name)     -> ImportItem(name, name)
+  convimport: Single(name)     -> [ImportItem(name, name)]
   
   //import a as b              -> [ImportItem(a as b)]
   convimport: SingleAs(n1, n2) -> [ImportItem(n1, n2)]
@@ -45,7 +45,17 @@ rules
     where
     items := <mapconcat(convimport)> ns
   
+  //---------------------------------------------------------------------------
+  //Resugar back to original form
+  resugar: Import(items, file) -> ImportItemFrom(items', file)
+    where
+    items' := <unconvimport2> items
   
-  
+  unconvimport1: ImportStar(name) -> Star(name)
+  unconvimport1: ImportItem(a, b) -> SingleAs(a, b)
+  unconvimport2: [head]           -> <unconvimport1> head
+  unconvimport2: c@[_ | [_ | _]]  -> Multi(ns)
+    where
+    ns := <map(unconvimport1)> c
   
   

@@ -75,10 +75,16 @@ context-free syntax
   Statement = ExtraStatement
   
   //-----------------------------------------------------------------
+  //Shorthand for a statement or a return/voidreturn.
+  StatementOrAnyReturn = Statement
+  StatementOrAnyReturn = ReturnStatement
+  StatementOrAnyReturn = VoidReturnStatement
+  
   //Shorthand for a statement or a return.
   StatementOrReturn = Statement
   StatementOrReturn = ReturnStatement
   
+  //Shorthand for a statement or a void return.
   StatementOrVoidReturn = Statement
   StatementOrVoidReturn = VoidReturnStatement
   

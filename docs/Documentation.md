@@ -35,6 +35,9 @@ In the desugaring phase, a few different transformations are applied to simplify
 - **LValue assignments:** LValue assignments are converted to a simpler form, e.g. `a += 10` is converted into `a = a + 10`.
 - **Imports:** the different import formats are converted into the same generic form.
 - **Types:** the different elementary types are converted to the more specific forms they are shorthands for. For example, `int` is converted into `int256` and `byte` is converted into `bytes1`.
+- **Constructors:** for constructors, the name of the enclosing contract is added to the constructor element. This way, the constructor can be seen as a function which returns an instance of the contract type, which simplifies typechecking.
+- **Return statements:** the name of the enclosing function is added to return statements to simplify typechecking.
+- **Numbers**: Literal numbers are constant folded to allow proper typechecking. This is necessary since an expression like `1.2 * 5` would be regarded as the integer number 6 by the solidity compiler, even though there are no floating point numbers. Units are also removed, e.g. `2 minutes` is converted into `120`. Finally, the desugarer calculates the number of bits that would be required to fit the number (rounded up to multiples of 8) into a signed integer and into an unsigned integer, which is used by the type checking to determine the precise type (int8 vs uint8 vs int16).
 
 Still to be implemented:
 Since fixed size arrays are part of the type system, constant expressions may need to be evaluated before typechecking. NaBL2 is not turing-complete, and does not have the ability to compute arbitrary expressions.

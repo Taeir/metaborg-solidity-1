@@ -50,7 +50,11 @@ rules
     xTy == ty | error $[All items in the array must have the same type] @x.
 
   //-----------------------------------------------------------------------------------------------
-  //TODO This
+  //This
+  [[ t@This() ^ (s) : tyThis ]] :=
+    This{"this"@t} -> s,
+    This{"this"@t} |-> self | error $[You cannot refer to "this" from this location],
+    self : tyThis.
   
   //-----------------------------------------------------------------------------------------------
   //Cast
@@ -283,7 +287,43 @@ rules
     arrTy == FArrayT(ty, _).
   
   //-----------------------------------------------------------------------------------------------
-  //TODO Calls
+  [[ Call(FunctionCall(VarRef(name), args)) ^ (s) : tyCall ]] :=
+    //TODO Separate resolve scope?
+    Function{name} -> s,
+    Function{name} |-> fun | error $[Unable to find function [name]],
+    fun : tyCallFun | error $[You can only call functions (not [tyCallFun])],
+    
+    tyCallFun == FunctionT(paramTys, retTys) | error $[You can only call functions (not [tyCallFun])],
+    
+    Map1T [[ args ^ (s) : argTys ]],
+    argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the parameter types [paramTys]],
+    [tyCall] == retTys.
+    //TODO Tuple types
+  
+  [[ Call(FunctionCall(Member(exp, name), args)) ^ (s) : tyCall ]] :=
+    [[ exp ^ (s) : tyCallExp ]],
+    tyCallExp_2 is simplifyType of tyCallExp | error $[Type [tyCallExp] does not have functions!] @exp,
+    tyCallExp_2 <test? IsType()              | error $[Type [tyCallExp] does not have functions!] @exp,
+    tyCallExp == NamedT(occ, tyNamed)        | error $[Type [tyCallExp] does not have functions!] @exp,
+    occ ?=I=> typeScope,
+    
+    //Resolve in a temporary scope
+    new resolveScope,
+    resolveScope -P-> typeScope,
+    
+    //Resolve variable
+    Function{name} -> resolveScope,
+    Function{name} |-> fun | error $[Cannot find function with name [name] in [occ]] @name,
+    fun : tyCallFun | error $[You can only call functions (not [tyCallFun])],
+    
+    tyCallFun == FunctionT(paramTys, retTys) | error $[You can only call functions (not [tyCallFun])],
+    
+    Map1T [[ args ^ (s) : argTys ]],
+    argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the parameter types [paramTys]],
+    [tyCall] == retTys.
+    //TODO Tuple types
+  
+  //TODO Call arbitrary expressions
   
   //-----------------------------------------------------------------------------------------------
   //TODO New
@@ -294,29 +334,7 @@ rules
     tyDeleteExp_2 <? IsType() | warning $[Unable to determine type of expression] @exp.
   
   //-----------------------------------------------------------------------------------------------
-  //TODO Member
-  [[ Member(exp, name) ^ (s) : ty ]] :=
-    [[ exp ^ (s) : eTy ]],
-    //TODO Support member calls on addresses, etc.
-    eTy == UserDefT(occ) | error $[You can only perform calls on user defined types],
-    
-    //Get the scope of the occurrence
-    occ ?===> typeScope,
-    
-    //Resolve in a temporary scope
-    new resolveScope,
-    resolveScope -P-> typeScope,
-    Var{name} -> resolveScope,
-    Var{name} |-> var | error $[Cannot find variable [name] in [occ]] @name,
-    var : ty.
-  
-  //-----------------------------------------------------------------------------------------------
-  //TODO VarRef
-//  [[ VarRef(name) ^ (s) : ty ]] :=
-//    //Lookup
-//    Var{name} -> s,
-//    Var{name} |-> var | error $[Cannot find variable with name [name]],
-//    Var{name} : ty.
+
   
   //-----------------------------------------------------------------------------------------------
   //Assignments

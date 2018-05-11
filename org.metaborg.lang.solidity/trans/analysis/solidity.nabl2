@@ -70,7 +70,9 @@ signature
     CanIndex          : TypeTest
     
   relations
-    reflexive, anti-symmetric, transitive sub  : Type * Type
+    reflexive, anti-symmetric, transitive sub  : Type * Type {
+      [+sub]
+    }
     anti-symmetric, anti-transitive       test : Type * TypeTest
     
     /* ------------------------------> */ cast : Type * Type
@@ -97,6 +99,7 @@ signature
       FBytesT(i)         -> FBytesTS(),
       FixedT(m, n)       -> FixedTS(),
       UFixedT(m, n)      -> UFixedTS(),
+      NamedT(o, st)      -> NamedTS(),
       other              -> other
     }
     
@@ -376,7 +379,9 @@ rules
     FBytesTS() <test! CanIndex(),
     
     //Casting string -> bytes
-    StringT() <test! IsType()
+    StringT() <test! IsType(),
+    
+    NamedTS() <test! IsType()
     .
 
 

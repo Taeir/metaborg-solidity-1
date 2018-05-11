@@ -1,14 +1,24 @@
 module desugar/solidity
 
 imports
+  signatures/-
   desugar/contracts
   desugar/expressions
   desugar/functions
   desugar/numbers
   desugar/solimports
   desugar/statements
+  desugar/statevariables
   desugar/types
+  
+signature
+  constructors
+    //Invalid modifiers
+    InvalidMod : Modifier
 
 strategies
-  //Desugar, fold constants
-  desugar-all = innermost(desugar); constant-fold
+  //Desugar, fold constants, name constructors, normalize functions
+  desugar-all = innermost(desugar); constant-fold; name-constructors; normalize-functions
+  
+  //Resugar back into original AST
+  resugar-all = innermost(resugar)

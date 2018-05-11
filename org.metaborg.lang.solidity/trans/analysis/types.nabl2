@@ -35,14 +35,13 @@ signature
     MappingT   : Type * Type -> Type
 
     //User defined types
-    UserDefT   : occurrence -> Type
-    EnumT      : occurrence -> Type
-    EventT     : occurrence -> Type
-    StructT    : occurrence -> Type
-    ContractT  : occurrence -> Type
-    InterfaceT : occurrence -> Type
-    LibraryT   : occurrence -> Type
-    BuiltInT   : occurrence -> Type
+    EnumT      : Type
+    EventT     : Type
+    StructT    : Type
+    ContractT  : Type
+    InterfaceT : Type
+    LibraryT   : Type
+    BuiltInT   : Type
     
     //Named type
     NamedT     : occurrence * Type -> Type
@@ -57,6 +56,7 @@ signature
     FixedTS  : Type
     UFixedTS : Type
     FArrayTS : Type -> Type
+    NamedTS  : Type
     
     //More general types for constants
     NrT      : INT * INT -> Type
@@ -117,12 +117,12 @@ rules
 
   //-----------------------------------------------------------------------------------------------
   //User defined types
-  [[ UserDefinedType(x) ^ (s) : ty ]] :=
+  [[ UserDefinedType(x) ^ (s) : tyRef ]] :=
     //TODO
     //Lookup the type
     TypeReferrable{x} -> s,
     TypeReferrable{x} |-> ref | error $[Cannot find any user defined type [x]] @x,
-    ref : ty.
+    ref : tyRef.
   
   //-----------------------------------------------------------------------------------------------
   //Var type
