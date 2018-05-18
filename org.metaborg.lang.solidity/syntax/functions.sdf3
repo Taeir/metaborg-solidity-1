@@ -51,7 +51,7 @@ context-free syntax
     }>
   
   //---------------------------------------------------------------------------
-  Function.AbstractFunction = <<AbstractFunction>>
+  Function = AbstractFunction
   
   AbstractFunction.AbstractFunction = <function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns?>;>
   
