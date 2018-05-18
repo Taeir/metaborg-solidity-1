@@ -42,7 +42,7 @@ rules
   
   [[ c@ContractInherits(name, inherits, content) ^ (programScope) ]] :=
     //Define contract and type, also make it referrable
-     Contract{name}       <- programScope,
+    Contract{name}       <- programScope,
     TypeReferrable{name} <- programScope,
     Contract{name}       : contractType !,
     TypeReferrable{name} : contractType !,
@@ -68,4 +68,3 @@ rules
     TypeReferrable{name} =I=> contractScope,
     
     false | note $[Inherits not yet implemented].
-

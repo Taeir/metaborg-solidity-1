@@ -91,7 +91,7 @@ rules
     tyPlusExp2_2 is simplifyType of tyPlusExp1,
     tyPlusExp1_2 <test? CanArithBasic(),
 //    tyPlusExp2_2 <test? CanArithBasic(),
-    tyPlus is sub.lub of (tyPlusExp1, tyPlusExp2). //Smallest integer that fits
+    tyPlus is sub.lub of (tyPlusExp1, tyPlusExp2).
     
   [[ BinExp(Minus(), e1, e2) ^ (s) : tySub ]] :=
     [[ e1 ^ (s) : tySubExp1 ]],

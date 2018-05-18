@@ -47,7 +47,6 @@ signature
 	Delete : UnOp
 	
 	//?
-	Integer : UnOp
 	Array : UnOp
 	Object : UnOp
 	
