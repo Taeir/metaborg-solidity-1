@@ -203,6 +203,21 @@ rules
     tyBitXor is sub.lub of (tyBitXorExp1, tyBitXorExp2).
 
   //-----------------------------------------------------------------------------------------------
+  //++ and --
+  [[ UnExp(IncRet(), exp) ^ (s) : tyIncRet ]] :=
+    [[ exp ^ (s) : tyIncRet ]],
+    tyIncRet is sub.lub of (NrT(8, 8), tyIncRet).
+  [[ UnExp(DecRet(), exp) ^ (s) : tyDecRet ]] :=
+    [[ exp ^ (s) : tyDecRet ]],
+    tyDecRet is sub.lub of (NrT(8, 8), tyDecRet).
+  [[ UnExp(RetInc(), exp) ^ (s) : tyRetInc ]] :=
+    [[ exp ^ (s) : tyRetInc ]],
+    tyRetInc is sub.lub of (NrT(8, 8), tyRetInc).
+  [[ UnExp(RetDec(), exp) ^ (s) : tyRetDec ]] :=
+    [[ exp ^ (s) : tyRetDec ]],
+    tyRetDec is sub.lub of (NrT(8, 8), tyRetDec).
+
+  //-----------------------------------------------------------------------------------------------
   //Equality
   [[ BinExp(Lt(), e1, e2) ^ (s) : BoolT() ]] :=
     [[ e1 ^ (s) : tyLtExp1 ]],
