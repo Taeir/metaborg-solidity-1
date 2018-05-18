@@ -1,0 +1,36 @@
+module desugar/deadcode
+
+imports
+  //Works with normalized return signatures
+  desugar/functions
+  desugar/statements
+
+signature
+  constructors
+    DeadStatement : Statement -> Statement
+
+strategies
+  //Should be applied very late in the desugaring
+  check-dead-code = topdown(try(check-dead))
+
+rules
+  check-dead: Block(stmts) -> Block(<check-dead> stmts)
+  
+  //Any code after an "exit" statement (return, continue, break, throw or emit) is marked as dead.
+  check-dead: l@[]  -> l
+  check-dead: l@[_] -> l
+  check-dead: l@[h | t] -> [h | t']
+    where
+    (<?ReturnStatement(_, _) +
+      ?VoidReturn(_) +
+      ?Continue() +
+      ?Break() +
+      ?Throw() +
+      ?Emit(_, _)> h; t' := <map(\s -> DeadStatement(s)\)> t) <+
+    (t' := <check-dead> t)
+  
+  
+  
+  //-----------------------------------------------------------------------------------------------
+  //Convert back to the original AST
+  resugar: DeadStatement(s) -> s

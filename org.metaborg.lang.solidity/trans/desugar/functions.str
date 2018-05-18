@@ -39,7 +39,7 @@ rules
       (mod := InvalidMod())            //Only one modifier may be present -> Invalid
     )
   
-  //TODO Fix function modifiers
+  //TODO Fix function modifiers 
   
   //-----------------------------------------------------------------------------------------------
   /**

@@ -12,6 +12,10 @@ imports
   desugar/statevariables
   desugar/strings
   desugar/types
+  desugar/vartype
+  
+  //Extra
+  desugar/deadcode
   
 signature
   constructors
@@ -24,7 +28,8 @@ strategies
                 constant-fold;
                 name-constructors;
                 normalize-functions;
-                desugar-enums
+                desugar-enums;
+                check-dead-code //Should be very late in the process
   
   //Resugar back into original AST
   resugar-all = innermost(resugar)

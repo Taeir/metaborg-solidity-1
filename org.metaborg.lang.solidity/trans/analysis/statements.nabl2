@@ -111,6 +111,22 @@ rules
     Var{name} <- s,
     Var{name}.origin := Local(),
     Var{name} : tyVarDecl !.
+  
+  //var x = 10; --> x = NrT(8, 8)
+  [[ DeclareVarVar(name, exp) ^ (s) ]] :=
+    [[ exp   ^ (s) : tyVarInit ]],
+//    tyVarInit <test? IsType() | error $[Unable [tyVarInit] does not match defined type [tyVarDecl]] @exp,
+    
+    Var{name} <- s,
+    Var{name}.origin := Local(),
+    Var{name} : tyVarInit !.
+  
+  //var x;
+  [[ DeclareVarVar(name) ^ (s) ]] :=
+    Var{name} <- s,
+    Var{name}.origin := Local(),
+    Var{name} : tyVarVar !,
+    false | warning $[Using var without immediate assignment is not supported!].
 
   //-----------------------------------------------------------------------------------------------
   //Expression statements
@@ -121,3 +137,9 @@ rules
   //Inline assembly
   [[ Assembly(_, _) ^ (s) ]] :=
     false | note $[Inline assembly is not checked].
+  
+  //-----------------------------------------------------------------------------------------------
+  //Dead code
+  [[ DeadStatement(stmt) ^ (s) ]] :=
+    [[ stmt ^ (s) ]],
+    false | warning $[Dead code].
