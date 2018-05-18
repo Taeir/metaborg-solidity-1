@@ -1,0 +1,36 @@
+module analysis/subtypes/bytearrays
+
+rules
+  SubByteArrays [[ p ^ (programScope) ]] :=
+    //Fixed size byte arrays are subtypes of the larger sizes
+    FBytesT(1)  <sub! FBytesT(2),
+    FBytesT(2)  <sub! FBytesT(3),
+    FBytesT(3)  <sub! FBytesT(4),
+    FBytesT(4)  <sub! FBytesT(5),
+    FBytesT(5)  <sub! FBytesT(6),
+    FBytesT(6)  <sub! FBytesT(7),
+    FBytesT(7)  <sub! FBytesT(8),
+    FBytesT(8)  <sub! FBytesT(9),
+    FBytesT(9)  <sub! FBytesT(10),
+    FBytesT(10) <sub! FBytesT(11),
+    FBytesT(11) <sub! FBytesT(12),
+    FBytesT(12) <sub! FBytesT(13),
+    FBytesT(13) <sub! FBytesT(14),
+    FBytesT(14) <sub! FBytesT(15),
+    FBytesT(15) <sub! FBytesT(16),
+    FBytesT(16) <sub! FBytesT(17),
+    FBytesT(17) <sub! FBytesT(18),
+    FBytesT(18) <sub! FBytesT(19),
+    FBytesT(19) <sub! FBytesT(20),
+    FBytesT(20) <sub! FBytesT(21),
+    FBytesT(21) <sub! FBytesT(22),
+    FBytesT(22) <sub! FBytesT(23),
+    FBytesT(23) <sub! FBytesT(24),
+    FBytesT(24) <sub! FBytesT(25),
+    FBytesT(25) <sub! FBytesT(26),
+    FBytesT(26) <sub! FBytesT(27),
+    FBytesT(27) <sub! FBytesT(28),
+    FBytesT(28) <sub! FBytesT(29),
+    FBytesT(29) <sub! FBytesT(30),
+    FBytesT(30) <sub! FBytesT(31),
+    FBytesT(31) <sub! FBytesT(32).

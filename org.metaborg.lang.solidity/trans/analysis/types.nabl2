@@ -61,6 +61,7 @@ signature
     //More general types for constants
     NrT      : INT * INT -> Type
     FractT   : INT * INT * INT * INT -> Type
+    StringLitT : INT -> Type
     
     InvalidType : Type
   

@@ -19,7 +19,10 @@ imports
   analysis/types
   analysis/vars
   
-  analysis/subnrt
+  analysis/subtypes/bytearrays
+  analysis/subtypes/integers
+  analysis/subtypes/numberliterals
+  analysis/subtypes/stringliterals
 
 signature
   name resolution
@@ -186,144 +189,7 @@ rules
   init ^ (programScope) :=
     new programScope,
     
-    //Int * Int Subtyping
-    IntT(8)    <sub! IntT(16),
-    IntT(16)   <sub! IntT(24),
-    IntT(24)   <sub! IntT(32),
-    IntT(32)   <sub! IntT(40),
-    IntT(40)   <sub! IntT(48),
-    IntT(48)   <sub! IntT(56),
-    IntT(56)   <sub! IntT(64),
-    IntT(64)   <sub! IntT(72),
-    IntT(72)   <sub! IntT(80),
-    IntT(80)   <sub! IntT(88),
-    IntT(88)   <sub! IntT(96),
-    IntT(96)   <sub! IntT(104),
-    IntT(104)  <sub! IntT(112),
-    IntT(112)  <sub! IntT(120),
-    IntT(120)  <sub! IntT(128),
-    IntT(128)  <sub! IntT(136),
-    IntT(136)  <sub! IntT(144),
-    IntT(144)  <sub! IntT(152),
-    IntT(152)  <sub! IntT(160),
-    IntT(160)  <sub! IntT(168),
-    IntT(168)  <sub! IntT(176),
-    IntT(176)  <sub! IntT(184),
-    IntT(184)  <sub! IntT(192),
-    IntT(192)  <sub! IntT(200),
-    IntT(200)  <sub! IntT(208),
-    IntT(208)  <sub! IntT(216),
-    IntT(216)  <sub! IntT(224),
-    IntT(224)  <sub! IntT(232),
-    IntT(232)  <sub! IntT(240),
-    IntT(240)  <sub! IntT(248),
-    IntT(248)  <sub! IntT(256),
-
-    //UInt(X) * UInt(X+8) subtyping
-    UIntT(8)   <sub! UIntT(16),
-    UIntT(16)  <sub! UIntT(24),
-    UIntT(24)  <sub! UIntT(32),
-    UIntT(32)  <sub! UIntT(40),
-    UIntT(40)  <sub! UIntT(48),
-    UIntT(48)  <sub! UIntT(56),
-    UIntT(56)  <sub! UIntT(64),
-    UIntT(64)  <sub! UIntT(72),
-    UIntT(72)  <sub! UIntT(80),
-    UIntT(80)  <sub! UIntT(88),
-    UIntT(88)  <sub! UIntT(96),
-    UIntT(96)  <sub! UIntT(104),
-    UIntT(104) <sub! UIntT(112),
-    UIntT(112) <sub! UIntT(120),
-    UIntT(120) <sub! UIntT(128),
-    UIntT(128) <sub! UIntT(136),
-    UIntT(136) <sub! UIntT(144),
-    UIntT(144) <sub! UIntT(152),
-    UIntT(152) <sub! UIntT(160),
-    UIntT(160) <sub! UIntT(168),
-    UIntT(168) <sub! UIntT(176),
-    UIntT(176) <sub! UIntT(184),
-    UIntT(184) <sub! UIntT(192),
-    UIntT(192) <sub! UIntT(200),
-    UIntT(200) <sub! UIntT(208),
-    UIntT(208) <sub! UIntT(216),
-    UIntT(216) <sub! UIntT(224),
-    UIntT(224) <sub! UIntT(232),
-    UIntT(232) <sub! UIntT(240),
-    UIntT(240) <sub! UIntT(248),
-    UIntT(248) <sub! UIntT(256),
-    
-    //UInt(X) is subtype of Int(X+8)
-    UIntT(8)   <sub! IntT(16),
-    UIntT(16)  <sub! IntT(24),
-    UIntT(24)  <sub! IntT(32),
-    UIntT(32)  <sub! IntT(40),
-    UIntT(40)  <sub! IntT(48),
-    UIntT(48)  <sub! IntT(56),
-    UIntT(56)  <sub! IntT(64),
-    UIntT(64)  <sub! IntT(72),
-    UIntT(72)  <sub! IntT(80),
-    UIntT(80)  <sub! IntT(88),
-    UIntT(88)  <sub! IntT(96),
-    UIntT(96)  <sub! IntT(104),
-    UIntT(104) <sub! IntT(112),
-    UIntT(112) <sub! IntT(120),
-    UIntT(120) <sub! IntT(128),
-    UIntT(128) <sub! IntT(136),
-    UIntT(136) <sub! IntT(144),
-    UIntT(144) <sub! IntT(152),
-    UIntT(152) <sub! IntT(160),
-    UIntT(160) <sub! IntT(168),
-    UIntT(168) <sub! IntT(176),
-    UIntT(176) <sub! IntT(184),
-    UIntT(184) <sub! IntT(192),
-    UIntT(192) <sub! IntT(200),
-    UIntT(200) <sub! IntT(208),
-    UIntT(208) <sub! IntT(216),
-    UIntT(216) <sub! IntT(224),
-    UIntT(224) <sub! IntT(232),
-    UIntT(232) <sub! IntT(240),
-    UIntT(240) <sub! IntT(248),
-    UIntT(248) <sub! IntT(256),
-    
-    //UInt is subtype of Fbytes
-    UIntT(8)   <sub! FBytesT(1),
-    UIntT(16)  <sub! FBytesT(2),
-    UIntT(24)  <sub! FBytesT(3),
-    UIntT(32)  <sub! FBytesT(4),
-    UIntT(40)  <sub! FBytesT(5),
-    UIntT(48)  <sub! FBytesT(6),
-    UIntT(56)  <sub! FBytesT(7),
-    UIntT(64)  <sub! FBytesT(8),
-    UIntT(72)  <sub! FBytesT(9),
-    UIntT(80)  <sub! FBytesT(10),
-    UIntT(88)  <sub! FBytesT(11),
-    UIntT(96)  <sub! FBytesT(12),
-    UIntT(104) <sub! FBytesT(13),
-    UIntT(112) <sub! FBytesT(14),
-    UIntT(120) <sub! FBytesT(15),
-    UIntT(128) <sub! FBytesT(16),
-    UIntT(136) <sub! FBytesT(17),
-    UIntT(144) <sub! FBytesT(18),
-    UIntT(152) <sub! FBytesT(19),
-    UIntT(160) <sub! FBytesT(20),
-    UIntT(168) <sub! FBytesT(21),
-    UIntT(176) <sub! FBytesT(22),
-    UIntT(184) <sub! FBytesT(23),
-    UIntT(192) <sub! FBytesT(24),
-    UIntT(200) <sub! FBytesT(25),
-    UIntT(208) <sub! FBytesT(26),
-    UIntT(216) <sub! FBytesT(27),
-    UIntT(224) <sub! FBytesT(28),
-    UIntT(232) <sub! FBytesT(29),
-    UIntT(240) <sub! FBytesT(30),
-    UIntT(248) <sub! FBytesT(31),
-    UIntT(256) <sub! FBytesT(32),
-    
-    
-    
-    //The following section is generated out of these rules.
-    //Basically, since NaBL does not allow wildcards in the different sides,
-    //I replace all the wildcards with the possible instantiations.
+    //TODO Substringlit
     
     //Casting int -> int/uint ; uint -> int/uint
     IntTS()  <cast! IntTS(),
@@ -390,7 +256,10 @@ rules
 
   [[ p@Program(elements) ^ (programScope) ]] :=
     //More subtyping relations
-    NumberTypeSubs[[ p ^ (programScope) ]],
+    SubNumberLiterals [[ p ^ (programScope) ]],
+    SubStringLiterals [[ p ^ (programScope) ]],
+    SubByteArrays     [[ p ^ (programScope) ]],
+    SubIntegers       [[ p ^ (programScope) ]],
     
     Globals [[ p ^ (programScope) ]],
     

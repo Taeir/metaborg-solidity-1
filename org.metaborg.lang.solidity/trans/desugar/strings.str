@@ -1,0 +1,25 @@
+module desugar/strings
+
+imports
+  signatures/expressions-sig
+  
+signature
+  constructors
+  StringLit : String * INT -> Exp
+
+rules
+  //Add a length to string literals, that is -1 if the string is longer than 32 characters.
+  desugar: StringLit(x) -> StringLit(x', y)
+    where
+    (
+      (<string-starts-with(|"\"")> x; x':= <un-double-quote> x) <+
+      (<string-starts-with(|"'")> x; x':= <un-single-quote> x)
+    );
+    len := <strlen> x';
+    (
+      (<gt> (len, 32); y := -1) <+
+      (y := len)
+    )
+  
+  //Convert back to original AST
+  resugar: StringLit(x, _) -> StringLit(x)

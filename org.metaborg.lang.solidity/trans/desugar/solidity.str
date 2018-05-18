@@ -10,6 +10,7 @@ imports
   desugar/solimports
   desugar/statements
   desugar/statevariables
+  desugar/strings
   desugar/types
   
 signature

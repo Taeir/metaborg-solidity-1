@@ -34,11 +34,8 @@ rules
     //TODO add relation to check conformance with string, array, etc.
     tyHexStringLiteral == StringT().
   
-  //TODO Add size in desugar step and use it for convertability?
-  [[ StringLit(_) ^ (s) : tyStringLiteral ]] :=
-    //TODO add relation to allow string, bytes, bytes1-bytes32 (based on size?), etc.
-    //TODO Distinguish between string (pointer) and literal string (byte array-like)?
-    tyStringLiteral == StringT().
+  [[ StringLit(_, len) ^ (s) : tyStringLiteral ]] :=
+    tyStringLiteral == StringLitT(len).
     
   [[ LitArray(exps) ^ (s) : ty ]] :=
     //TODO Determine size and allow both fixed/dynamic?
