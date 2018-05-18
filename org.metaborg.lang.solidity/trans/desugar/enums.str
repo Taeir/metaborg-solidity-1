@@ -1,0 +1,25 @@
+module desugar/enums
+
+imports
+  signatures/enums-sig
+  
+signature
+  constructors
+    EnumValue : String * String -> EnumValue
+
+strategies
+  desugar-enums = topdown(try(desugar-enum))
+
+rules
+  desugar-enum: Enum(name, values) -> Enum(name, values')
+    where
+    values' := <map(add-name-to-enum-value(|name))> values
+  
+  /**
+   * Adds the given name to constructors.
+   */
+  add-name-to-enum-value(|enumName): EnumValue(vName) -> EnumValue(enumName, vName)
+  
+  //-----------------------------------------------------------------------------------------------
+  resugar: EnumValue(n, _) -> EnumValue(n)
+  

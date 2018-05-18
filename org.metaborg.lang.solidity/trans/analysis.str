@@ -17,6 +17,7 @@ signature
     ReturnParam   : Origin
     Local         : Origin
     StructField   : Origin
+    EnumValue     : Origin
     
     TrueC         : Constant
     FalseC        : Constant

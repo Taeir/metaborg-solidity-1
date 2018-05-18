@@ -36,7 +36,7 @@ signature
 
     //User defined types
     EnumT      : Type
-    EventT     : Type
+    EventT     : list(Type) -> Type
     StructT    : Type
     ContractT  : Type
     InterfaceT : Type
@@ -127,4 +127,25 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Var type
   [[ Var() ^ (s) : VarT() ]].
+  
+  //A reference to a type
+  [[ TypeRef(name) ^ (s) : tyRef ]] :=
+    TypeReferrable{name} -> s,
+    TypeReferrable{name} |-> ref | error $[Unable to find [name]] @name,
+    ref : tyRef | error @name.
+  
+  //A path reference to a type
+  [[ TypeRef(ref, name) ^ (s) : tyRef ]] :=
+    [[ ref ^ (s) : tyRefBase ]],
+    tyRefBase == NamedT(occ, tyRefBaseBase) | error $[Unable to find [ref]] @name,
+    
+    occ ?=I=> occScope | error @name,
+    
+    new resolveScope,
+    resolveScope -P-> occScope,
+    
+    TypeReferrable{name} -> resolveScope,
+    TypeReferrable{name} |-> ref | error $[Unable to find [name]] @name,
+    ref : tyRef | error @name.
+  
   

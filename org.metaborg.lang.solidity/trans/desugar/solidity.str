@@ -3,6 +3,7 @@ module desugar/solidity
 imports
   signatures/-
   desugar/contracts
+  desugar/enums
   desugar/expressions
   desugar/functions
   desugar/numbers
@@ -18,7 +19,11 @@ signature
 
 strategies
   //Desugar, fold constants, name constructors, normalize functions
-  desugar-all = innermost(desugar); constant-fold; name-constructors; normalize-functions
+  desugar-all = innermost(desugar);
+                constant-fold;
+                name-constructors;
+                normalize-functions;
+                desugar-enums
   
   //Resugar back into original AST
   resugar-all = innermost(resugar)

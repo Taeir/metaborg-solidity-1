@@ -49,8 +49,28 @@ rules
   [[ Break()      ^ (s) ]].
   [[ Continue()   ^ (s) ]].
   [[ Throw()      ^ (s) ]].
+//  [[ Emit(name, args) ^ (s) ]] :=
+//    Event{name} -> s,
+//    Event{name} |-> event | error $[Unable to find event [name]] @name,
+//    event : tyEvent,
+//    tyEvent == NamedT(event, EventT(paramTys)),
+//    
+//    Map1T [[ args ^ (s) : argTys ]],
+//    argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the event parameter types [paramTys]].
+
+  [[ Emit(ref, args) ^ (s) ]] :=
+    [[ ref ^ (s) : tyRef ]],
+    tyRef == NamedT(event, tyEvent) | error $[Cannot find event [ref]], //place at args to fix incorrect placement
+    tyEvent == EventT(paramTys)     | error $[[ref] is not an event],   //place at args to fix incorrect placement
+    
+    Map1T [[ args ^ (s) : argTys ]],
+    argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the event parameter types [paramTys]].
+  
   [[ Emit(call)   ^ (s) ]] :=
+    false | note $[Failed to desugar emit],
     [[ call ^ (s) : ty ]].
+  
+  //TODO Idea: Have different named rules in nabl for return statements in different contexts?
   
   //Return statements in constructor
   [[ VoidReturn() ^ (s) ]].

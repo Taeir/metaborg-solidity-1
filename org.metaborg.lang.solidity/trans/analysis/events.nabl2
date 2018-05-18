@@ -1,0 +1,38 @@
+module analysis/events
+
+imports
+  signatures/-
+
+signature
+  namespaces
+    Event
+
+rules
+  [[ Event(name, params, _) ^ (s) ]] :=
+    //Define event and type, also make it referrable
+    Event{name}          <- s,
+    TypeReferrable{name} <- s,
+    Event{name}          : eventType !,
+    TypeReferrable{name} : eventType !,
+    eventType == NamedT(Event{name}, EventT(paramTys)),
+    
+    //Create scope
+    new eventScope,
+    eventScope -P-> s,
+    
+    // Resolve parameters
+    Map1T [[ params ^ (eventScope) : paramTys ]],
+
+    Event{name}          =I=> eventScope,
+    TypeReferrable{name} =I=> eventScope.
+  
+  [[ EventParam(solTy, _, Some(name)) ^ (eventScope) : tyEventParam ]] :=
+    [[ solTy ^ (eventScope) : tyEventParam ]],
+    
+    Var{name} <- eventScope,
+    Var{name}.origin   := Param(),
+    Var{name}.constant := FalseC(),
+    Var{name} : tyEventParam !.
+  
+  [[ EventParam(solTy, _, None()) ^ (eventScope) : tyEventParam ]] :=
+    [[ solTy ^ (eventScope) : tyEventParam ]].

@@ -6,6 +6,8 @@ imports
   desugar/numbers
   
   analysis/contracts
+  analysis/enums
+  analysis/events
   analysis/expressions
   analysis/functions
   analysis/globals
@@ -51,6 +53,7 @@ signature
 
   namespaces
     Import { iname : string }
+    Referrable
   
   sorts
     NaBLBool

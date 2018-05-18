@@ -1,0 +1,43 @@
+module analysis/enums
+
+imports
+  signatures/enums-sig
+
+signature
+  namespaces
+    Enum
+
+rules
+  [[ Enum(name, values) ^ (s) ]] :=
+    //Define event and type, also make it referrable
+    Enum{name}           <- s,
+    TypeReferrable{name} <- s,
+    Referrable{name}     <- s,
+    Var{name}            <- s, //Enum shares variable scope
+    Enum{name}           : enumType !,
+    TypeReferrable{name} : enumType !,
+    Referrable{name}     : enumType !,
+    Var{name}            : enumType !,
+    enumType == NamedT(Enum{name}, EnumT()),
+    
+    //Create scope
+    new enumScope,
+    enumScope -P-> s,
+    
+    // Resolve enum values
+    Map1T [[ values ^ (enumScope) : enumTys ]],
+
+    Enum{name}           =I=> enumScope,
+    TypeReferrable{name} =I=> enumScope,
+    Referrable{name}     =I=> enumScope,
+    Var{name}            =I=> enumScope.
+  
+  [[ EnumValue(enumName, name) ^ (enumScope) : tyEnumValue ]] :=
+    Enum{enumName} -> enumScope,
+    Enum{enumName} |-> enum | error $[Unable to find enum with name [enumName]],
+    enum : tyEnumValue,
+    
+    Var{name} <- enumScope,
+    Var{name}.origin   := EnumValue(),
+    Var{name}.constant := FalseC(),
+    Var{name} : tyEnumValue !.
