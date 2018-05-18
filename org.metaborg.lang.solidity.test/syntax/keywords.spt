@@ -100,13 +100,23 @@ test F: keyword for   [[ for   ]] parse fails
 
 //-----------------------------------------------------------------------------
 //Standard Types
-test F: type keyword bool    [[ bool    ]] parse fails
-test F: type keyword int     [[ int     ]] parse fails
-test F: type keyword uint    [[ uint    ]] parse fails
-test F: type keyword fixed   [[ fixed   ]] parse fails
-test F: type keyword ufixed  [[ ufixed  ]] parse fails
-test F: type keyword address [[ address ]] parse fails
-test F: type keyword bytes   [[ bytes   ]] parse fails
-test F: type keyword byte    [[ byte    ]] parse fails
-test F: type keyword string  [[ string  ]] parse fails
-test F: type keyword var     [[ var     ]] parse fails
+test F: type keyword bool      [[ bool      ]] parse fails
+test F: type keyword int       [[ int       ]] parse fails
+test F: type keyword int8      [[ int8      ]] parse fails
+test F: type keyword int16     [[ int16     ]] parse fails
+test F: type keyword int256    [[ int256    ]] parse fails
+test F: type keyword uint      [[ uint      ]] parse fails
+test F: type keyword uint8     [[ uint8     ]] parse fails
+test F: type keyword uint16    [[ uint16    ]] parse fails
+test F: type keyword uint256   [[ uint256   ]] parse fails
+test F: type keyword fixed     [[ fixed     ]] parse fails
+test F: type keyword fixed8x8  [[ fixed8x8  ]] parse fails
+test F: type keyword ufixed    [[ ufixed    ]] parse fails
+test F: type keyword ufixed8x8 [[ ufixed8x8 ]] parse fails
+test F: type keyword address   [[ address   ]] parse fails
+test F: type keyword bytes     [[ bytes     ]] parse fails
+test F: type keyword bytes1    [[ bytes1    ]] parse fails
+test F: type keyword bytes32   [[ bytes32   ]] parse fails
+test F: type keyword byte      [[ byte      ]] parse fails
+test F: type keyword string    [[ string    ]] parse fails
+test F: type keyword var       [[ var       ]] parse fails
