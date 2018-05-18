@@ -66,6 +66,12 @@ context-free syntax
   Statement            = ExpStatement
   
   //-----------------------------------------------------------------
+  //Return statements
+  ReturnStatement.VoidReturn      = <return;>
+  ReturnStatement.ReturnStatement = <return <Exp>;>
+  Statement                       = ReturnStatement
+  
+  //-----------------------------------------------------------------
   //Inline assembly
   Statement            = AssemblyStatement
 
@@ -73,20 +79,4 @@ context-free syntax
   //Added Print statement for usefullness
   ExtraStatement.Print = < print(<Exp>); >
   Statement = ExtraStatement
-  
-  //-----------------------------------------------------------------
-  //Shorthand for a statement or a return/voidreturn.
-  StatementOrAnyReturn = Statement
-  StatementOrAnyReturn = ReturnStatement
-  StatementOrAnyReturn = VoidReturnStatement
-  
-  //Shorthand for a statement or a return.
-  StatementOrReturn = Statement
-  StatementOrReturn = ReturnStatement
-  
-  //Shorthand for a statement or a void return.
-  StatementOrVoidReturn = Statement
-  StatementOrVoidReturn = VoidReturnStatement
-  
-  VoidReturnStatement.VoidReturn  = <return;>
-  ReturnStatement.ReturnStatement = <return <Exp>;>
+

@@ -36,18 +36,18 @@ context-free syntax
 // Full function
   Function.Function = <
     function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
-      <{StatementOrAnyReturn "\n"}*>
+      <{Statement "\n"}*>
     }>
   
   Function.VoidFunction = <
     function <ID>(<{Param ", "}*>) <ModifiersFun*> {
-      <{StatementOrAnyReturn "\n"}*>
+      <{Statement "\n"}*>
     }>
   
   //Fallback function has no name, no parameters and no returns.
   Function.FallBackFunction = <
     function() <ModifiersFun*> {
-      <{StatementOrVoidReturn "\n"}*>
+      <{Statement "\n"}*>
     }>
   
   //---------------------------------------------------------------------------
@@ -59,12 +59,12 @@ context-free syntax
   //Constructors
   Constructor.Constructor = <
     constructor(<{Param ", "}*>) <ModifierCon?> {
-      <{StatementOrVoidReturn "\n"}*>
+      <{Statement "\n"}*>
     }>
   
   Constructor.ConstructorWithSuper = <
     constructor(<{Param ", "}*>) <ModifierCon?> <ModifierConSuper> <ModifierCon?> {
-      <{StatementOrVoidReturn "\n"}*>
+      <{Statement "\n"}*>
     }>
   
   //---------------------------------------------------------------------------
