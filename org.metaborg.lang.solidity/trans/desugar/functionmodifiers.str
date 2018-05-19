@@ -1,0 +1,16 @@
+module desugar/functionmodifiers
+
+imports
+  signatures/functionmodifiers-sig
+
+rules
+  desugar: FunctionModifier(name, None(), stmts) -> FunctionModifier(name, FMParams([]), stmt)
+    where
+    stmt := Block(stmts)
+  desugar: FunctionModifier(name, Some(fmparams), stmts) -> FunctionModifier(name, fmparams, stmt)
+    where
+    stmt := Block(stmts)
+  
+  //-----------------------------------------------------------------------------------------------
+  resugar: FunctionModifier(n, FMParams([]), s)      -> FunctionModifier(n, None(), [s])
+  resugar: FunctionModifier(n, f@FMParams([_|_]), s) -> FunctionModifier(n, Some(f), [s])

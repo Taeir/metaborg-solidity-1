@@ -5,6 +5,7 @@ imports
   desugar/contracts
   desugar/enums
   desugar/expressions
+  desugar/functionmodifiers
   desugar/functions
   desugar/numbers
   desugar/solimports

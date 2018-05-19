@@ -9,6 +9,7 @@ imports
   analysis/enums
   analysis/events
   analysis/expressions
+  analysis/functionmodifiers
   analysis/functions
   analysis/globals
   analysis/interfaces

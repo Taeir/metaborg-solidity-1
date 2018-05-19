@@ -9,61 +9,62 @@ signature
   
   constructors
     //Numeric types
-    IntT       : INT -> Type
-    UIntT      : INT -> Type
-    FixedT     : INT * INT -> Type
-    UFixedT    : INT * INT -> Type
+    IntT         : INT -> Type
+    UIntT        : INT -> Type
+    FixedT       : INT * INT -> Type
+    UFixedT      : INT * INT -> Type
     
     //One word types
-    BoolT      : Type
-    AddressT   : Type
-//    ByteT      : Type //byte == bytes1
-    StringT    : Type
+    BoolT        : Type
+    AddressT     : Type
+//    ByteT        : Type //byte == bytes1
+    StringT      : Type
     
     //Byte arrays
-    FBytesT    : INT -> Type
-    DBytesT    : Type
+    FBytesT      : INT -> Type
+    DBytesT      : Type
     
     //Array types
-    FArrayT    : Type * INT -> Type
-    DArrayT    : Type -> Type
+    FArrayT      : Type * INT -> Type
+    DArrayT      : Type -> Type
     
     //Function types
-    FunctionT  : list(Type) * list(Type) -> Type
+    FunctionT    : list(Type) * list(Type) -> Type
+    FunctionModT : list(Type) -> Type
     
     //Mapping types
-    MappingT   : Type * Type -> Type
+    MappingT     : Type * Type -> Type
 
     //User defined types
-    EnumT      : Type
-    EventT     : list(Type) -> Type
-    StructT    : Type
-    ContractT  : Type
-    InterfaceT : Type
-    LibraryT   : Type
-    BuiltInT   : Type
+    EnumT        : Type
+    EventT       : list(Type) -> Type
+    StructT      : Type
+    ContractT    : Type
+    InterfaceT   : Type
+    LibraryT     : Type
+    BuiltInT     : Type
     
     //Named type
-    NamedT     : occurrence * Type -> Type
+    NamedT       : occurrence * Type -> Type
     
     //Var type
-    VarT       : Type
+    VarT         : Type
     
     //Simplified type
-    IntTS    : Type
-    UIntTS   : Type
-    FBytesTS : Type
-    FixedTS  : Type
-    UFixedTS : Type
-    FArrayTS : Type -> Type
-    NamedTS  : Type
+    IntTS        : Type
+    UIntTS       : Type
+    FBytesTS     : Type
+    FixedTS      : Type
+    UFixedTS     : Type
+    FArrayTS     : Type -> Type
+    NamedTS      : Type
     
     //More general types for constants
-    NrT      : INT * INT -> Type
-    FractT   : INT * INT * INT * INT -> Type
-    StringLitT : INT -> Type
+    NrT          : INT * INT -> Type
+    FractT       : INT * INT * INT * INT -> Type
+    StringLitT   : INT -> Type
     
-    InvalidType : Type
+    InvalidType  : Type
   
   namespaces
     //Something that can be referenced as a type.
