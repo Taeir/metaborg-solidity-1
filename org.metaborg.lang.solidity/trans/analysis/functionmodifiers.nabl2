@@ -23,10 +23,10 @@ rules
     modScope -P-> s,
     
     // Resolve parameters
-    Map1T [[ params ^ (modScope) : paramTys ]],
+    [[ params ^ (modScope) : paramTys ]],
 
     FunctionModifier{name} =I=> modScope,
     TypeReferrable{name}   =I=> modScope.
   
-  [[ FMParams(params) ^ (modScope) ]] :=
+  [[ FMParams(params) ^ (modScope) : paramTys]] :=
     Map1T [[ params ^ (modScope) : paramTys ]].
