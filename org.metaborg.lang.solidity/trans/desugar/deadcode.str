@@ -11,26 +11,29 @@ signature
 
 strategies
   //Should be applied very late in the desugaring
-  check-dead-code = topdown(try(check-dead))
+  check-dead-code = topdown(try(check-dead)); innermost(fix-nested-deadstatements)
 
 rules
   check-dead: Block(stmts) -> Block(<check-dead> stmts)
   
   //Any code after an "exit" statement (return, continue, break, throw or emit) is marked as dead.
   check-dead: l@[]  -> l
-  check-dead: l@[_] -> l
   check-dead: l@[h | t] -> [h | t']
     where
-    (<?ReturnStatement(_, _) +
-      ?VoidReturn(_) +
-      ?Continue() +
-      ?Break() +
-      ?Throw() +
-      ?Emit(_, _)> h; t' := <map(\s -> DeadStatement(s)\)> t) <+
-    (t' := <check-dead> t)
+    (
+      (<?ReturnStatement(_, _) +
+        ?VoidReturn(_) +
+        ?Continue() +
+        ?Break() +
+        ?Throw() +
+        ?Emit(_, _)> h; t' := <map(\s -> DeadStatement(s)\)> t) <+
+      (t' := <check-dead> t)
+    )
   
-  
+  //Fix nested deadstatements.
+  fix-nested-deadstatements: DeadStatement(DeadStatement(s)) -> DeadStatement(s)
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to the original AST
   resugar: DeadStatement(s) -> s
+  
