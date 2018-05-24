@@ -1,4 +1,4 @@
-package org.metaborg.lang.solidity.strategies;
+package org.metaborg.lang.evmbytecode.strategies;
 
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.strategoxt.lang.Context;
@@ -65,28 +65,31 @@ public abstract class SafeStrategy extends Strategy {
 		}
 	}
 	
-	public IStrategoTerm call(Context context, IStrategoTerm current) {
+	public IStrategoTerm call(Context context, IStrategoTerm current) throws Exception {
 		throw new InvalidArgumentsException();
 	}
 	
-	public IStrategoTerm call(Context context, IStrategoTerm current, IStrategoTerm t1) {
+	public IStrategoTerm call(Context context, IStrategoTerm current, IStrategoTerm t1) throws Exception {
 		throw new InvalidArgumentsException();
 	}
 	
-	public IStrategoTerm call(Context context, IStrategoTerm current, IStrategoTerm t1, IStrategoTerm t2) {
+	public IStrategoTerm call(Context context, IStrategoTerm current, IStrategoTerm t1, IStrategoTerm t2) throws Exception {
 		throw new InvalidArgumentsException();
 	}
 	
-	public IStrategoTerm call(Context context, IStrategoTerm current, IStrategoTerm t1, IStrategoTerm t2, IStrategoTerm t3) {
+	public IStrategoTerm call(Context context, IStrategoTerm current, IStrategoTerm t1, IStrategoTerm t2, IStrategoTerm t3) throws Exception {
 		throw new InvalidArgumentsException();
 	}
 	
-	public IStrategoTerm call(Context context, IStrategoTerm current, Strategy s1) {
+	public IStrategoTerm call(Context context, IStrategoTerm current, Strategy s1) throws Exception {
 		throw new InvalidArgumentsException();
 	}
 	
 	protected class InvalidArgumentsException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
-
+		public InvalidArgumentsException() {}
+		public InvalidArgumentsException(String msg) {
+			super(msg);
+		}
 	}
 }
