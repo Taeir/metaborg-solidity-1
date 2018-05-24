@@ -20,13 +20,7 @@ context-free start-symbols
 context-free syntax
   FunctionModifier.FunctionModifier = <
     modifier <ID> <FunctionModifierParams?> {
-      <{FMStatement "\n"}*>
+      <{Statement "\n"}*>
     }>
   
   FunctionModifierParams.FMParams = <(<{Param ", "}*>)>
-  
-  //Function modifier can contain all normal statements + the underscore statement
-  FMStatement = UnderscoreStatement
-  FMStatement = Statement
-  
-  UnderscoreStatement.Underscore = <_;>

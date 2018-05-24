@@ -60,6 +60,11 @@ context-free syntax
   VarDeclStatement.DeclareVarAssign = <<LocalVarType> <ID> = <Exp>;>
   Statement                         = VarDeclStatement
   
+  //---------------------------------------------------------------------------
+  //Underscore statement (modifiers)
+  UnderscoreStatement.Underscore = <_;> {prefer}
+  Statement                      = UnderscoreStatement
+  
   //-----------------------------------------------------------------
   //Arbitrary Expressions
   ExpStatement.ExpStmt = <<Exp>;>
@@ -80,3 +85,6 @@ context-free syntax
   ExtraStatement.Print = < print(<Exp>); >
   Statement = ExtraStatement
 
+
+context-free priorities
+  UnderscoreStatement.Underscore > ExpStatement.ExpStmt
