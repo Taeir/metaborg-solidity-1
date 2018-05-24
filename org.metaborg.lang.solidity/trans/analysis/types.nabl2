@@ -50,6 +50,9 @@ signature
     //Var type
     VarT         : Type
     
+    //Void type (for functions with no return)
+    VoidT        : Type
+    
     //Simplified type
     IntTS        : Type
     UIntTS       : Type

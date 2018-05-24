@@ -85,7 +85,7 @@ rules
     //---------------------------------------------------------------------------------------------
     //Global functions and variables
     Function{"assert"} <- programScope,
-    Function{"assert"} : FunctionT([ BoolT() ], []) !!,
+    Function{"assert"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
     
     //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
 //    Function{"blockhash"} <- programScope,
@@ -99,17 +99,17 @@ rules
     
     //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
 //    Function{"require"} <- programScope,
-//    Function{"require"} : FunctionT([ BoolT() ], []) !!,
+//    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
     
     Function{"require"} <- programScope,
-    Function{"require"} : FunctionT([ BoolT(), StringT() ], []) !!,
+    Function{"require"} : FunctionT([ BoolT(), StringT() ], [ VoidT() ]) !!,
     
     //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
 //    Function{"revert"} <- programScope,
-//    Function{"revert"} : FunctionT([], []) !!,
+//    Function{"revert"} : FunctionT([], [ VoidT() ]) !!,
     
     Function{"revert"} <- programScope,
-    Function{"revert"} : FunctionT([ StringT() ], []) !!,
+    Function{"revert"} : FunctionT([ StringT() ], [ VoidT() ]) !!,
     
     //---------------------------------------------------------------------------------------------
     //Hashing functions
@@ -129,7 +129,7 @@ rules
     
     Function{"selfdestruct"} <- programScope,
     Function{"selfdestruct"} : tyDestruct !!,
-    tyDestruct == FunctionT([ AddressT() ], []),
+    tyDestruct == FunctionT([ AddressT() ], [ VoidT() ]),
     
     Function{"suicide"} <- programScope,
     Function{"suicide"} : tyDestruct !!.
@@ -144,8 +144,8 @@ rules
 //    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!.
 //    
 ////    Function{"require"} <- programScope,
-////    Function{"require"} : FunctionT([ BoolT() ], []) !!,
+////    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
 ////    
 ////    Function{"revert"} <- programScope,
-////    Function{"revert"} : FunctionT([], []) !!.
+////    Function{"revert"} : FunctionT([], [ VoidT() ]) !!.
     
