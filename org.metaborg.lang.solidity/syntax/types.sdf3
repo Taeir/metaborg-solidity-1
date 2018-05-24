@@ -117,6 +117,11 @@ context-free syntax
   LocalVarType.Var = <var>
   LocalVarType = Type
 
+context-free restrictions
+  FAType     -/- [a-zA-Z0-9]
+  DAType     -/- [a-zA-Z0-9]
+  SimpleType -/- [a-zA-Z0-9]
+
 syntax
   //I define the different type variants in kernel syntax.
   //If I define them in context-free syntax, it would allow types like `int   8`
