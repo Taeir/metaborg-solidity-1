@@ -12,7 +12,7 @@ lexical syntax
   //Define as keyword
   KEYWORD = FUNMODKEYWORD
   FUNMODKEYWORD = "modifier"
-  ID = FUNMODKEYWORD {reject}
+  ID = "modifier" {reject}
 
 context-free start-symbols
   FunctionModifier

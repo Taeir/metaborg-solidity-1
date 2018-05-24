@@ -9,8 +9,6 @@ signature
 
 rules
   [[ FunctionModifier(name, params, stmt) ^ (s) ]] :=
-    [[ stmt ^ (s) ]],
-    
     //Define modifier and type, also make it referrable
     FunctionModifier{name} <- s,
     TypeReferrable{name}   <- s,
@@ -24,6 +22,9 @@ rules
     
     // Resolve parameters
     [[ params ^ (modScope) : paramTys ]],
+    
+    //Resolve body
+    [[ stmt ^ (modScope) ]],
 
     FunctionModifier{name} =I=> modScope,
     TypeReferrable{name}   =I=> modScope.
