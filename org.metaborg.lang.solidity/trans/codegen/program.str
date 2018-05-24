@@ -222,6 +222,7 @@ rules
   content-to-ebc = eventdecl-to-ebc
   content-to-ebc = enumdecl-to-ebc
   content-to-ebc = structdecl-to-ebc
+  content-to-ebc = funmoddecl-to-ebc
   
   //-----------------------------------------------------------------------------------------------
   //State variables
@@ -279,6 +280,12 @@ rules
   //-----------------------------------------------------------------------------------------------
   
   structdecl-to-ebc: Struct(name, fields) -> [] //TODO
+  
+  //-----------------------------------------------------------------------------------------------
+  //Function modifiers
+  //-----------------------------------------------------------------------------------------------
+  
+  funmoddecl-to-ebc: FunctionModifier(name, params, stmts) -> [] //TODO
   
   //-----------------------------------------------------------------------------------------------
   //Statements
@@ -340,6 +347,10 @@ rules
     ]
   
   //TODO If without else (or desugar away)
+  
+  //TODO For loops
+  
+  //TODO While loops
   
   //-----------------------------------------------------------------------------------------------
   //Expressions
