@@ -83,14 +83,14 @@ rules
    */
   normalize-fun: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods, retParams, body')
     where
-    body' := Block(<map(add-function-name-to-return(|name))> body)
+    body' := Block(<innermost(add-function-name-to-return(|name))> body)
   normalize-fun: VoidFunction(name, params, mods, body) -> Function(name, params, mods, [], body')
     where
-    body' := Block(<map(add-function-name-to-return(|name))> body)
+    body' := Block(<innermost(add-function-name-to-return(|name))> body)
   normalize-fun: FallBackFunction(mods, body) -> Function(name, [], mods, [], body')
     where
     name := "*fallback";
-    body' := Block(<map(add-function-name-to-return(|name))> body)
+    body' := Block(<innermost(add-function-name-to-return(|name))> body)
   
   //For constuctors, only do the block / modifier fix. Return statements are allowed in the constructor.
   normalize-fun: Constructor(name, params, mod, body) -> Constructor(name, params, mod, Block(body))
@@ -103,14 +103,8 @@ rules
    * Adds the given name of the function to all the return statements in it.
    * This allows us to type check the return statements in NaBL2.
    */
-  add-function-name-to-return(|funName): Block(stmts) -> Block(stmts')
-    where
-    stmts' := <map(add-function-name-to-return(|funName))> stmts
   add-function-name-to-return(|funName): ReturnStatement(e) -> ReturnStatement(funName, e)
   add-function-name-to-return(|funName): VoidReturn()       -> VoidReturn(funName)
-  add-function-name-to-return(|funName): x -> x
-    where
-    not(<?Block(_)> x); not(<?ReturnStatement(_)> x); not(<?VoidReturn()> x)
 
 
   //Unpack returns and returnstatement
