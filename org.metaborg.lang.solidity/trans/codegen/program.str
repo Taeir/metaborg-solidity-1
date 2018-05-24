@@ -5,16 +5,17 @@ imports
   
   signatures/ebc/-
 
-  signatures/expressions-sig
-  signatures/functions-sig
-  signatures/statements-sig
+  signatures/-
   
   desugar/-
-  desugar/expressions
+  
+  analysis/types
+  
+  utils/externals
 
 strategies
   /**
-   * Repeats strategy s count times.
+   * Repeats strategy s n times.
    * Fails if any of the applications fails.
    */
   do-n(s|n) = (<leq> (n, 0); id) <+ (s; n' := <subti> (n, 1); do-n(s|n'))
@@ -25,59 +26,112 @@ overlays
 rules
   //TODO Pyethereum execution?
   //TODO ABI Generation
-  /*
-  
-  function x() returns (int8) {
-    return 10;
-  }
-  
-  */
   
   //-----------------------------------------------------------------------------------------------
-  program-init: Program(_) -> [
-    PUSH(1, "0x80"),  //0,1
-    PUSH(1, "0x40"),  //2,3
-    MSTORE(),         //4
-    CALLVALUE(),      //5
-    
-    //If return of CALLVALUE is zero (success), then jump to tag1
-    DUP(1),           //6
-    ISZERO(),         //7
-    PUSHTAG(tag1),    //8-10 (PUSH2)
-    JUMPI(),          //11
-    
-    //Else, REVERT
-    PUSH(1, 0),       //12,13
-    DUP(1),           //14
-    REVERT(),         //15
-    
-    //Tag1: Program start
-    JUMPDEST(tag1),   //16: tag1
-    POP(),            //17
-    <create-push> plen, //18,19
-    PUSH(?, plen),    //18,19 0xE1 = 225 [LENGTH OF CONTRACT CODE]
-    DUP(1),           //20
-    PUSHTAG(tagCode), //21,22,23 (0x001f = 31) [BEGIN OF CONTRACT CODE]
-    PUSH(1, 0),       //24,25            [Start at index 0]
-    CODECOPY(),       //26               [Load the code starting at PC 31 of length 225]
-    PUSH(1, 0),       //27,28
-    RETURN(),         //29
-    STOP(),           //30
-    TAG(tagCode)
-                      //CONTRACT CODE BEGINS HERE
-  ] where
-    <newname> "" => tag1;
-    plen := <instr-len> code
+  //Helper methods
+  //-----------------------------------------------------------------------------------------------
   
   /**
-   * Creates a push with the smallest length fitting the given number.
+   * Creates a push instruction of the appropriate size (smallest length fitting the given number).
    */
+  //TODO biginteger division instead of integer division
   create-push: nr    -> PUSH(<addi> (<divi> (nr, 256), 1), nr)
   //create-push: nrHex -> PUSH(<addHex> (<divHex> (nrHex, "0x100"), "0x1"), nrHex)
   
+  /**
+   * Determines the length of the given list of instructions.
+   */
+  instructions-length: [] -> 0
+  instructions-length: [i | is] -> <addi> (<instr-len> i, <instructions-length> is)
+  
+  /**
+   * Returns the length of the given instruction.
+   *
+   * PUSH<n> = 1 + n
+   * PUSHTAG = PUSH2 = 3
+   * TAG     = 0
+   * OTHERS  = 1
+   */
+  instr-len: PUSH(n, _) -> <addi> (n, 1)
+  instr-len: PUSHTAG(_) -> 3
+  instr-len: TAG(_)     -> 0
+  instr-len: _          -> 1
+  
+  
   //-----------------------------------------------------------------------------------------------
-  //
-  program-to-ebc: [] -> []
+  //Program
+  //-----------------------------------------------------------------------------------------------
+  //A program consists of a specific "contract load" sequence which loads the actual code of the
+  //contract and then jumps into it. 
+  program-to-ebc: Program(content) -> <concat> [
+    [
+      //Default initialization (allocate 128 bytes of memory)
+      PUSH(1, "0x80"),    //0,1
+      PUSH(1, "0x40"),    //2,3
+      MSTORE(),           //4
+      CALLVALUE(),        //5
+      
+      //If return of CALLVALUE is zero (success), then jump to tagLoad
+      DUP(1),             //6
+      ISZERO(),           //7
+      PUSHTAG(tagLoad),   //8,910
+      JUMPI(),            //11
+      
+      //Else, REVERT
+      PUSH(1, 0),         //12,13
+      DUP(1),             //14
+      REVERT(),           //15
+      
+      //TagLoad: Load code
+      JUMPDEST(tagLoad),  //16
+      POP(),              //17
+      <create-push> plen, //18,19,20 [Length of contract code]
+      DUP(1),             //21       [???]
+      PUSHTAG(tagCode),   //22,23,24 [Begin of contract code]
+      PUSH(1, 0),         //25,26    [Start at index 0]
+      CODECOPY(),         //27       [Load the code starting at PC x of length l]
+      PUSH(1, 0),         //28,29    [Push 0 to signal success]
+      RETURN(),           //30       [Return to caller]
+      STOP(),             //31
+      TAG(tagCode)        //32       [Begin of contract code]
+    ],
+    code,
+    [
+      STOP()
+      //TODO FOOTER
+    ]
+  ] where
+    <newname> "" => tagCode;
+    <newname> "" => tagLoad;
+    code := <mapconcat(program-content-to-ebc)> content;
+    plen := <instructions-length> code
+  
+  program-content-to-ebc = pragma-to-ebc
+  program-content-to-ebc = import-to-ebc
+  program-content-to-ebc = interface-to-ebc
+  program-content-to-ebc = library-to-ebc
+  program-content-to-ebc = contract-to-ebc
+  
+  //-----------------------------------------------------------------------------------------------
+  //Pragmas
+  //-----------------------------------------------------------------------------------------------
+  //We can completely ignore pragmas
+  pragma-to-ebc: Pragma(_, _) -> []
+  
+  //-----------------------------------------------------------------------------------------------
+  //Imports
+  //-----------------------------------------------------------------------------------------------
+  //TODO Imports. For now, I just ignore imports
+  import-to-ebc: Import(_, _) -> []
+  
+  //-----------------------------------------------------------------------------------------------
+  //Contract-like
+  //-----------------------------------------------------------------------------------------------
+  //TODO Interfaces
+  interface-to-ebc: Interface(name, content) -> []
+  
+  //Treat libraries like contracts
+  library-to-ebc: Library(name, content) -> <contract-to-ebc> Contract(name, content)
   
   contract-to-ebc: Contract(name, content) -> <concat> [
     //Allocate 128 bytes 
@@ -97,7 +151,7 @@ rules
       PUSH(4, "0xFFFFFFFF"),
       AND(),
       DUP(1),
-      PUSH(4, "0xFF020EFE"),
+      PUSH(4, "0xFF020EFE"), //Hash check??
       EQ(),
       PUSHTAG(tag2),
       JUMPI() ],
@@ -120,15 +174,67 @@ rules
       REVERT() ],
     
     //Tag 3: ???
-    [ JUMPDEST(tag3) ],
+    [ JUMPDEST(tag3),
+      POP(),
+      PUSHTAG(tag4),
+      PUSH(0, 4),
+      DUP(1),
+      CALLDATASIZE(),
+      SUB(),
+      DUP(2),
+      ADD(),
+      SWAP(1),
+      DUP(1),
+      DUP(1),
+      CALLDATALOAD(),
+      SWAP(1),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(1),
+      SWAP(3),
+      SWAP(2),
+      SWAP(1),
+      POP(),
+      POP(),
+      POP(),
+      POP(),
+      PUSHTAG(tag5),
+      JUMP() ],
+    
+    [ JUMPDEST(tag4) ], //TODO
+    [ JUMPDEST(tag5) ],
     
     <map(content-to-ebc)> content
       
   ] where
     tag1 := <new> "";
     tag2 := <new> "";
-    tag3 := <new> ""
+    tag3 := <new> "";
+    tag4 := <new> "";
+    tag5 := <new> ""
   
+  //-----------------------------------------------------------------------------------------------
+  //Contract content
+  //-----------------------------------------------------------------------------------------------
+  //Support statevariables, functions, event, enum and struct definitions
+  content-to-ebc = statevar-to-ebc
+  content-to-ebc = fun-to-ebc
+  content-to-ebc = eventdecl-to-ebc
+  content-to-ebc = enumdecl-to-ebc
+  content-to-ebc = structdecl-to-ebc
+  
+  //-----------------------------------------------------------------------------------------------
+  //State variables
+  //-----------------------------------------------------------------------------------------------
+  
+  statevar-to-ebc: StateVariable(ty, mod, name, None()) -> [] //TODO
+  statevar-to-ebc: StateVariable(ty, mod, name, Some(e)) -> [] //TODO
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, None()) -> [] //TODO Not supported?
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, Some(e)) -> [] //TODO
+  
+  //-----------------------------------------------------------------------------------------------
+  //Functions
+  //-----------------------------------------------------------------------------------------------
   fun-to-ebc: Function(_, params, _, retParams, body) -> instr
     where
     retlen := <length> retParams;
@@ -156,27 +262,59 @@ rules
       [ JUMP() ]
     ]
   
+  //-----------------------------------------------------------------------------------------------
+  //Events
+  //-----------------------------------------------------------------------------------------------
+  
+  eventdecl-to-ebc: Event(name, params, anonymous) -> [] //TODO
+  
+  //-----------------------------------------------------------------------------------------------
+  //Enums
+  //-----------------------------------------------------------------------------------------------
+  
+  enumdecl-to-ebc: Enum(name, fields) -> [] //TODO
+  
+  //-----------------------------------------------------------------------------------------------
+  //Structs
+  //-----------------------------------------------------------------------------------------------
+  
+  structdecl-to-ebc: Struct(name, fields) -> [] //TODO
+  
+  //-----------------------------------------------------------------------------------------------
+  //Statements
+  //-----------------------------------------------------------------------------------------------
   ret-to-ebc(|stacklen): ReturnStatement(name, e1) -> <concat> [
     <exp-to-ebc> e1,
     //TODO Get function type from NaBL to determine return type
     [ 
-      SWAP()
+      //TODO Empty stack up to return
+      //TODO Swap return address up
+      JUMP()
     
     ]
   ] where
     a := <nabl2-get-ast-analysis>;
     ref-occ := <nabl2-mk-occurrence(|"Function")> name;
     dec-occ := <nabl2-get-resolved-name(|a); Fst> ref-occ;
-    type    := <nabl2-get-type(|a)> dec-occ
+    type    := <nabl2-get-type(|a)> dec-occ;
+    ret-type := <return-type> type
   
   ret-to-ebc: r@VoidReturn(name) -> <concat> [
     //TODO Get function type from NaBL to determine how much to pop?
     //TODO Keep track of current stack size to pop properly?
-  ]
+    //TODO Empty stack up to return
+    //TODO Swap return address up
+  ] where
+    a := <nabl2-get-ast-analysis>;
+    ref-occ := <nabl2-mk-occurrence(|"Function")> name;
+    dec-occ := <nabl2-get-resolved-name(|a); Fst> ref-occ;
+    type    := <nabl2-get-type(|a)> dec-occ;
+    ret-type := <return-type> type
   
-  stmt-to-ebc: ExpStmt(e1) -> <exp-to-ebc> e1
-  
-  
+  //-----------------------------------------------------------------------------------------------
+  //Expression statements
+  //TODO Optional POP?
+  stmt-to-ebc: ExpStmt(e1) -> <exp-to-ebc> e1 //TODO Return stack to original length
   
   //-----------------------------------------------------------------------------------------------
   //If statements
@@ -201,9 +339,11 @@ rules
         JUMPDEST(tagAfterIf) ] //  JUMPDEST
     ]
   
+  //TODO If without else (or desugar away)
   
   //-----------------------------------------------------------------------------------------------
   //Expressions
+  //-----------------------------------------------------------------------------------------------
   
   //TODO Keep stack of stack with map like structure (dictionary)
   //getPosition(name) => number
@@ -241,6 +381,7 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Operators
+  //-----------------------------------------------------------------------------------------------
   //Simple operators that will work without any other information
   op-to-ebc: Plus()   -> ADD()
   op-to-ebc: Minus()  -> SUB()
@@ -251,4 +392,10 @@ rules
   op-to-ebc: BitXor() -> XOR()
   op-to-ebc: BitNot() -> NOT()
   
+  //TODO
+  
+  //-----------------------------------------------------------------------------------------------
+  //Nabl types
+  //-----------------------------------------------------------------------------------------------
+  return-type: FunctionT(_, [retT]) -> retT
   

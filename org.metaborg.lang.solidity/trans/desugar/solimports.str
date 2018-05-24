@@ -12,7 +12,7 @@ signature
     DImportItem
   
   constructors
-    //DImport.Import   = <<DImportItem*>>
+    //DImport.Import   = <<DImportItem*> <ImportFile>>
     
     //DImportItem.Star = <* as <ImportName>>
     //DImportItem.Item = <<ImportName> as <ImportName>>
