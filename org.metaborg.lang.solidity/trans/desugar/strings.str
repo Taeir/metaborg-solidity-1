@@ -5,7 +5,7 @@ imports
   
 signature
   constructors
-  StringLit : String * INT -> Exp
+    StringLit : String * INT -> Exp
 
 rules
   //Add a length to string literals, that is -1 if the string is longer than 32 characters.

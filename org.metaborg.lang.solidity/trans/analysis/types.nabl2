@@ -1,7 +1,8 @@
 module analysis/types
 
 imports
-  signatures/-
+  signatures/types-sig
+  signatures/vars-sig
 
 signature
   sorts

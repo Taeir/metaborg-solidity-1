@@ -2,7 +2,7 @@ module analysis/interfaces
 
 imports
 
-  signatures/-
+  signatures/interfaces-sig
   analysis/types
 
 signature

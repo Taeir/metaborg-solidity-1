@@ -1,7 +1,8 @@
 module analysis/structs
 
 imports
-  signatures/-
+  signatures/structs-sig
+  signatures/vars-sig
   analysis/types
   analysis/vars
 

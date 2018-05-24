@@ -2,7 +2,7 @@ module analysis/contracts
 
 imports
 
-  signatures/-
+  signatures/contracts-sig
   analysis/types
 
 signature

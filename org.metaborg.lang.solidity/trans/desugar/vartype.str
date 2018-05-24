@@ -9,8 +9,11 @@ signature
     DeclareVarVar : String       -> Statement
 
 rules
+  //Use a special construct for variables with the var type, to ease type inference
   desugar: DeclareVarAssign(Var(), name, exp) -> DeclareVarVar(name, exp)
   desugar: DeclareVar(Var(), name)            -> DeclareVarVar(name)
   
+  //---------------------------------------------------------------------------
+  //Convert back to the original AST
   resugar: DeclareVarVar(n, e)                -> DeclareVarAssign(Var(), n, e)
   resugar: DeclareVarVar(n)                   -> DeclareVar(Var(), n)

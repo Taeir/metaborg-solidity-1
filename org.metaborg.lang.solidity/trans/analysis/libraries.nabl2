@@ -2,7 +2,7 @@ module analysis/libraries
 
 imports
 
-  signatures/-
+  signatures/libraries-sig
   analysis/types
 
 signature

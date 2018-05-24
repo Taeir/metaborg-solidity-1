@@ -12,10 +12,6 @@ rules
   //Literals
   [[ True()  ^ (s) : BoolT() ]].
   [[ False() ^ (s) : BoolT() ]].
-
-//  [[ IntLiteral(_, min) ^ (s) : tyIntLiteral ]] :=
-//    //TODO add relation to check for any number, byte, whatever.
-//    tyIntLiteral == IntT(min).
   
   // Int literal that is positive, can be either int or uint
   [[ IntLiteral(_, min, Some(umin)) ^ (s) : tyIntLiteral ]] :=

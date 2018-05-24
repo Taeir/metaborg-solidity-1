@@ -1,7 +1,7 @@
 module analysis/events
 
 imports
-  signatures/-
+  signatures/events-sig
 
 signature
   namespaces
