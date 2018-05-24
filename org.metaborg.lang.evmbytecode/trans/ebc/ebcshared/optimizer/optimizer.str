@@ -1,0 +1,26 @@
+module ebc/ebcshared/optimizer/optimizer
+
+rules
+
+//DUP1
+//SWAP1
+//POP
+//= NOP
+
+//PUSH A
+//PUSH B
+//SWAP1
+//==
+//PUSH B
+//PUSH A
+
+
+//PUSH1 2
+//EXP
+//MUL
+//= SHL
+
+//PUSH1 2
+//EXP
+//DIV
+//= SHR
