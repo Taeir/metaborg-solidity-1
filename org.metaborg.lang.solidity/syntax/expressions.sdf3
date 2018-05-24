@@ -80,7 +80,7 @@ context-free syntax
   //---------------------------------------------------------------------------
   //Function calls
   Exp.Call   = FunctionCall
-  FunctionCall.FunctionCall = < <Exp>(<{Exp ", "}*>) > {left}
+  FunctionCall.FunctionCall = < <Exp>(<{AlsoExp ", "}*>) > {left}
   
   //---------------------------------------------------------------------------
   //Literals
@@ -140,7 +140,6 @@ context-free priorities
     Exp.NewObject
     Exp.Subscript
     VarRef.Member
-    Exp.Call
     FunctionCall.FunctionCall} >
   {right:
     Exp.IncRet Exp.DecRet
@@ -161,4 +160,4 @@ context-free priorities
   {left: Exp.Ternary} >
   {right: Exp.Assign Exp.AssignArray Exp.LValAssign},
   //TODO Solve problems between casts and calls by only making the distinction in the desugaring/nabl?
-  {right: Exp.Cast} > {left: Exp.Call FunctionCall.FunctionCall}
+  {right: Exp.Cast} > {left: FunctionCall.FunctionCall}
