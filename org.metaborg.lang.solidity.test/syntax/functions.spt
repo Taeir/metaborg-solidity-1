@@ -57,29 +57,3 @@ test funccombireturn[[
 	}
 ]] parse succeeds
 
-
-//Failing returns
-test funcwrongreturn[[
-	contract two {
-		function testone(bool x, int y) public{ 
-			return true;
-		}
-	}
-]] parse fails
-
-test funcwrongreturn2[[
-	contract two {
-		function testone(bool x, int y) public returns (bool){ 
-
-		}
-	}
-]] parse fails
-
-test funcwrongreturn3 [[
-	contract two {
-		function testone(bool x, int y) public returns (bool z){ 
-			z = x;
-			return true;
-		}
-	}
-]] parse fails

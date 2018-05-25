@@ -22,9 +22,3 @@ test S: return statement [[
     return 10;
   }
 ]] parse succeeds
-
-test F: void return in non-void function [[
-  function k() returns (int) {
-    return;
-  }
-]] parse fails
