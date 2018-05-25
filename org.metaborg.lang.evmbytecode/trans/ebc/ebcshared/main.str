@@ -5,3 +5,4 @@ imports
   ebc/ebcshared/codegen
   ebc/ebcshared/desugar
   ebc/ebcshared/static-semantics
+  ebc/ebcshared/evmrun

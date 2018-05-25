@@ -1,0 +1,16 @@
+module ebc/ebcshared/evmrun
+
+rules
+  /**
+   * Creates a contract with the given bytecode and initial amount (optional).
+   * 
+   * Examples:
+   *   <evm-create-contract> "0x20"
+   *   <evm-create-contract> ("0x20", "200000")
+   *
+   * @param string            - the bytecode
+   * @param (optional) string - the amount to send to the contract, default 0.
+   *
+   * @return string           - the address of the contract
+   */
+  external evm-create-contract(|)
