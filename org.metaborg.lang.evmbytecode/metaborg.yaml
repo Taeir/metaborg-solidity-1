@@ -12,20 +12,7 @@ dependencies:
   - org.metaborg:org.metaborg.meta.nabl2.shared:${metaborgVersion}
   - org.metaborg:org.metaborg.meta.nabl2.runtime:${metaborgVersion}
   java:
-#  - org.web3j:fatjar:3.4.0
   - org.web3j:core:3.4.0
-#  - org.web3j:abi:3.4.0
-#  - org.web3j:crypto:3.4.0
-#  # Crypto: rlp, utils, jackson-databind, slf4j-api
-#  - org.slf4j:slf4j-api:1.7.25
-#  - org.web3j:rlp:3.4.0
-#  # Rlp: utils
-#  - org.web3j:utils:3.4.0
-#  # Utils: bcprov-jdk15on
-#  - org.bouncycastle:bcprov-jdk15on:1.54
-#
-#  - org.web3j:tuples:3.4.0
-#  # Tuples: no dependencies
 exports:
 
   ## Stratego
@@ -54,7 +41,7 @@ exports:
   - "completion/ebc/*.str"
   - "pp/ebc/*.str"
   - "signatures/ebc/*.str"
-
+- directory: lib
 
 pardonedLanguages:
 - EditorService
@@ -85,5 +72,3 @@ language:
     - stratego-sdf
     - -la
     - strc
-exports:
-- directory: lib
