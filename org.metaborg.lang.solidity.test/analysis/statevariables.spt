@@ -1,0 +1,35 @@
+module statevariables
+
+language solidity
+
+start symbol Program
+
+//fixture [[
+//  contract X {
+//    int y;
+//    [[...]]
+//  }
+//]]
+
+test State variable reference [[
+  contract X {
+    int [[x]];
+    function t() {
+      int y = [[x]];
+    }
+  }
+]] resolve #2 to #1
+
+test Local variable shadows state variable [[
+  contract X {
+    int x;
+    function t() {
+      int [[x]];
+      int y = [[x]];
+    }
+  }
+]] resolve #2 to #1
+
+//test type of int [[
+//  [[int256]] x;
+//]] run get-type on #1 to IntT(256)
