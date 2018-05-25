@@ -15,7 +15,9 @@ imports
   libstratego-gpp
   libspoofax/sdf/pp
   libspoofax/core/language
-
+  
+  ebc/ebcshared/ebcpp
+  
 rules // Debugging
   
   debug-show-aterm:
@@ -43,4 +45,4 @@ rules // Debugging
    *
    * @type EBC AST -> EBC concrete syntax
    */
-  ebc-pp = call-in-language(|"evmbytecode", "pp-evmbytecode-string")
+  ebc-pp = pp-evmbytecode-string //call-in-language(|"evmbytecode", "pp-evmbytecode-string")

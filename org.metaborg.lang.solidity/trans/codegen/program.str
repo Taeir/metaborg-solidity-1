@@ -557,14 +557,16 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Statements
   //-----------------------------------------------------------------------------------------------
+  stmt-to-ebc = ret-to-ebc(|0)
+  
   ret-to-ebc(|stacklen): ReturnStatement(name, e1) -> <concat> [
     <exp-to-ebc> e1,
     //TODO Get function type from NaBL to determine return type
     [ 
       //TODO Empty stack up to return
       //TODO Swap return address up
+      SWAP(1),
       JUMP()
-    
     ]
   ] where
     a := <nabl2-get-ast-analysis>;
@@ -573,7 +575,7 @@ rules
     type    := <nabl2-get-type(|a)> dec-occ;
     ret-type := <return-type> type
   
-  ret-to-ebc: r@VoidReturn(name) -> <concat> [
+  ret-to-ebc(|stacklen): r@VoidReturn(name) -> <concat> [
     //TODO Get function type from NaBL to determine how much to pop?
     //TODO Keep track of current stack size to pop properly?
     //TODO Empty stack up to return
