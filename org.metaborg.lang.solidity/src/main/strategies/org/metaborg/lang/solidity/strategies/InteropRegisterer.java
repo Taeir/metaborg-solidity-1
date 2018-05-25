@@ -38,7 +38,10 @@ public class InteropRegisterer extends JavaInteropRegisterer {
 				//BigInt
 				sol_bigint_mult_0_0.instance,
 				sol_bigint_to_hex_0_0.instance,
-				sol_hexadecimal_int_to_bigint_0_0.instance
+				sol_hexadecimal_int_to_bigint_0_0.instance,
+				
+				//EVM Fallback
+				evm_generate_function_hash_0_0.instance
 		});
 	}
 }

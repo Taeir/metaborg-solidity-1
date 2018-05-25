@@ -34,7 +34,14 @@ lexical restrictions
 context-free syntax
 
   EBCStart.Empty = <>
-  EBCStart       = Code
+  EBCStart       = EBCFile
+  
+  EBCFile.EBCFile = <
+    FILE: <Anything>
+    CONTRACT: <Anything>
+    CODE:
+      <Code>
+  >
   
   Code.Code      = <<{Instr "\n"}*>>
 

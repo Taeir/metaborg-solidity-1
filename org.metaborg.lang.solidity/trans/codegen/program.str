@@ -4,14 +4,16 @@ imports
   nabl2/api
   
   signatures/ebc/-
+  ebc/ebcshared/evminstructions
 
   signatures/-
-  
   desugar/-
-  
   analysis/types
   
   utils/externals
+  pp
+  
+  libspoofax/stratego/debug
 
 strategies
   /**
@@ -68,12 +70,39 @@ rules
   fix-push: instr -> instr
     where
     not(<?PUSH(_, _)> instr)
+  
+  /**
+   * Generate the function hash from the function
+   */
+  hash-signature: Function(name, params, _, _, _)  -> <evm-generate-function-hash> (name, <map(get-param-type-name)> params)
+  hash-signature: VoidFunction(name, params, _, _) -> <evm-generate-function-hash> (name, <map(get-param-type-name)> params)
+  
+  get-param-type-name: Param(type, _, _) -> <pp-solidity-string> type
+  
+  //uint16  = PUSH FFFF, AND
+  //int8    = PUSH 0, SIGNEXTEND
+  //int16   = PUSH 1, SIGNEXTEND
+  extend-to-32-bytes: BoolT() -> [
+    ISZERO(),
+    ISZERO()
+  ]
+  extend-to-32-bytes: IntT(32) -> []
+  extend-to-32-bytes: IntT(n) -> [
+    PUSH(1, <divi> (n, 8)),
+    SIGNEXTEND()
+  ]
+  extend-to-32-bytes: UIntT(n) -> [
+    PUSH(n', <conc-strings> ("0x", <do-n(append-FF|n')> "") ),
+    AND()
+  ] where n' := <divi> (n, 8)
+  
+  append-FF: s -> <conc-strings> (s, "FF")
   //-----------------------------------------------------------------------------------------------
   //Program
   //-----------------------------------------------------------------------------------------------
   //A program consists of a specific "contract load" sequence which loads the actual code of the
   //contract and then jumps into it. 
-  program-to-ebc: Program(content) -> <concat> [
+  program-to-ebc: Program(content) -> [EBCFile(None(), "WIP", Code(<concat> [
     [
       //Default initialization (allocate 128 bytes of memory)
       PUSH(1, "0x80"),    //0,1
@@ -106,11 +135,8 @@ rules
       TAG(tagCode)        //32       [Begin of contract code]
     ],
     code,
-    [
-      STOP()
-      //TODO FOOTER
-    ]
-  ] where
+    [ STOP() ]
+  ]))] where
     <newname> "" => tagCode;
     <newname> "" => tagLoad;
     code := <mapconcat(program-content-to-ebc)> content;
@@ -138,7 +164,7 @@ rules
   //Contract-like
   //-----------------------------------------------------------------------------------------------
   //TODO Interfaces
-  interface-to-ebc: Interface(name, content) -> []
+  interface-to-ebc: Interface(name, content) -> [] //TODO
   
   //Treat libraries like contracts
   library-to-ebc: Library(name, content) -> <contract-to-ebc> Contract(name, content)
@@ -151,77 +177,49 @@ rules
       PUSH(1, 4),
       CALLDATASIZE(),
       LT(),
-      PUSHTAG(tag1),
+      PUSHTAG(tagFailHandler),
       JUMPI(),
       PUSH(1, 0),
+      
+      //Determine the function being called
       CALLDATALOAD(),
       PUSH(29, "0x100000000000000000000000000000000000000000000000000000000"),
       SWAP(1),
       DIV(),
       PUSH(4, "0xFFFFFFFF"),
-      AND(),
-      DUP(1),
-      PUSH(4, "0xFF020EFE"), //Hash check??
-      EQ(),
-      PUSHTAG(tag2),
-      JUMPI() ],
+      AND() ],
     
-    //Tag 1: Revert
-    [ JUMPDEST(tag1),
+    selectFunctionSequence,
+    
+    //Tag Fail Handler: Revert
+    [ JUMPDEST(tagFailHandler),
       PUSH(1, 0),
       DUP(1),
       REVERT() ],
     
-    //Tag 2: If deposited amount is zero, then goto 3, else revert
-    [ JUMPDEST(tag2),
-      CALLVALUE(),
-      DUP(1),
-      ISZERO(),
-      PUSHTAG(tag3),
-      JUMPI(),
-      PUSH(1, 0),
-      DUP(1),
-      REVERT() ],
+    //Function definitions
+    functionBlocks
     
-    //Tag 3: ???
-    [ JUMPDEST(tag3),
-      POP(),
-      PUSHTAG(tag4),
-      PUSH(0, 4),
-      DUP(1),
-      CALLDATASIZE(),
-      SUB(),
-      DUP(2),
-      ADD(),
-      SWAP(1),
-      DUP(1),
-      DUP(1),
-      CALLDATALOAD(),
-      SWAP(1),
-      PUSH(1, "0x20"),
-      ADD(),
-      SWAP(1),
-      SWAP(3),
-      SWAP(2),
-      SWAP(1),
-      POP(),
-      POP(),
-      POP(),
-      POP(),
-      PUSHTAG(tag5),
-      JUMP() ],
-    
-    [ JUMPDEST(tag4) ], //TODO
-    [ JUMPDEST(tag5) ],
-    
-    <map(content-to-ebc)> content
+    //TODO Other content
+    //<map(content-to-ebc)> content
       
   ] where
-    tag1 := <new> "";
-    tag2 := <new> "";
-    tag3 := <new> "";
-    tag4 := <new> "";
-    tag5 := <new> ""
+    tagFailHandler := <newname> "";
+    
+    //Create the code for the functions
+    functions := <filter-fun> content;
+    <ppdebugna0> functions;
+    
+    funtuples := <map(fun-to-ebc)> functions;
+    
+    //The select function sequence is the first element of the tuple, concatenated.
+    //It determines which function is selected upon calling
+    <ppdebugna1> funtuples;
+    selectFunctionSequence := <concat> <map(\ (i, _) -> i \)> funtuples;
+    
+    //The blocks of instructions for the different functions
+    functionBlocks         := <concat> <map(\ (_, f) -> f \)> funtuples;
+    <ppdebugna2> functionBlocks
   
   //-----------------------------------------------------------------------------------------------
   //Contract content
@@ -238,40 +236,299 @@ rules
   //State variables
   //-----------------------------------------------------------------------------------------------
   
-  statevar-to-ebc: StateVariable(ty, mod, name, None()) -> [] //TODO
+  statevar-to-ebc: StateVariable(ty, mod, name, None())  -> [] //TODO
   statevar-to-ebc: StateVariable(ty, mod, name, Some(e)) -> [] //TODO
-  statevar-to-ebc: ConstantStateVariable(ty, mod, name, None()) -> [] //TODO Not supported?
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, None())  -> [] //TODO Not supported?
   statevar-to-ebc: ConstantStateVariable(ty, mod, name, Some(e)) -> [] //TODO
   
   //-----------------------------------------------------------------------------------------------
   //Functions
   //-----------------------------------------------------------------------------------------------
-  fun-to-ebc: Function(_, params, _, retParams, body) -> instr
+  /**
+   * Retain only the functions in the given list.
+   *
+   * @param list
+   *
+   * @return list
+   */
+  filter-fun: [] -> []
+  filter-fun: [head | tail] -> [head | <filter-fun> tail]
     where
-    retlen := <length> retParams;
-    instr := <concat> [
-      //Return address is on the stack
-      [ JUMPDEST() ],
-      //TODO params
-      <mapconcat(stmt-to-ebc)> body,
+    <?Function(_, _, _, _, _) + ?VoidFunction(_, _, _, _)> head
+  filter-fun: [head | tail] -> <filter-fun> tail
+    where
+    not(<?Function(_, _, _, _, _) + ?VoidFunction(_, _, _, _)> head)
+  
+  //In the first tag, there is matching of function hashes to their initial jump points
+  //All checks after the first need a DUP(1) first.
+  
+  //Then, there is, for each function, thus a jump point, which initiates the call as follows:
+  // 1. check that the CALLVALUE ISZERO, if it is, continue to the next jump point, otherwise revert.
+  // 2. 
+  
+  fun-to-ebc: f@Function(name, params, _, retParams, Block(stmts)) -> (
+    //PART1: Check if this is the function being called, and if so, jump to funInit
+    [
+      DUP(1),
+      PUSH(4, <conc-strings> ("0x", <hash-signature> f)), //The hash of the function determines which function is being called.
+      EQ(),
+      PUSHTAG(tagFunInit),
+      JUMPI()
+    ],
+    
+    <concat> [
+      //PART2: Check if CALLVALUE is ZERO -> jump to pre, else, REVERT
+      [ JUMPDEST(tagFunInit),
+        CALLVALUE(),
+        DUP(1),
+        ISZERO(),
+        PUSHTAG(tagFunPre),
+        JUMPI(),
+        PUSH(1, 0),
+        DUP(1),
+        REVERT() ],
       
-      //TODO: Swap n-th stack element to move return address to top
-      //JUMPS to the element at the top of the stack
-      //TODO: POP remaining items on stack until only that which we want to return is left.
-      [
-        SWAP(retlen),
-        JUMP()
+      //PART3: Create stack frame for function (load arguments)
+      //0-argument function
+      [ JUMPDEST(tagFunPre),
+        POP(),
+        PUSHTAG(tagFunPost),
+        
+        //TODO LOAD ARGUMENTS HERE
+        
+        PUSHTAG(tagFunStart),
+        JUMP() ],
+      
+      /*
+      //1-argument function
+      <concat> [
+        [ JUMPDEST(tagFunPre),
+          POP(),
+          PUSHTAG(tagFunPost),
+          PUSH(0, 4),
+          DUP(1),
+          CALLDATASIZE(),
+          SUB(),
+          DUP(2),
+          ADD(),
+          SWAP(1),
+          DUP(1),
+          DUP(1),
+          CALLDATALOAD() ],
+          
+          //Extend value to 32 bytes
+          <extend-to-32-bytes> type
+          
+          [ SWAP(1),
+          PUSH(1, "0x20"),
+          ADD(),
+          SWAP(1),
+          SWAP(3),
+          SWAP(2),
+          SWAP(1),
+          POP(),
+          POP(),
+          POP(),
+          PUSHTAG(tagFunStart),
+          JUMP() ]
+      ],
+      */
+      
+      //PART4: store result
+      [ JUMPDEST(tagFunPost),
+        PUSH(1, "0x40"),
+        MLOAD(),
+        DUP(1),
+        DUP(3),
+        PUSH(1, 0),
+        SIGNEXTEND(),
+        PUSH(1, 0),
+        SIGNEXTEND(),
+        DUP(2),
+        MSTORE(),
+        PUSH(1, "0x20"),
+        ADD(),
+        SWAP(2),
+        POP(),
+        POP(),
+        PUSH(1, "0x40"),
+        MLOAD(),
+        DUP(1),
+        SWAP(2),
+        SUB(),
+        SWAP(1),
+        RETURN() ],
+      
+      /*
+      //For a string return, we get this giant mess
+      JUMPDEST(tagFunPost),
+      PUSH(1, "0x40"),
+      MLOAD(),
+      DUP(1),
+      DUP(1),
+      PUSH(1, "0x20"),
+      ADD(),
+      DUP(3),
+      DUP(2),
+      SUB(),
+      DUP(3),
+      MSTORE(),
+      DUP(4),
+      DUP(2),
+      DUP(2),
+      MLOAD(),
+      DUP(2),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(2),
+      POP(),
+      DUP(1),
+      MLOAD(),
+      SWAP(1),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(1),
+      DUP(1),
+      DUP(4),
+      DUP(4),
+      PUSH(0),
+      
+      //Tag 6: some kind of loop
+      JUMPDEST(tag6),
+      DUP(4),
+      DUP(2),
+      LT(),
+      ISZERO(),
+      PUSHTAG(tag7),
+      JUMPI(),
+      DUP(1),
+      DUP(3),
+      ADD(),
+      MLOAD(),
+      DUP(2),
+      DUP(5),
+      ADD(),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      DUP(2),
+      ADD(),
+      SWAP(1),
+      POP(),
+      PUSHTAG(tag6),
+      JUMP()
+      
+      //Tag7
+      JUMPDEST(tag7),
+      POP(),
+      POP(),
+      POP(),
+      POP(),
+      SWAP(1),
+      POP(),
+      SWAP(1),
+      DUP(2),
+      ADD(),
+      SWAP(1),
+      PUSH(1, "0x1F"),
+      AND(),
+      DUP(1),
+      ISZERO(),
+      PUSHTAG(tag9),
+      JUMPI(),
+      DUP(1),
+      DUP(3),
+      SUB(),
+      DUP(1),
+      MLOAD(),
+      PUSH(1, 1),
+      DUP(4),
+      PUSH(1, "0x20"),
+      SUB(),
+      PUSH(1, "0x100"),
+      EXP(),
+      SUB(),
+      NOT(),
+      AND(),
+      DUP(2),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(2),
+      POP(),
+      
+      //tag 9
+      JUMPDEST(tag9),
+      POP(),
+      SWAP(3),
+      POP(),
+      POP(),
+      POP(),
+      PUSH(1, "0x40"),
+      MLOAD(),
+      DUP(1),
+      SWAP(2),
+      SUB(),
+      SWAP(1),
+      RETURN()
+      */
+      
+      //PART5: Actual function
+      <concat> [
+        //Return address is on the stack
+        [ JUMPDEST(tagFunStart) ],
+        //TODO params
+        <mapconcat(stmt-to-ebc)> stmts,
+        
+        //TODO: Swap n-th stack element to move return address to top
+        //JUMPS to the element at the top of the stack
+        //TODO: POP remaining items on stack until only that which we want to return is left.
+        [
+          SWAP(1),
+          JUMP()
+        ]
       ]
     ]
+    ) where
+    tagFunInit  := <newname> "";
+    tagFunPre   := <newname> "";
+    tagFunPost  := <newname> "";
+    tagFunStart := <newname> ""
+    
+    //Determine type of function
+//    a := <nabl2-get-ast-analysis>;
+//    ref-occ := <nabl2-mk-occurrence(|"Function")> name;
+//    dec-occ := <nabl2-get-resolved-name(|a); Fst> ref-occ;
+//    type    := <nabl2-get-type(|a)> dec-occ;
+//    param-types := <param-types> type
+    
   
-  fun-to-ebc: VoidFunction(_, params, _, body) -> instr
-    where
-    instr := <concat> [
-      [ JUMPDEST() ],
-      //TODO params
-      <mapconcat(stmt-to-ebc)> body,
-      [ JUMP() ]
-    ]
+//  fun-to-ebc: Function(name, params, _, retParams, body) -> instr
+//    where
+//    retlen := <length> retParams;
+//    instr := <concat> [
+//      //Return address is on the stack
+//      [ JUMPDEST() ],
+//      //TODO params
+//      <mapconcat(stmt-to-ebc)> body,
+//      
+//      //TODO: Swap n-th stack element to move return address to top
+//      //JUMPS to the element at the top of the stack
+//      //TODO: POP remaining items on stack until only that which we want to return is left.
+//      [
+//        SWAP(retlen),
+//        JUMP()
+//      ]
+//    ]
+//  
+//  fun-to-ebc: VoidFunction(name, params, _, body) -> instr
+//    where
+//    instr := <concat> [
+//      [ JUMPDEST() ],
+//      //TODO params
+//      <mapconcat(stmt-to-ebc)> body,
+//      [ JUMP() ]
+//    ]
   
   //-----------------------------------------------------------------------------------------------
   //Events

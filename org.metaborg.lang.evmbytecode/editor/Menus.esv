@@ -1,0 +1,5 @@
+module Menus
+
+//menus
+//  menu: "EBC"
+//    action: "Generate ASM Aterm" = translate-class (source)

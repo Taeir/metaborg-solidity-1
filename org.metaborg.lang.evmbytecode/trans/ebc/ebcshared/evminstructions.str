@@ -1,4 +1,4 @@
-module ebc/ebcshared/evmrun
+module ebc/ebcshared/evminstructions
 
 rules
   /**
@@ -14,3 +14,11 @@ rules
    * @return string           - the address of the contract
    */
   external evm-create-contract(|)
+  
+  /**
+   * Generates a function hash for the given function name and type names.
+   *
+   * @param string       - the name of the function
+   * @param list(string) - the list of the function types
+   */
+  external evm-generate-function-hash(|)

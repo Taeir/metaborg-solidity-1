@@ -1,6 +1,9 @@
 module ebc/Layout
 
 lexical syntax
+  Anything         = AnyChar* 
+  AnyChar          = ~[\n]
+  
   EBCCommentChar   = [\*] 
   LAYOUT           = [\ \t\n\r]
   LAYOUT           = "/*" EBCInsideComment* "*/" 

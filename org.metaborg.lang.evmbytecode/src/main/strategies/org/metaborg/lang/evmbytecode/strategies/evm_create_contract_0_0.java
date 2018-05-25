@@ -28,7 +28,7 @@ public class evm_create_contract_0_0 extends MixedStrategy {
 			ex.printStackTrace();
 		}
 	}
-//	
+	
 	@Override
 	public IStrategoTerm call(Context context, IStrategoTerm[] terms) throws Exception {
 		if (terms.length > 2) throw new InvalidArgumentsException("Expected 1 or 2 arguments");

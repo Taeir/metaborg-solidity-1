@@ -6,32 +6,9 @@ import org.strategoxt.lang.Strategy;
 public class InteropRegisterer extends JavaInteropRegisterer {
     public InteropRegisterer() {
         super(new Strategy[] {
+        		evm_generate_function_hash_0_0.instance,
         		evm_create_contract_0_0.instance,
         		evm_test_0_0.instance
         });
-        
-//        initEVM();
-//        destructEVM();
     }
-    
-//    private void initEVM() {
-//		try {
-//			EVMMain.init();
-//		} catch (Exception ex) {
-//			System.err.println("Error initializing EVMMain: ");
-//			ex.printStackTrace();
-//			return;
-//		}
-//
-//		try {
-//			EVMMain.test();
-//		} catch (Exception ex) {
-//			System.err.println("EVMMain test failed: ");
-//			ex.printStackTrace();
-//		}
-//	}
-//
-//	private void destructEVM() {
-//		EVMMain.destruct();
-//	}
 }

@@ -9,3 +9,7 @@ menus
   
 //  menu: "Optimize" (openeditor)
 //    action: "Constant Folding" = editor-resugar (source)
+
+  menu: "Generation" (openeditor) (realtime)
+    action: "Generate EBC (.ebc.aterm file)"      = show-ebc
+    action: "Generate EBC (.ebc files)"           = generate-ebc
