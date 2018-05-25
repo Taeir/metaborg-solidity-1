@@ -115,7 +115,7 @@ context-free syntax
   
   //0x60-0x7F: Push Operations
   Instr.PUSH         = <<EBCPush> <EBCHex>> //60-7F: Place n-byte item on stack
-  Instr.PUSH         = <<EBCPush> <EBCINT>> //60-7F: Place n-byte item on stack
+  Instr.PUSHI        = <<EBCPush> <EBCINT>> //60-7F: Place n-byte item on stack
   
   //0x8*: Dup
   Instr.DUP          = <<EBCDup>>		//80-8F: Duplicate n-th stack item

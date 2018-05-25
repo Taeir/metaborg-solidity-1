@@ -52,12 +52,22 @@ rules
    * TAG     = 0
    * OTHERS  = 1
    */
-  instr-len: PUSH(n, _) -> <addi> (n, 1)
-  instr-len: PUSHTAG(_) -> 3
-  instr-len: TAG(_)     -> 0
-  instr-len: _          -> 1
+  instr-len: PUSH(n, _)  -> <addi> (n, 1)
+  instr-len: PUSHI(n, _) -> <addi> (n, 1)
+  instr-len: PUSHTAG(_)  -> 3
+  instr-len: TAG(_)      -> 0
+  instr-len: _           -> 1
   
-  
+  /**
+   * Fixes all push instructions to use PUSHI where applicable.
+   */
+  fix-all-push: list -> <map(fix-push)> list
+  fix-push: PUSH(a, nr) -> PUSHI(a, nr)
+    where
+    <is-int> nr
+  fix-push: instr -> instr
+    where
+    not(<?PUSH(_, _)> instr)
   //-----------------------------------------------------------------------------------------------
   //Program
   //-----------------------------------------------------------------------------------------------
@@ -369,8 +379,8 @@ rules
   
   
   //Literals
-  exp-to-ebc: True()  -> [ PUSH(1, "1") ]
-  exp-to-ebc: False() -> [ PUSH(1, "0") ]
+  exp-to-ebc: True()  -> [ PUSH(1, 1) ]
+  exp-to-ebc: False() -> [ PUSH(1, 0) ]
   exp-to-ebc: IntLiteral(nr, signed, unsigned) -> [ PUSH(plen, nr) ]
     where
     plen := <divi> (signed, 8)

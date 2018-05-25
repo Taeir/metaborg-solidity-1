@@ -54,6 +54,9 @@ rules
   instr-to-hex: XOR()          -> "18"
   instr-to-hex: NOT()          -> "19"
   instr-to-hex: BYTE()         -> "1a"
+  instr-to-hex: SHL()          -> "1b"
+  instr-to-hex: SHR()          -> "1c"
+  instr-to-hex: SAR()          -> "1d"
 
   instr-to-hex: SHA3()         -> "20"
 
@@ -70,6 +73,9 @@ rules
   instr-to-hex: GASPRICE()     -> "3a"
   instr-to-hex: EXTCODESIZE()  -> "3b"
   instr-to-hex: EXTCODECOPY()  -> "3c"
+  
+  instr-to-hex: RETURNDATASIZE() -> "3d"
+  instr-to-hex: RETURNDATACOPY() -> "3e"
 
   instr-to-hex: BLOCKHASH()    -> "40"
   instr-to-hex: COINBASE()     -> "41"
@@ -91,11 +97,17 @@ rules
   instr-to-hex: GAS()          -> "5a"
   instr-to-hex: JUMPDEST()     -> "5b"
 
-  instr-to-hex: PUSH(n, hexnr) -> s
+  instr-to-hex: PUSH(n, nr) -> s
+    where
+    ((<is-string> n; n2 := <string-to-int> n) <+ (n2 := n));
+    ((<is-string> nr; hexstr := nr) <+ (hexstr := <int-to-hex> nr));
+    opcode := <int-to-hex> <addi> (95, n2);
+    s      := <conc-strings> (opcode, <lower-case> hexstr)
+  instr-to-hex: PUSHI(n, nr) -> s
     where
     ((<is-string> n; n2 := <string-to-int> n) <+ (n2 := n));
     opcode := <int-to-hex> <addi> (95, n2);
-    s      := <conc-strings> (opcode, <lower-case> hexnr)
+    s      := <conc-strings> (opcode, <lower-case> <int-to-hex> nr)
 
   instr-to-hex: DUP(n) -> opcode
     where
@@ -114,6 +126,11 @@ rules
   instr-to-hex: CALLCODE()     -> "f2"
   instr-to-hex: RETURN()       -> "f3"
   instr-to-hex: DELEGATECALL() -> "f4"
+  
+  instr-to-hex: STATICCALL()   -> "fa"
+  
+  instr-to-hex: REVERT()       -> "fd"
+  instr-to-hex: INVALID()      -> "fe"
   instr-to-hex: SELFDESTRUCT() -> "ff"
   
   
