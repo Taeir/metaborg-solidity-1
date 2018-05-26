@@ -97,7 +97,7 @@ rules
   fix-numbers: PUSH(i, nr)  -> PUSH(<int-to-string> i, nr)
     where
     <string-starts-with(|"0x")> nr
-  fix-numbers: PUSH(i, nr)  -> PUSH(i', <int-to-hex> nr')
+  fix-numbers: PUSH(i, nr)  -> PUSH(i', <conc-strings> ("0x", <int-to-hex> nr'))
     where
     not(<string-starts-with(|"0x")> nr);
     ((<is-int> i; i' := <int-to-string> i) <+ (i' := i));
