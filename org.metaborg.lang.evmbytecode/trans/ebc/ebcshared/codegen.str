@@ -42,6 +42,21 @@ rules
     (s' := <conc-strings> ("0", s))
   
   /**
+   * Fixes the length of the given hex string to the given length.
+   *
+   * @param int    - the intended length of s
+   * @param string - the hex string to lengthen
+   */
+  fix-hex-length(|n): s -> s'
+    where
+    diff := (<subti> (n, <strlen> s));
+    (
+      //if (n == |s|) s' := s else if (n > |s|) s' := fix-hex-length(|n) "0" . s
+      (<eq> (diff, 0); s' := s) <+
+      (<gt> (diff, 0); s' := <fix-hex-length(|n)> <conc-strings> ("0", s))
+    )
+    
+  /**
    * Prepends 0x and ensures that the given hex string is of the correct length (0 -> 0x00).
    */
   finish-hex: s -> s'
@@ -73,12 +88,14 @@ rules
    * @param list(Instr)  - the list of instructions
    * @return list(TAG/2) - a list with only the tags and locations
    */
-  index-tags(|index): []                   -> []
-  index-tags(|index): [TAG(x) | tail]      -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
+  index-tags(|index): []                    -> []
+  index-tags(|index): [TAG(x)      | tail] -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
   index-tags(|index): [JUMPDEST(x) | tail] -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
+  index-tags(|index): [PUSH(n, _)  | tail] -> <index-tags(|<inc> <addi> (index, <string-to-int> n))> tail
+  index-tags(|index): [PUSHTAG(_)  | tail] -> <index-tags(|<addi> (index, 3))> tail
   index-tags(|index): [head | tail]        -> <index-tags(|<inc> index)> tail
     where
-    not(<?TAG(_) + ?JUMPDEST(_)> head)
+    not(<?TAG(_) + ?JUMPDEST(_) + ?PUSH(_, _) + ?PUSHTAG(_)> head)
   
   /**
    * Takes a tuple of (Instr, list(TAG(name, index))).
@@ -89,7 +106,7 @@ rules
    * @param list(TAG/2)
    * @return Instr
    */
-  convert-tag: (PUSHTAG(x), tags) -> PUSH("2", <conc-strings> ("0x", <fix-hex-length> <int-to-hex> <get-tag-index> (x, tags)))
+  convert-tag: (PUSHTAG(x), tags) -> PUSH("2", <conc-strings> ("0x", <fix-hex-length(|4)> <int-to-hex> <get-tag-index> (x, tags)))
   convert-tag: (i, _)             -> i
     where
     not(<?PUSHTAG(_)> i)
@@ -101,7 +118,7 @@ rules
    * @param list(TAG/2) - list of tags and indices
    * @return int        - tag index
    */
-  get-tag-index: (x, [TAG(x, index) | _]) -> index
+  get-tag-index: (x, [TAG(y, index) | _]) -> index where <string-starts-with(|x)> y; <string-starts-with(|y)> x
   get-tag-index: (x, [_ | tail])          -> <get-tag-index> (x, tail)
   get-tag-index: (x, [])                  -> <fail>
   //-----------------------------------------------------------------------------------------------
