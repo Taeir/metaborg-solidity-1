@@ -44,26 +44,6 @@ rules
   //create-push: nrHex -> PUSH(<addHex> (<divHex> (nrHex, "0x100"), "0x1"), nrHex)
   
   /**
-   * Determines the length of the given list of instructions.
-   */
-  instructions-length: [] -> 0
-  instructions-length: [i | is] -> <addi> (<instr-len> i, <instructions-length> is)
-  
-  /**
-   * Returns the length of the given instruction.
-   *
-   * PUSH<n> = 1 + n
-   * PUSHTAG = PUSH2 = 3
-   * TAG     = 0
-   * OTHERS  = 1
-   */
-  instr-len: PUSH(n, _)  -> <addi> (n, 1)
-  instr-len: PUSHI(n, _) -> <addi> (n, 1)
-  instr-len: PUSHTAG(_)  -> 3
-  instr-len: TAG(_)      -> 0
-  instr-len: _           -> 1
-  
-  /**
    * Generate the function hash from the function
    */
   hash-signature: Function(name, params, _, _, _)  -> <evm-generate-function-hash> (name, <map(get-param-type-name)> params)
@@ -91,75 +71,49 @@ rules
   
   append-FF: s -> <conc-strings> (s, "FF")
   
-  
-  //Fixes "loose" usage of PUSH, PUSHI, SWAP, DUP and LOG
-  //PUSH(1, "0x10") -> PUSH("1", "0x10")
-  fix-numbers: PUSH(i, nr)  -> PUSH(<int-to-string> i, nr)
-    where
-    <string-starts-with(|"0x")> nr
-  fix-numbers: PUSH(i, nr)  -> PUSH(i', <conc-strings> ("0x", <int-to-hex> nr'))
-    where
-    not(<string-starts-with(|"0x")> nr);
-    ((<is-int> i; i' := <int-to-string> i) <+ (i' := i));
-    ((<is-int> nr; nr' := nr) <+ (nr' := <string-to-int> nr))
-    
-  //TODO Should be pairs of nrs
-  //PUSHI(1, 0) -> PUSH("1", "0x0")
-  fix-numbers: PUSHI(i, nr) -> PUSH(i', <conc-strings> ("0x", <int-to-hex> nr'))
-    where
-    ((<is-int> i; i' := <int-to-string> i) <+ (i' := i));
-    ((<is-int> nr; nr' := nr) <+ (nr' := <string-to-int> nr))
-  
-  fix-numbers: SWAP(i) -> SWAP(<int-to-string> i)
-  fix-numbers: DUP(i)  -> DUP(<int-to-string> i)
-  fix-numbers: LOG(i)  -> LOG(<int-to-string> i)
-  
-  fix-numbers: x -> x
-    where
-    not(<?PUSH(_, _) + ?PUSHI(_, _) + ?SWAP(_) + ?DUP(_) + ?LOG(_)> x)
-  
   //-----------------------------------------------------------------------------------------------
   //Program
   //-----------------------------------------------------------------------------------------------
   //A program consists of a specific "contract load" sequence which loads the actual code of the
   //contract and then jumps into it. 
-  program-to-ebc: Program(content) -> [EBCFile(None(), "WIP", Code(<map(fix-numbers)> <concat> [
+  program-to-ebc: Program(content) -> [EBCFile(None(), "WIP", Code(<fix-instructions> <concat> [
     [
       //Default initialization (allocate 128 bytes of memory)
-      PUSH(1, "0x80"),    //0,1
-      PUSH(1, "0x40"),    //2,3
-      MSTORE(),           //4
-      CALLVALUE(),        //5
+      PUSH(1, "0x80"),       //0,1
+      PUSH(1, "0x40"),       //2,3
+      MSTORE(),              //4
+      CALLVALUE(),           //5
       
       //If return of CALLVALUE is zero (success), then jump to tagLoad
-      DUP(1),             //6
-      ISZERO(),           //7
-      PUSHTAG(tagLoad),   //8,910
-      JUMPI(),            //11
+      DUP(1),                //6
+      ISZERO(),              //7
+      PUSHTAG(tagLoad),      //8,910
+      JUMPI(),               //11
       
       //Else, REVERT
-      PUSH(1, 0),         //12,13
-      DUP(1),             //14
-      REVERT(),           //15
+      PUSH(1, 0),            //12,13
+      DUP(1),                //14
+      REVERT(),              //15
       
       //TagLoad: Load code
-      JUMPDEST(tagLoad),  //16
-      POP(),              //17
-      <create-push> plen, //18,19,20 [Length of contract code]
-      DUP(1),             //21       [???]
-      PUSHTAG(tagCode),   //22,23,24 [Begin of contract code]
-      PUSH(1, 0),         //25,26    [Start at index 0]
-      CODECOPY(),         //27       [Load the code starting at PC x of length l]
-      PUSH(1, 0),         //28,29    [Push 0 to signal success]
-      RETURN(),           //30       [Return to caller]
-      STOP(),             //31
-      TAG(tagCode)        //32       [Begin of contract code]
+      JUMPDESTTAG(tagLoad),  //16
+      POP(),                 //17
+      <create-push> plen,    //18,19,20 [Length of contract code]
+      DUP(1),                //21       [???]
+      PUSHTAG(tagCodeStart), //22,23,24 [Begin of contract code]
+      PUSH(1, 0),            //25,26    [Start at index 0]
+      CODECOPY(),            //27       [Load the code starting at PC x of length l]
+      PUSH(1, 0),            //28,29    [Push 0 to signal success]
+      RETURN(),              //30       [Return to caller]
+      STOP(),                //31
+      TAG(tagCodeStart),     //32       [Begin of contract code]
+      RESETPC()
     ],
     code,
     [ STOP() ]
   ]))] where
-    <newname> "" => tagCode;
-    <newname> "" => tagLoad;
+    <newname> "CodeStart" => tagCodeStart;
+    <newname> "LoadCode"  => tagLoad;
     code := <mapconcat(program-content-to-ebc)> content;
     plen := <instructions-length> code
   
@@ -213,7 +167,7 @@ rules
     selectFunctionSequence,
     
     //Tag Fail Handler: Revert
-    [ JUMPDEST(tagFailHandler),
+    [ JUMPDESTTAG(tagFailHandler),
       PUSH(1, 0),
       DUP(1),
       REVERT() ],
@@ -225,7 +179,7 @@ rules
     //<map(content-to-ebc)> content
       
   ] where
-    tagFailHandler := <newname> "";
+    <newname> "FailHandler" => tagFailHandler;
     
     //Create the code for the functions
     functions := <filter-fun> content;
@@ -299,7 +253,7 @@ rules
     
     <concat> [
       //PART2: Check if CALLVALUE is ZERO -> jump to pre, else, REVERT
-      [ JUMPDEST(tagFunInit),
+      [ JUMPDESTTAG(tagFunInit),
         CALLVALUE(),
         DUP(1),
         ISZERO(),
@@ -311,7 +265,7 @@ rules
       
       //PART3: Create stack frame for function (load arguments)
       //0-argument function
-      [ JUMPDEST(tagFunPre),
+      [ JUMPDESTTAG(tagFunPre),
         POP(),
         PUSHTAG(tagFunPost),
         
@@ -323,7 +277,7 @@ rules
       /*
       //1-argument function
       <concat> [
-        [ JUMPDEST(tagFunPre),
+        [ JUMPDESTTAG(tagFunPre),
           POP(),
           PUSHTAG(tagFunPost),
           PUSH(0, 4),
@@ -356,7 +310,7 @@ rules
       */
       
       //PART4: store result
-      [ JUMPDEST(tagFunPost),
+      [ JUMPDESTTAG(tagFunPost),
         PUSH(1, "0x40"),
         MLOAD(),
         DUP(1),
@@ -382,7 +336,7 @@ rules
       
       /*
       //For a string return, we get this giant mess
-      JUMPDEST(tagFunPost),
+      JUMPDESTTAG(tagFunPost),
       PUSH(1, "0x40"),
       MLOAD(),
       DUP(1),
@@ -416,7 +370,7 @@ rules
       PUSH(0),
       
       //Tag 6: some kind of loop
-      JUMPDEST(tag6),
+      JUMPDESTTAG(tag6),
       DUP(4),
       DUP(2),
       LT(),
@@ -440,7 +394,7 @@ rules
       JUMP()
       
       //Tag7
-      JUMPDEST(tag7),
+      JUMPDESTTAG(tag7),
       POP(),
       POP(),
       POP(),
@@ -479,7 +433,7 @@ rules
       POP(),
       
       //tag 9
-      JUMPDEST(tag9),
+      JUMPDESTTAG(tag9),
       POP(),
       SWAP(3),
       POP(),
@@ -497,7 +451,7 @@ rules
       //PART5: Actual function
       <concat> [
         //Return address is on the stack
-        [ JUMPDEST(tagFunStart) ],
+        [ JUMPDESTTAG(tagFunStart) ],
         //TODO params
         <mapconcat(stmt-to-ebc)> stmts,
         
@@ -511,10 +465,10 @@ rules
       ]
     ]
     ) where
-    tagFunInit  := <newname> "";
-    tagFunPre   := <newname> "";
-    tagFunPost  := <newname> "";
-    tagFunStart := <newname> ""
+    tagFunInit  := <newname> "Fun_Init";
+    tagFunPre   := <newname> "Fun_Pre";
+    tagFunPost  := <newname> "Fun_Post";
+    tagFunStart := <newname> "Fun_Start"
     
     //Determine type of function
 //    a := <nabl2-get-ast-analysis>;
@@ -619,21 +573,21 @@ rules
   //TODO Stack/variable count/other
   stmt-to-ebc: If(e1, trueStmt, Else(elseStmt)) -> instr
     where
-    tagFalse   := <newname> "";
-    tagAfterIf := <newname> "";
-    instr := <concat> [        //
-      <exp-to-ebc> e1,         //  PUSH e1
-      [ ISZERO(),              //  ISZERO
-        PUSHTAG(tagFalse),     //  PUSHTAG tagFalse
-        JUMPI() ],             //  JUMPI
-      <stmt-to-ebc> trueStmt,  //  <IF-BRANCH>
-      [ PUSHTAG(tagAfterIf),   //  PUSHTAG tagAfterIf
-        JUMP(),                //  JUMP
-                               //tag false
-        JUMPDEST(tagFalse) ],  //  JUMPDEST
-      <stmt-to-ebc> elseStmt,  //  <ELSE-BRANCH>
-      [                        //tag afterIf
-        JUMPDEST(tagAfterIf) ] //  JUMPDEST
+    tagFalse   := <newname> "If_ElseBranch";
+    tagAfterIf := <newname> "If_After";
+    instr := <concat> [           //
+      <exp-to-ebc> e1,            //  PUSH e1
+      [ ISZERO(),                 //  ISZERO
+        PUSHTAG(tagFalse),        //  PUSHTAG tagFalse
+        JUMPI() ],                //  JUMPI
+      <stmt-to-ebc> trueStmt,     //  <IF-BRANCH>
+      [ PUSHTAG(tagAfterIf),      //  PUSHTAG tagAfterIf
+        JUMP(),                   //  JUMP
+                                  //tag false
+        JUMPDESTTAG(tagFalse) ],  //  JUMPDEST
+      <stmt-to-ebc> elseStmt,     //  <ELSE-BRANCH>
+      [                           //tag afterIf
+        JUMPDESTTAG(tagAfterIf) ] //  JUMPDEST
     ]
   
   //TODO If without else (or desugar away)

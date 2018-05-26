@@ -1,0 +1,20 @@
+module Color
+
+imports
+  libspoofax/color/colors
+  libspoofax/color/default
+
+colorer
+  Instr.TAG      : 255 0 0 bold    //Red
+  Instr.RESETPC  : 255 0 0 bold    //Red
+  
+  EBCTag         : 200 0 0 //Dark red
+  
+  Instr.JUMPDEST : 128 128 0 bold  //??
+  Instr.JUMP     : 128 128 0 bold  //??
+  Instr.JUMPI    : 128 128 0 bold  //??
+  
+  EBCAnything    : 255 0 0
+  EBCHex         : 0 128 0         //green numbers
+  number         : 0 128 0
+//  Instr          : 127 0 85 bold   //purple

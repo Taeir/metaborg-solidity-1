@@ -5,8 +5,8 @@ imports
 
 signature
   constructors
-    TAG      : EBCInt * EBCInt -> Instr
-    JUMPDEST : EBCInt * EBCInt -> Instr
+    TAG         : EBCID * EBCInt -> Instr
+    JUMPDESTTAG : EBCID -> Instr
 
 rules
   //-----------------------------------------------------------------------------------------------
@@ -19,12 +19,12 @@ rules
     where
     (
       (<lt> (n, 10); h := <int-to-string> n) <+
-      (<eq> (n, 10); h := "a") <+
-      (<eq> (n, 11); h := "b") <+
-      (<eq> (n, 12); h := "c") <+
-      (<eq> (n, 13); h := "d") <+
-      (<eq> (n, 14); h := "e") <+
-      (<eq> (n, 15); h := "f") <+
+      (<eq> (n, 10); h := "A") <+
+      (<eq> (n, 11); h := "B") <+
+      (<eq> (n, 12); h := "C") <+
+      (<eq> (n, 13); h := "D") <+
+      (<eq> (n, 14); h := "E") <+
+      (<eq> (n, 15); h := "F") <+
       (h := <conc-strings> (<int-to-hex> <divi> (n, 16), <int-to-hex> <mod> (n, 16)))
     )
   
@@ -88,14 +88,11 @@ rules
    * @param list(Instr)  - the list of instructions
    * @return list(TAG/2) - a list with only the tags and locations
    */
-  index-tags(|index): []                    -> []
-  index-tags(|index): [TAG(x)      | tail] -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
-  index-tags(|index): [JUMPDEST(x) | tail] -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
-  index-tags(|index): [PUSH(n, _)  | tail] -> <index-tags(|<inc> <addi> (index, <string-to-int> n))> tail
-  index-tags(|index): [PUSHTAG(_)  | tail] -> <index-tags(|<addi> (index, 3))> tail
-  index-tags(|index): [head | tail]        -> <index-tags(|<inc> index)> tail
-    where
-    not(<?TAG(_) + ?JUMPDEST(_) + ?PUSH(_, _) + ?PUSHTAG(_)> head)
+  index-tags(|index): []                      -> []
+  index-tags(|index): [RESETPC()      | tail] -> <index-tags(|0)> tail
+  index-tags(|index): [TAG(x)         | tail] -> [TAG(x, index) | <index-tags(|index)> tail]
+  index-tags(|index): [JUMPDESTTAG(x) | tail] -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
+  index-tags(|index): [instruction    | tail] -> <index-tags(|<addi> (index, <instr-len> instruction))> tail
   
   /**
    * Takes a tuple of (Instr, list(TAG(name, index))).
@@ -121,6 +118,74 @@ rules
   get-tag-index: (x, [TAG(y, index) | _]) -> index where <string-starts-with(|x)> y; <string-starts-with(|y)> x
   get-tag-index: (x, [_ | tail])          -> <get-tag-index> (x, tail)
   get-tag-index: (x, [])                  -> <fail>
+  
+  //-----------------------------------------------------------------------------------------------
+  //Fix instruction styling
+  //-----------------------------------------------------------------------------------------------
+  /**
+   * Fixes the instructions by doing the following:
+   * - PUSH, SWAP, DUP and LOG have their first argument turned into a string.
+   * - PUSH has it's second argument turned into a correct hex string.
+   * - JUMPDESTTAG(tag) is replaced with TAG(tag), JUMPDEST()
+   *
+   * @param  list(Instr)
+   * @return list(Instr)
+   */
+  fix-instructions: [] -> []
+  fix-instructions: [JUMPDESTTAG(tag) | tail] -> [TAG(tag), JUMPDEST()    | <fix-instructions> tail]
+  fix-instructions: [instruction      | tail] -> [<fix-instr> instruction | <fix-instructions> tail]
+  
+  fix-instr = fix-instr-numbers
+  
+  //Fixes "loose" usage of PUSH, SWAP, DUP and LOG
+  //PUSH(1, "0x10") -> PUSH("1", "0x10")
+  fix-instr-numbers: PUSH(i, nr)  -> PUSH(<int-to-string> i, nr)
+    where
+    <string-starts-with(|"0x")> nr
+  fix-instr-numbers: PUSH(i, nr)  -> PUSH(i', <conc-strings> ("0x", <int-to-hex> nr'))
+    where
+    not(<string-starts-with(|"0x")> nr);
+    ((<is-int> i; i' := <int-to-string> i) <+ (i' := i));
+    ((<is-int> nr; nr' := nr) <+ (nr' := <string-to-int> nr))
+  
+  fix-instr-numbers: SWAP(i) -> SWAP(<int-to-string> i)
+  fix-instr-numbers: DUP(i)  -> DUP(<int-to-string> i)
+  fix-instr-numbers: LOG(i)  -> LOG(<int-to-string> i)
+  
+  fix-instr-numbers: x -> x
+    where
+    not(<?PUSH(_, _) + ?SWAP(_) + ?DUP(_) + ?LOG(_)> x)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Instruction length
+  //-----------------------------------------------------------------------------------------------
+  
+  /**
+   * Determines the length of the given list of instructions.
+   *
+   * @param list(Instr)
+   * @return int
+   */
+  instructions-length: []       -> 0
+  instructions-length: [i | is] -> <addi> (<instr-len> i, <instructions-length> is)
+  
+  /**
+   * Returns the length of the given instruction.
+   *
+   * PUSH<n> = 1 + n
+   * PUSHTAG = PUSH2 = 3
+   * TAG     = 0
+   * RESETPC = 0
+   * OTHERS  = 1
+   * @param Instr
+   * @return int
+   */
+  instr-len: PUSH(n, _) -> <addi> (n', 1) where (n' := <string-to-int> n <+ n' := n)
+  instr-len: PUSHTAG(_) -> 3 //TODO Not always
+  instr-len: TAG(_)     -> 0
+  instr-len: RESETPC()  -> 0
+  instr-len: _          -> 1
+  
   //-----------------------------------------------------------------------------------------------
   //Instructions to hex
   //-----------------------------------------------------------------------------------------------
@@ -133,117 +198,108 @@ rules
     where
     hexinstructions := <map(instr-to-hex)> <resolve-pushtags> instructions;
     hexstring := <concat-strings> hexinstructions;
-    hex := <conc-strings> ("0x", hexstring)
+    hex := <conc-strings> ("0x", <lower-case> hexstring)
   
-  instr-to-hex: STOP()         -> "00"
-  instr-to-hex: ADD()          -> "01"
-  instr-to-hex: MUL()          -> "02"
-  instr-to-hex: SUB()          -> "03"
-  instr-to-hex: DIV()          -> "04"
-  instr-to-hex: SDIV()         -> "05"
-  instr-to-hex: MOD()          -> "06"
-  instr-to-hex: SMOD()         -> "07"
-  instr-to-hex: ADDMOD()       -> "08"
-  instr-to-hex: MULMOD()       -> "09"
-  instr-to-hex: EXP()          -> "0a"
-  instr-to-hex: SIGNEXTEND()   -> "0b"
+  instr-to-hex: STOP()           -> "00"
+  instr-to-hex: ADD()            -> "01"
+  instr-to-hex: MUL()            -> "02"
+  instr-to-hex: SUB()            -> "03"
+  instr-to-hex: DIV()            -> "04"
+  instr-to-hex: SDIV()           -> "05"
+  instr-to-hex: MOD()            -> "06"
+  instr-to-hex: SMOD()           -> "07"
+  instr-to-hex: ADDMOD()         -> "08"
+  instr-to-hex: MULMOD()         -> "09"
+  instr-to-hex: EXP()            -> "0a"
+  instr-to-hex: SIGNEXTEND()     -> "0b"
 
+  instr-to-hex: LT()             -> "10"
+  instr-to-hex: GT()             -> "11"
+  instr-to-hex: SLT()            -> "12"
+  instr-to-hex: SGT()            -> "13"
+  instr-to-hex: EQ()             -> "14"
+  instr-to-hex: ISZERO()         -> "15"
+  instr-to-hex: AND()            -> "16"
+  instr-to-hex: OR()             -> "17"
+  instr-to-hex: XOR()            -> "18"
+  instr-to-hex: NOT()            -> "19"
+  instr-to-hex: BYTE()           -> "1a"
+  instr-to-hex: SHL()            -> "1b"
+  instr-to-hex: SHR()            -> "1c"
+  instr-to-hex: SAR()            -> "1d"
 
-  instr-to-hex: LT()           -> "10"
-  instr-to-hex: GT()           -> "11"
-  instr-to-hex: SLT()          -> "12"
-  instr-to-hex: SGT()          -> "13"
-  instr-to-hex: EQ()           -> "14"
-  instr-to-hex: ISZERO()       -> "15"
-  instr-to-hex: AND()          -> "16"
-  instr-to-hex: OR()           -> "17"
-  instr-to-hex: XOR()          -> "18"
-  instr-to-hex: NOT()          -> "19"
-  instr-to-hex: BYTE()         -> "1a"
-  instr-to-hex: SHL()          -> "1b"
-  instr-to-hex: SHR()          -> "1c"
-  instr-to-hex: SAR()          -> "1d"
+  instr-to-hex: SHA3()           -> "20"
 
-  instr-to-hex: SHA3()         -> "20"
-
-  instr-to-hex: ADDRESS()      -> "30"
-  instr-to-hex: BALANCE()      -> "31"
-  instr-to-hex: ORIGIN()       -> "32"
-  instr-to-hex: CALLER()       -> "33"
-  instr-to-hex: CALLVALUE()    -> "34"
-  instr-to-hex: CALLDATALOAD() -> "35"
-  instr-to-hex: CALLDATASIZE() -> "36"
-  instr-to-hex: CALLDATACOPY() -> "37"
-  instr-to-hex: CODESIZE()     -> "38"
-  instr-to-hex: CODECOPY()     -> "39"
-  instr-to-hex: GASPRICE()     -> "3a"
-  instr-to-hex: EXTCODESIZE()  -> "3b"
-  instr-to-hex: EXTCODECOPY()  -> "3c"
-  
+  instr-to-hex: ADDRESS()        -> "30"
+  instr-to-hex: BALANCE()        -> "31"
+  instr-to-hex: ORIGIN()         -> "32"
+  instr-to-hex: CALLER()         -> "33"
+  instr-to-hex: CALLVALUE()      -> "34"
+  instr-to-hex: CALLDATALOAD()   -> "35"
+  instr-to-hex: CALLDATASIZE()   -> "36"
+  instr-to-hex: CALLDATACOPY()   -> "37"
+  instr-to-hex: CODESIZE()       -> "38"
+  instr-to-hex: CODECOPY()       -> "39"
+  instr-to-hex: GASPRICE()       -> "3a"
+  instr-to-hex: EXTCODESIZE()    -> "3b"
+  instr-to-hex: EXTCODECOPY()    -> "3c"
   instr-to-hex: RETURNDATASIZE() -> "3d"
   instr-to-hex: RETURNDATACOPY() -> "3e"
 
-  instr-to-hex: BLOCKHASH()    -> "40"
-  instr-to-hex: COINBASE()     -> "41"
-  instr-to-hex: TIMESTAMP()    -> "42"
-  instr-to-hex: NUMBER()       -> "43"
-  instr-to-hex: DIFFICULTY()   -> "44"
-  instr-to-hex: GASLIMIT()     -> "45"
+  instr-to-hex: BLOCKHASH()      -> "40"
+  instr-to-hex: COINBASE()       -> "41"
+  instr-to-hex: TIMESTAMP()      -> "42"
+  instr-to-hex: NUMBER()         -> "43"
+  instr-to-hex: DIFFICULTY()     -> "44"
+  instr-to-hex: GASLIMIT()       -> "45"
 
-  instr-to-hex: POP()          -> "50"
-  instr-to-hex: MLOAD()        -> "51"
-  instr-to-hex: MSTORE()       -> "52"
-  instr-to-hex: MSTORE8()      -> "53"
-  instr-to-hex: SLOAD()        -> "54"
-  instr-to-hex: SSTORE()       -> "55"
-  instr-to-hex: JUMP()         -> "56"
-  instr-to-hex: JUMPI()        -> "57"
-  instr-to-hex: PC()           -> "58"
-  instr-to-hex: MSIZE()        -> "59"
-  instr-to-hex: GAS()          -> "5a"
-  instr-to-hex: JUMPDEST()     -> "5b"
-  instr-to-hex: JUMPDEST(_)    -> "5b"
+  instr-to-hex: POP()            -> "50"
+  instr-to-hex: MLOAD()          -> "51"
+  instr-to-hex: MSTORE()         -> "52"
+  instr-to-hex: MSTORE8()        -> "53"
+  instr-to-hex: SLOAD()          -> "54"
+  instr-to-hex: SSTORE()         -> "55"
+  instr-to-hex: JUMP()           -> "56"
+  instr-to-hex: JUMPI()          -> "57"
+  instr-to-hex: PC()             -> "58"
+  instr-to-hex: MSIZE()          -> "59"
+  instr-to-hex: GAS()            -> "5a"
+  instr-to-hex: JUMPDEST()       -> "5b"
+  instr-to-hex: JUMPDESTTAG(_)   -> "5b"
 
-  instr-to-hex: PUSH(n, nr) -> s
+  instr-to-hex: PUSH(n, nr) -> s //60-7F
     where
     ((<is-string> n; n' := <string-to-int> n) <+ (n' := n));
     ((<is-string> nr; hexstr := <fix-hex-length> <string-replace(|"0x","")> nr) <+ (hexstr := <fix-hex-length> <int-to-hex> nr) <+ (hexstr := nr));
     opcode := <int-to-hex> <addi> (95, n');
     s      := <conc-strings> (opcode, <lower-case> hexstr)
-  instr-to-hex: PUSHI(n, nr) -> s
-    where
-    ((<is-string> n; n' := <string-to-int> n) <+ (n' := n));
-    ((<is-string> nr; nr' := <string-to-int> nr) <+ (nr' := nr));
-    opcode := <int-to-hex> <addi> (95, n');
-    s      := <conc-strings> (opcode, <lower-case> <fix-hex-length> <int-to-hex> nr')
 
-  instr-to-hex: DUP(n) -> opcode
+  instr-to-hex: DUP(n) -> opcode  //80-8F
     where
     (n' := <string-to-int> n <+ n' := n);
-    opcode := <int-to-hex> <addi> (127, n')
+    opcode := <lower-case> <int-to-hex> <addi> (127, n')
 
-  instr-to-hex: SWAP(n) -> opcode
+  instr-to-hex: SWAP(n) -> opcode //90-9F
     where
     (n' := <string-to-int> n <+ n' := n);
-    opcode := <int-to-hex> <addi> (143, n')
+    opcode := <lower-case> <int-to-hex> <addi> (143, n')
     
-
-  instr-to-hex: LOG(n) -> opcode
+  instr-to-hex: LOG(n) -> opcode  //A0-A3
     where
     (n' := <int-to-string> n <+ n' := n);
     opcode := <conc-strings> ("a", n')
 
-  instr-to-hex: CREATE()       -> "f0"
-  instr-to-hex: CALL()         -> "f1"
-  instr-to-hex: CALLCODE()     -> "f2"
-  instr-to-hex: RETURN()       -> "f3"
-  instr-to-hex: DELEGATECALL() -> "f4"
+  instr-to-hex: CREATE()         -> "f0"
+  instr-to-hex: CALL()           -> "f1"
+  instr-to-hex: CALLCODE()       -> "f2"
+  instr-to-hex: RETURN()         -> "f3"
+  instr-to-hex: DELEGATECALL()   -> "f4"
   
-  instr-to-hex: STATICCALL()   -> "fa"
+  instr-to-hex: STATICCALL()     -> "fa"
   
-  instr-to-hex: REVERT()       -> "fd"
-  instr-to-hex: INVALID()      -> "fe"
-  instr-to-hex: SELFDESTRUCT() -> "ff"
+  instr-to-hex: REVERT()         -> "fd"
+  instr-to-hex: INVALID()        -> "fe"
+  instr-to-hex: SELFDESTRUCT()   -> "ff"
   
-  instr-to-hex: TAG(_)         -> ""
-  
+  instr-to-hex: TAG(_)           -> ""
+  instr-to-hex: RESETPC()        -> ""
