@@ -3,7 +3,15 @@ module ebc/ebcshared/codegen
 imports
   signatures/ebc/EBC-sig
 
+signature
+  constructors
+    TAG      : EBCInt * EBCInt -> Instr
+    JUMPDEST : EBCInt * EBCInt -> Instr
+
 rules
+  //-----------------------------------------------------------------------------------------------
+  //Hex util methods
+  //-----------------------------------------------------------------------------------------------
   /**
    * Converts an int to a hexidecimal string (without 0x).
    */
@@ -21,12 +29,92 @@ rules
     )
   
   /**
+   * Fixes the length of the given hex string (no 0x).
+   * 
+   * E.g:
+   *  0   -> 00
+   *  123 -> 0123
+   */
+  fix-hex-length: s -> s'
+    where
+    //if (|s| % 2 == 0) then s' := s else s' := "0" . s
+    (<eq> (<mod> (<strlen> s, 2), 0); s' := s) <+
+    (s' := <conc-strings> ("0", s))
+  
+  /**
+   * Prepends 0x and ensures that the given hex string is of the correct length (0 -> 0x00).
+   */
+  finish-hex: s -> s'
+    where
+      //if (|s| % 2 == 0) then s' := "0x" . s else s' := "0x0" . s
+      (<eq> (<mod> (<strlen> s, 2), 0); s' := <conc-strings> ("0x", s)) <+
+      (s' := <conc-strings> ("0x0", s))
+  
+  //-----------------------------------------------------------------------------------------------
+  //Tags
+  //-----------------------------------------------------------------------------------------------
+  /**
+   * Resolves all PUSHTAG instructions by replacing them with PUSH(2, tag location).
+   * 
+   * This strategy fails if some tags cannot be resolved.
+   *
+   * @param list(Instr)  - the list of instructions
+   * @return list(Instr) - the list of instructions with PUSHTAGs replaced 
+   */
+  resolve-pushtags: instructions -> instructions'
+    where
+    indexed-tags := <index-tags(|0)> instructions;
+    instructions' := <map(\ i -> <convert-tag> (i, indexed-tags) \)> instructions
+  
+  /**
+   * Indexes the locations of the tags.
+   *
+   * @param int          - current index
+   * @param list(Instr)  - the list of instructions
+   * @return list(TAG/2) - a list with only the tags and locations
+   */
+  index-tags(|index): []                   -> []
+  index-tags(|index): [TAG(x) | tail]      -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
+  index-tags(|index): [JUMPDEST(x) | tail] -> [TAG(x, index) | <index-tags(|<inc> index)> tail]
+  index-tags(|index): [head | tail]        -> <index-tags(|<inc> index)> tail
+    where
+    not(<?TAG(_) + ?JUMPDEST(_)> head)
+  
+  /**
+   * Takes a tuple of (Instr, list(TAG(name, index))).
+   * Converts PUSHTAG(x) to PUSH("2", location).
+   * Leaves all other instructions unchanged.
+   *
+   * @param Instr
+   * @param list(TAG/2)
+   * @return Instr
+   */
+  convert-tag: (PUSHTAG(x), tags) -> PUSH("2", <conc-strings> ("0x", <fix-hex-length> <int-to-hex> <get-tag-index> (x, tags)))
+  convert-tag: (i, _)             -> i
+    where
+    not(<?PUSHTAG(_)> i)
+  
+  /**
+   * Determines the index of the tag with the given name.
+   *
+   * @param string      - tag name
+   * @param list(TAG/2) - list of tags and indices
+   * @return int        - tag index
+   */
+  get-tag-index: (x, [TAG(x, index) | _]) -> index
+  get-tag-index: (x, [_ | tail])          -> <get-tag-index> (x, tail)
+  get-tag-index: (x, [])                  -> <fail>
+  //-----------------------------------------------------------------------------------------------
+  //Instructions to hex
+  //-----------------------------------------------------------------------------------------------
+  
+   /**
    * Converts a list of ebc instructions to a hexadecimal string.
    */
   ebc-to-hex-string: EBCFile(_, _, Code(instructions)) -> <ebc-to-hex-string> instructions
   ebc-to-hex-string: instructions@[_ | _] -> hex
     where
-    hexinstructions := <map(instr-to-hex)> instructions;
+    hexinstructions := <map(instr-to-hex)> <resolve-pushtags> instructions;
     hexstring := <concat-strings> hexinstructions;
     hex := <conc-strings> ("0x", hexstring)
   
@@ -97,11 +185,12 @@ rules
   instr-to-hex: MSIZE()        -> "59"
   instr-to-hex: GAS()          -> "5a"
   instr-to-hex: JUMPDEST()     -> "5b"
+  instr-to-hex: JUMPDEST(_)    -> "5b"
 
   instr-to-hex: PUSH(n, nr) -> s
     where
     ((<is-string> n; n' := <string-to-int> n) <+ (n' := n));
-    ((<is-string> nr; hexstr := <string-replace(|"0x","")> nr) <+ (hexstr := <int-to-hex> nr) <+ (hexstr := nr));
+    ((<is-string> nr; hexstr := <fix-hex-length> <string-replace(|"0x","")> nr) <+ (hexstr := <fix-hex-length> <int-to-hex> nr) <+ (hexstr := nr));
     opcode := <int-to-hex> <addi> (95, n');
     s      := <conc-strings> (opcode, <lower-case> hexstr)
   instr-to-hex: PUSHI(n, nr) -> s
@@ -109,7 +198,7 @@ rules
     ((<is-string> n; n' := <string-to-int> n) <+ (n' := n));
     ((<is-string> nr; nr' := <string-to-int> nr) <+ (nr' := nr));
     opcode := <int-to-hex> <addi> (95, n');
-    s      := <conc-strings> (opcode, <lower-case> <int-to-hex> nr')
+    s      := <conc-strings> (opcode, <lower-case> <fix-hex-length> <int-to-hex> nr')
 
   instr-to-hex: DUP(n) -> opcode
     where
@@ -139,4 +228,5 @@ rules
   instr-to-hex: INVALID()      -> "fe"
   instr-to-hex: SELFDESTRUCT() -> "ff"
   
+  instr-to-hex: TAG(_)         -> ""
   
