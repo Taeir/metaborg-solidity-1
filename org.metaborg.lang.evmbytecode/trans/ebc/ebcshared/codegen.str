@@ -23,7 +23,8 @@ rules
   /**
    * Converts a list of ebc instructions to a hexadecimal string.
    */
-  ebc-to-hex-string: instructions -> hex
+  ebc-to-hex-string: EBCFile(_, _, Code(instructions)) -> <ebc-to-hex-string> instructions
+  ebc-to-hex-string: instructions@[_ | _] -> hex
     where
     hexinstructions := <map(instr-to-hex)> instructions;
     hexstring := <concat-strings> hexinstructions;
@@ -99,27 +100,32 @@ rules
 
   instr-to-hex: PUSH(n, nr) -> s
     where
-    ((<is-string> n; n2 := <string-to-int> n) <+ (n2 := n));
-    ((<is-string> nr; hexstr := nr) <+ (hexstr := <int-to-hex> nr));
-    opcode := <int-to-hex> <addi> (95, n2);
+    ((<is-string> n; n' := <string-to-int> n) <+ (n' := n));
+    ((<is-string> nr; hexstr := <string-replace(|"0x","")> nr) <+ (hexstr := <int-to-hex> nr) <+ (hexstr := nr));
+    opcode := <int-to-hex> <addi> (95, n');
     s      := <conc-strings> (opcode, <lower-case> hexstr)
   instr-to-hex: PUSHI(n, nr) -> s
     where
-    ((<is-string> n; n2 := <string-to-int> n) <+ (n2 := n));
-    opcode := <int-to-hex> <addi> (95, n2);
-    s      := <conc-strings> (opcode, <lower-case> <int-to-hex> nr)
+    ((<is-string> n; n' := <string-to-int> n) <+ (n' := n));
+    ((<is-string> nr; nr' := <string-to-int> nr) <+ (nr' := nr));
+    opcode := <int-to-hex> <addi> (95, n');
+    s      := <conc-strings> (opcode, <lower-case> <int-to-hex> nr')
 
   instr-to-hex: DUP(n) -> opcode
     where
-    opcode := <int-to-hex> <addi> (127, <string-to-int> n)
+    (n' := <string-to-int> n <+ n' := n);
+    opcode := <int-to-hex> <addi> (127, n')
 
   instr-to-hex: SWAP(n) -> opcode
     where
-    opcode := <int-to-hex> <addi> (143, <string-to-int> n)
+    (n' := <string-to-int> n <+ n' := n);
+    opcode := <int-to-hex> <addi> (143, n')
+    
 
   instr-to-hex: LOG(n) -> opcode
     where
-    opcode := <conc-strings> ("a", n)
+    (n' := <int-to-string> n <+ n' := n);
+    opcode := <conc-strings> ("a", n')
 
   instr-to-hex: CREATE()       -> "f0"
   instr-to-hex: CALL()         -> "f1"

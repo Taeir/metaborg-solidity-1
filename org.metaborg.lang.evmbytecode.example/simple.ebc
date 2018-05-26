@@ -1,5 +1,9 @@
+FILE: path/file
+CONTRACT: name
+CODE:
+
 STOP
-PUSH32 0xAF
+PUSH1 0xAF
 DUP12
 DUP1
 STOP

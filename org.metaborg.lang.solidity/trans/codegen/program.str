@@ -5,6 +5,7 @@ imports
   
   signatures/ebc/-
   ebc/ebcshared/evminstructions
+  ebc/ebcshared/codegen
 
   signatures/-
   desugar/-
@@ -12,6 +13,8 @@ imports
   
   utils/externals
   pp
+  
+  
   
   libspoofax/stratego/debug
 
@@ -61,17 +64,6 @@ rules
   instr-len: _           -> 1
   
   /**
-   * Fixes all push instructions to use PUSHI where applicable.
-   */
-  fix-all-push: list -> <map(fix-push)> list
-  fix-push: PUSH(a, nr) -> PUSHI(a, nr)
-    where
-    <is-int> nr
-  fix-push: instr -> instr
-    where
-    not(<?PUSH(_, _)> instr)
-  
-  /**
    * Generate the function hash from the function
    */
   hash-signature: Function(name, params, _, _, _)  -> <evm-generate-function-hash> (name, <map(get-param-type-name)> params)
@@ -87,22 +79,51 @@ rules
     ISZERO()
   ]
   extend-to-32-bytes: IntT(32) -> []
-  extend-to-32-bytes: IntT(n) -> [
+  extend-to-32-bytes: IntT(n)  -> [
     PUSH(1, <divi> (n, 8)),
     SIGNEXTEND()
   ]
-  extend-to-32-bytes: UIntT(n) -> [
+  extend-to-32-bytes: UIntT(32) -> []
+  extend-to-32-bytes: UIntT(n)  -> [
     PUSH(n', <conc-strings> ("0x", <do-n(append-FF|n')> "") ),
     AND()
   ] where n' := <divi> (n, 8)
   
   append-FF: s -> <conc-strings> (s, "FF")
+  
+  
+  //Fixes "loose" usage of PUSH, PUSHI, SWAP, DUP and LOG
+  //PUSH(1, "0x10") -> PUSH("1", "0x10")
+  fix-numbers: PUSH(i, nr)  -> PUSH(<int-to-string> i, nr)
+    where
+    <string-starts-with(|"0x")> nr
+  fix-numbers: PUSH(i, nr)  -> PUSH(i', <int-to-hex> nr')
+    where
+    not(<string-starts-with(|"0x")> nr);
+    ((<is-int> i; i' := <int-to-string> i) <+ (i' := i));
+    ((<is-int> nr; nr' := nr) <+ (nr' := <string-to-int> nr))
+    
+  //TODO Should be pairs of nrs
+  //PUSHI(1, 0) -> PUSH("1", "0x0")
+  fix-numbers: PUSHI(i, nr) -> PUSH(i', <conc-strings> ("0x", <int-to-hex> nr'))
+    where
+    ((<is-int> i; i' := <int-to-string> i) <+ (i' := i));
+    ((<is-int> nr; nr' := nr) <+ (nr' := <string-to-int> nr))
+  
+  fix-numbers: SWAP(i) -> SWAP(<int-to-string> i)
+  fix-numbers: DUP(i)  -> DUP(<int-to-string> i)
+  fix-numbers: LOG(i)  -> LOG(<int-to-string> i)
+  
+  fix-numbers: x -> x
+    where
+    not(<?PUSH(_, _) + ?PUSHI(_, _) + ?SWAP(_) + ?DUP(_) + ?LOG(_)> x)
+  
   //-----------------------------------------------------------------------------------------------
   //Program
   //-----------------------------------------------------------------------------------------------
   //A program consists of a specific "contract load" sequence which loads the actual code of the
   //contract and then jumps into it. 
-  program-to-ebc: Program(content) -> [EBCFile(None(), "WIP", Code(<concat> [
+  program-to-ebc: Program(content) -> [EBCFile(None(), "WIP", Code(<map(fix-numbers)> <concat> [
     [
       //Default initialization (allocate 128 bytes of memory)
       PUSH(1, "0x80"),    //0,1

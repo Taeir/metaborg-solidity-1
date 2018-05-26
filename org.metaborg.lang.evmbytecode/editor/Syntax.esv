@@ -21,6 +21,9 @@ menus
     action: "Format"          = editor-format (source)
     action: "Show parsed AST" = debug-show-aterm (source)
 
+  menu: "Generation" (openeditor)
+    action: "Generate Hex"    = generate-hex (source)
+
 views
   
   outline view: editor-outline (source)

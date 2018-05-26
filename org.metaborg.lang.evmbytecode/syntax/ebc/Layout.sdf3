@@ -1,8 +1,8 @@
 module ebc/Layout
 
 lexical syntax
-  Anything         = AnyChar* 
-  AnyChar          = ~[\n]
+  EBCAnything      = EBCAnyChar* 
+  EBCAnyChar       = ~[\n\r]
   
   EBCCommentChar   = [\*] 
   LAYOUT           = [\ \t\n\r]
@@ -17,6 +17,7 @@ lexical syntax
 lexical restrictions
   EBCCommentChar -/- [\/]
   EBCEOF         -/- ~[]
+  EBCAnything    -/- [a-zA-Z0-9]
 
 context-free restrictions
   LAYOUT? -/- [\ \t\n\r]

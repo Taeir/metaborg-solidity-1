@@ -7,3 +7,4 @@ imports
   ebc/ebcshared/static-semantics
   ebc/ebcshared/evminstructions
   ebc/ebcshared/ebcpp
+  ebc/ebcshared/editor/builders
