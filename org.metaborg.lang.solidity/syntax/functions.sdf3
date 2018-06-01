@@ -83,8 +83,8 @@ context-free syntax
   ModifiersFun.StateMutability = <<ModStateMutability>>
   ModifiersFun.UserDefined     = <<ModUserDefined>>
   
-  ModUserDefined.Simple = <<ID>>
-  ModUserDefined.Ext    = <<ID>(<{Exp ", "}*>)>
+  ModUserDefined.SimpleUMod = <<ID>>
+  ModUserDefined.ExtUMod    = <<ID>(<{Exp ", "}*>)>
   
   //Constructors can be internal or public
   ModifierCon = Internal
