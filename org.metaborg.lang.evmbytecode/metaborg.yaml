@@ -51,7 +51,7 @@ debug:
   typesmart: false
 language:
   sdf:
-    pretty-print: evmbytecode
+    pretty-print: solidity
     sdf2table: c
     placeholder:
       prefix: "$"
