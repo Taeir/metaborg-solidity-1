@@ -1,59 +1,47 @@
 module functions
-
 language solidity
+start symbol Function
 
-start symbol Program
 
-//Test Param
-test funcnoparam[[
-	contract two {
-		function testone() public{ 
-		
-		}
-	}
+//Function N,M:
+//  N is the amount of parameters
+//  M is the amount of return parameters
+//  U stands for "unspecified"
 
-]] parse succeeds
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Parameter counts
+test S: Function 0,U: Simple no args     [[ function fun() {}                     ]] parse to VoidFunction("fun", [],        [], [])
+test S: Function 1,U: Simple single arg  [[ function fun(int a) {}                ]] parse to VoidFunction("fun", [_],       [], [])
+test S: Function 3,U: Simple multi arg   [[ function fun(int a, bool b, int c) {} ]] parse to VoidFunction("fun", [_, _, _], [], [])
 
-test funconeparam[[
-	contract two {
-		function testone(int x) public{ 
-		
-		}
-	}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Unnamed parameters
+test S: Function 1,U: Unnamed parameter  [[ function fun(int) {}            ]] parse to VoidFunction("fun", [Param(_, _, None())], [], [])
+test S: Function 3,U: Unnamed parameters [[ function fun(int, bool, int) {} ]] parse to VoidFunction("fun", [_, _, _], [], [])
 
-]] parse succeeds
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Return parameters
+test S: Function 0,1: returns 1 [[ function fun() returns (int) {}            ]] parse to Function("fun", [], [], Returns([_]), [])
+test S: Function 0,3: returns 2 [[ function fun() returns (int, bool, int) {} ]] parse to Function("fun", [], [], Returns([_, _, _]), [])
 
-test funcmultiparam[[
-	contract two {
-		function testtwo(bool x, int y) public{ 
-		
-		}
-	}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Named return parameters
+test S: Function 0,1: named return  [[ function f() returns (int a) {}               ]] parse to Function(_, [], [], Returns([_]), [])
+test S: Function 0,3: named returns [[ function f() returns (int a, int b, int c) {} ]] parse to Function(_, [], [], Returns([_, _, _]), [])
 
-]] parse succeeds
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Simple modifiers
+test S: Function 0,0: Simple public      [[ function fun() public {}      ]] parse succeeds
+test S: Function 0,0: Simple private     [[ function fun() private {}     ]] parse succeeds
+test S: Function 0,0: Simple pure        [[ function fun() pure {}        ]] parse succeeds
+test S: Function 0,0: Simple public pure [[ function fun() public pure {} ]] parse succeeds
+test S: Function 0,0: Simple pure public [[ function fun() pure public {} ]] parse succeeds
 
-//Test Returns
-test funcintreturn[[
-	contract two {
-		function testone() public returns (int){ 
-			return 42;
-		}
-	}
-]] parse succeeds
+//TODO Function modifiers (requires full test)
 
-test funcboolreturn[[
-	contract two {
-		function testone() public returns (bool){ 
-			return true;
-		}
-	}
-]] parse succeeds
-
-test funccombireturn[[
-	contract two {
-		function testone(bool x, int y) public returns (bool){ 
-			return true;
-		}
-	}
-]] parse succeeds
-
+//TODO Function bodies
+test S: Function 1,1: Simple function [[
+  function myFunction(int a) public returns (int) {
+    int b = a;
+  }
+]]
