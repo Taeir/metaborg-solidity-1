@@ -20,11 +20,12 @@ jdk:
   - oraclejdk8
 
 cache:
-  - $HOME/.m2
+  directories:
+    - $HOME/.m2
 
 branches:
   except:
-  - /^doc-.*$/
+    - /^doc-.*$/
 
 # Configuration variables.
 env:
@@ -33,6 +34,6 @@ env:
     - MAVEN_OPTS="-Xms512m -Xmx2048m -Xss16m"
 
 ################################################################################
-
+install: true
 script:
   - mvn -B -U clean verify
