@@ -40,7 +40,9 @@ exports:
   includes:
   - "completion/ebc/*.str"
   - "pp/ebc/*.str"
+  - "pp/*.str"
   - "signatures/ebc/*.str"
+  - "signatures/*.str"
 - directory: lib
 
 pardonedLanguages:
