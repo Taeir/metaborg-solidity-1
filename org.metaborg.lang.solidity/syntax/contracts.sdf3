@@ -22,7 +22,8 @@ lexical syntax
   KEYWORD = CONTRACTKEYWORD
   CONTRACTKEYWORD = "contract"
   CONTRACTKEYWORD = "is"
-  ID = CONTRACTKEYWORD {reject}
+  ID = "contract" {reject}
+  ID = "is" {reject}
 
 context-free syntax
   Contract.Contract = <
