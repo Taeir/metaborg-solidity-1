@@ -17,6 +17,7 @@ pardonedLanguages:
 - EditorService
 - Stratego-Sugar
 - SDF
+- DynSem
 runtime:
   nabl2:
     debug: analysis # add 'collection' to enable console logging of constraint collection
