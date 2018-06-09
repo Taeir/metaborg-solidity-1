@@ -27,6 +27,7 @@ exports:
   directory: syntax
   includes:
   - "ebc/*.sdf3"
+  - "abi/*.sdf3"
 - language: ATerm
   directory: src-gen/syntax
   includes:
@@ -43,6 +44,7 @@ exports:
   - "pp/*.str"
   - "signatures/ebc/*.str"
   - "signatures/*.str"
+  - "signatures/abi/*.str"
 - directory: lib
 
 pardonedLanguages:

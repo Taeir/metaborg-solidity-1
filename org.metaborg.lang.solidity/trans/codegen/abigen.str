@@ -1,0 +1,169 @@
+module codegen/abigen
+
+imports
+  signatures/abi/ABI-sig
+  
+  signatures/-
+  desugar/-
+  analysis/types
+
+rules
+  program-to-abi: Program(content) -> ABI(content')
+    where
+    content' := <mapconcat(program-content-to-abi)> content
+  
+  program-content-to-abi = pragma-to-abi
+  program-content-to-abi = import-to-abi
+  program-content-to-abi = interface-to-abi
+  program-content-to-abi = library-to-abi
+  program-content-to-abi = contract-to-abi
+  
+  //-----------------------------------------------------------------------------------------------
+  //Program content
+  //-----------------------------------------------------------------------------------------------
+  
+  //Remove pragmas and imports
+  pragma-to-abi: Pragma(_, _) -> []
+  import-to-abi: Import(_, _) -> []
+  
+  //Convert functions and events in interfaces, libraries and contracts
+  interface-to-abi: Interface(_, functions) -> <mapconcat(contract-content-to-abi)> functions
+  library-to-abi:   Library(_, content)     -> <mapconcat(contract-content-to-abi)> content
+  contract-to-abi:  Contract(_, content)    -> <mapconcat(contract-content-to-abi)> content
+  
+  contract-content-to-abi = statevar-to-abi
+  contract-content-to-abi = enum-to-abi
+  contract-content-to-abi = funmod-to-abi
+  contract-content-to-abi = function-to-abi
+  contract-content-to-abi = event-to-abi
+  
+  contract-content-to-abi = funmod-to-abi
+  
+  //-----------------------------------------------------------------------------------------------
+  //Contract content
+  //-----------------------------------------------------------------------------------------------
+  
+  //Remove statevariables
+  statevar-to-abi: StateVariable(_, _, _, _) -> []
+  statevar-to-abi: ConstantStateVariable(_, _, _, _) -> []
+  
+  //Remove enums
+  enum-to-abi: Enum(_, _) -> []
+  
+  //Remove function modifiers
+  funmod-to-abi: FunctionModifier(_, _, _) -> []
+
+  //-----------------------------------------------------------------------------------------------
+  //Events
+  //-----------------------------------------------------------------------------------------------
+  event-to-abi: Event(name, params, None()) -> [ABIEvent(
+    name,
+    <map(param-to-abi)> params,
+    None()
+  )]
+  event-to-abi: Event(name, params, Some(_)) -> [ABIEvent(
+    name,
+    <map(param-to-abi)> params,
+    Some(ABIAnonymous("true"))
+  )]
+  
+  
+  //-----------------------------------------------------------------------------------------------
+  //Functions
+  //-----------------------------------------------------------------------------------------------
+  function-to-abi: Function(name, params, mods, rets, _) -> [ABIFunction(
+    name,                       //name
+    <map(param-to-abi)> params, //inputs
+    <map(param-to-abi)> rets,   //outputs
+    <is-constant> mods,         //constant
+    <is-payable> mods,          //payable
+    <statemut-to-abi> mods)]    //statemut
+    
+  function-to-abi: Function("*fallback", [], mods, [], _) -> [ABIFallbackFunction(
+    <is-constant> mods,
+    <is-payable> mods,
+    <statemut-to-abi> mods)]
+    
+  function-to-abi: Constructor(_, params, _, _) -> [ABIConstructor(
+    <map(param-to-abi)> params, //inputs
+    "false",                    //constant
+    "false",                    //payable
+    "nonPayable")]              //stateMutability
+  function-to-abi: ConstructorWithSuper(_, params, _, _, _, _) -> [ABIConstructor(
+    <map(param-to-abi)> params, //inputs
+    "false",                    //constant
+    "false",                    //payable
+    "nonPayable")]              //stateMutability
+  
+  //-----------------------------------------------------------------------------------------------
+  //Modifiers
+  //-----------------------------------------------------------------------------------------------
+  
+  //constant = pure or view
+  is-constant: <fetch(?StateMutability("constant"))> -> "true"
+  is-constant: <fetch(?StateMutability("view"))>     -> "true"
+  is-constant: <fetch(?StateMutability("pure"))>     -> "true"
+  is-constant: _                                     -> "false"
+  
+  is-payable:  <fetch(?StateMutability("payable"))>  -> "true"
+  is-payable:  _                                     -> "false"
+  
+  //TODO Convert "constant" to "view" in the desugaring
+  statemut-to-abi: <fetch(?StateMutability("constant"))> -> "view"
+  statemut-to-abi: <fetch(?StateMutability(s))>          -> s
+  statemut-to-abi: _                                     -> "nonpayable"
+  
+  //-----------------------------------------------------------------------------------------------
+  //Parameters
+  //-----------------------------------------------------------------------------------------------
+  param-to-abi: Param(type, _, Some(name))       -> ABIVar(name, <tuple-to-abi> type, <type-to-abi> type)
+  param-to-abi: Param(type, _, None())           -> ABIVar("",   <tuple-to-abi> type, <type-to-abi> type)
+  param-to-abi: ReturnParam(type, _, Some(name)) -> ABIVar(name, <tuple-to-abi> type, <type-to-abi> type)
+  param-to-abi: ReturnParam(type, _, None())     -> ABIVar("",   <tuple-to-abi> type, <type-to-abi> type)
+  
+  param-to-abi: EventParam(type, indexed, name) ->
+    ABIEventParam(name', <tuple-to-abi> type, <type-to-abi> type, idx)
+    where
+    (<?Some(name')> name <+ name' := "");
+    ((<?Some(_)> indexed; idx := "true") <+ idx := "false")
+
+
+  //-----------------------------------------------------------------------------------------------
+  //Types
+  //-----------------------------------------------------------------------------------------------
+  type-to-abi: BooleanType() -> "bool"
+  type-to-abi: IntType(n)    -> <conc-strings> ("int", <abi-int-to-string> n)
+  type-to-abi: UIntType(n)   -> <conc-strings> ("uint", <abi-int-to-string> n)
+  
+  type-to-abi: FixedType(MxN(a, b))  ->
+    <concat-strings> ["fixed", <abi-int-to-string> a, "x", <abi-int-to-string> b]
+  type-to-abi: UFixedType(MxN(a, b)) ->
+    <concat-strings> ["ufixed", <abi-int-to-string> a, "x", <abi-int-to-string> b]
+  
+  type-to-abi: AddressType() -> "address" //Treated as uint160 in some cases
+  type-to-abi: StringType()  -> "string"
+  
+  type-to-abi: DynamicBytesArrayType() -> "bytes"
+  type-to-abi: FixedBytesArrayType(n)  -> <conc-strings> ("bytes", <abi-int-to-string> n)
+  type-to-abi: FixedBytesArrayType(n)  -> <conc-strings> ("bytes", <abi-int-to-string> n)
+  
+  type-to-abi: DynamicArrayType(type) -> <conc-strings> (<type-to-abi> type, "[]")
+  type-to-abi: FixedArrayType(type, IntLiteral(n, _, _)) -> <concat-strings> [
+    <type-to-abi> type, "[", <abi-int-to-string> n, "]"
+  ]
+  
+  //User defined types are treated as addresses.
+  type-to-abi: UserDefinedType(_)       -> "address"
+  type-to-abi: FunctionType(_, _, _, _) -> "function"
+  
+  //Mapping type is not allowed (storage type)
+  
+  //TODO Structs are translated to tuples
+  
+  //TODO Tuple types
+  tuple-to-abi: _ -> None()
+  
+  //-----------------------------------------------------------------------------------------------
+  abi-int-to-string: n -> n'
+    where
+    (n':= <int-to-string> n) <+ n' := n

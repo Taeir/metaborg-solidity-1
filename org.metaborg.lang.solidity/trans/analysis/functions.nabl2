@@ -36,7 +36,10 @@ rules
     
     Map1T [[ params    ^ (funScope) : paramTys ]],
     Map1T [[ retParams ^ (funScope) : retTys   ]],
-    [[ body ^ (funScope) ]].
+    [[ body ^ (funScope) ]],
+    
+    //Check modifiers
+    Map1  [[ mods ^ (funScope) ]].
   
   //-----------------------------------------------------------------------------------------------
   [[ Constructor(contractName, params, mod, body) ^ (s) ]] :=
