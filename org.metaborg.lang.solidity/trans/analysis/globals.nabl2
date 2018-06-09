@@ -139,13 +139,24 @@ rules
 //    //TODO erecover, addmod, mulmod
 //    
 //    //TODO address balance, send, transfer
-//  Globals2 [[ p ^ (programScope) ]] :=
-//    Function{"blockhash"} <- programScope,
-//    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!.
-//    
-////    Function{"require"} <- programScope,
-////    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
-////    
-////    Function{"revert"} <- programScope,
-////    Function{"revert"} : FunctionT([], [ VoidT() ]) !!.
+  Globals2 [[ p ^ (programScope) ]] :=
     
+    Function{"blockhash"} <- programScope,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    
+    Function{"require"} <- programScope,
+    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
+    
+    Function{"revert"} <- programScope,
+    Function{"revert"} : FunctionT([], [ VoidT() ]) !!.
+    
+  GlobalsStart [[ p ^ (programScope) ]] :=
+    new globalsAScope,
+    programScope -P-> globalsAScope,
+    
+    Globals [[ p ^ (globalsAScope) ]],
+    
+    new globalsBScope,
+    programScope -P-> globalsBScope,
+    
+    Globals2 [[ p ^ (globalsBScope) ]].

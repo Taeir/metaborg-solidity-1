@@ -1,0 +1,12 @@
+module analysis/modifiers
+
+imports
+  signatures/modifiers-sig
+  desugar/functions
+  
+rules
+  [[ Visibility(_) ^ (s) ]].
+  [[ StateMutability(_) ^ (s) ]].
+  
+  [[ InvalidMod(reason) ^ (s) ]] :=
+    false | error $[Invalid modifiers: [reason]].

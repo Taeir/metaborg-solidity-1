@@ -14,6 +14,8 @@ imports
   analysis/globals
   analysis/interfaces
   analysis/libraries
+  analysis/modifiers
+  analysis/modifiertypes
   analysis/statements
   analysis/statevariables
   analysis/structs
@@ -262,7 +264,10 @@ rules
     SubByteArrays     [[ p ^ (programScope) ]],
     SubIntegers       [[ p ^ (programScope) ]],
     
+    //Add globals
     Globals [[ p ^ (programScope) ]],
+    
+    InitVisibility [[ p ^ (programScope) ]],
     
     Map1 [[ elements ^ (programScope) ]],
     

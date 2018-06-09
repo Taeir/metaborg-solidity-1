@@ -29,17 +29,47 @@ rules
   //Helper functions
   /**
    * Fixes constructor modifiers.
+   *
+   * @param list
+   * @return list
    */
   fix-constructor-modifiers: (mod1, mod2) -> mod
     where
-    //Fix modifiers
     (
       (<?None()> mod1; mod := mod2) <+ //First modifier is absent
       (<?None()> mod2; mod := mod1) <+ //Second modifier is absent
-      (mod := InvalidMod())            //Only one modifier may be present -> Invalid
+      (mod := InvalidMod("You can only specify one modifier"))
     )
   
-  //TODO Fix function modifiers 
+  /**
+   * Fixes function modifiers.
+   *
+   * @param list
+   * @return list
+   */
+  fix-function-modifiers: [] -> []
+  fix-function-modifiers: mods -> <concat> [statemut', visibility']
+    where
+    statemut := <get-statemut-modifiers> mods;
+    visibility := <get-visibility-modifiers> mods;
+    (
+      (<gti> (<length> statemut, 1);
+      statemut' := [InvalidMod("You can only have one state mutability modifier.")]) <+
+      statemut' := statemut
+    );
+    (
+      (<gti> (<length> visibility, 1);
+      visibility' := [InvalidMod("You can only have one visibility modifier.")]) <+
+      visibility' := visibility
+    )
+  
+  get-statemut-modifiers:   [] -> []
+  get-statemut-modifiers:   [s@StateMutability(_) | tail] ->  [s | <get-statemut-modifiers> tail]
+  get-statemut-modifiers:   [_                    | tail] ->  <get-statemut-modifiers> tail
+  
+  get-visibility-modifiers: [] -> []
+  get-visibility-modifiers: [v@Visibility(_) | tail]      -> [v | <get-visibility-modifiers> tail]
+  get-visibility-modifiers: [_               | tail]      -> <get-visibility-modifiers> tail
   
   //-----------------------------------------------------------------------------------------------
   /**
@@ -81,16 +111,19 @@ rules
    * - Fallback is turned into a function named "*fallback"
    * - Fixes super constructor modifiers
    */
-  normalize-fun: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods, retParams, body')
+  normalize-fun: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods', retParams, body')
     where
-    body' := Block(<innermost(add-function-name-to-return(|name))> body)
-  normalize-fun: VoidFunction(name, params, mods, body) -> Function(name, params, mods, [], body')
+    body' := Block(<innermost(add-function-name-to-return(|name))> body);
+    mods' := <fix-function-modifiers> mods
+  normalize-fun: VoidFunction(name, params, mods, body) -> Function(name, params, mods', [], body')
     where
-    body' := Block(<innermost(add-function-name-to-return(|name))> body)
-  normalize-fun: FallBackFunction(mods, body) -> Function(name, [], mods, [], body')
+    body' := Block(<innermost(add-function-name-to-return(|name))> body);
+    mods' := <fix-function-modifiers> mods
+  normalize-fun: FallBackFunction(mods, body) -> Function(name, [], mods', [], body')
     where
     name := "*fallback";
-    body' := Block(<innermost(add-function-name-to-return(|name))> body)
+    body' := Block(<innermost(add-function-name-to-return(|name))> body);
+    mods' := <fix-function-modifiers> mods
   
   //For constuctors, only do the block / modifier fix. Return statements are allowed in the constructor.
   normalize-fun: Constructor(name, params, mod, body) -> Constructor(name, params, mod, Block(body))

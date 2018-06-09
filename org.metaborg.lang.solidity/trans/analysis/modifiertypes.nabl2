@@ -1,0 +1,34 @@
+module analysis/modifiertypes
+
+imports
+  analysis/types
+
+signature
+  sorts
+    ModType
+    VisibilityType
+    StorageLocationType
+  
+  constructors
+    //Visibility
+    PublicT   : VisibilityType  //Everyone
+    PrivateT  : VisibilityType  //Only the contract itself
+    InternalT : VisibilityType  //Only the contract itself and descendants
+    ExternalT : VisibilityType  //Everyone but the contract itself
+    
+    //Memory variables vs storage variables
+    MemoryT   : StorageLocationType
+    StorageT  : StorageLocationType
+
+  relations
+    reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
+      [+vissub]
+    }
+
+rules
+  InitVisibility [[ p ^ (programScope) ]] :=
+    ExternalT() <vissub! PublicT(),
+    InternalT() <vissub! PublicT(),
+    PrivateT()  <vissub! InternalT().
+
+    

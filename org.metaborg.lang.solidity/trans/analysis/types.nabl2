@@ -30,7 +30,7 @@ signature
     DArrayT      : Type -> Type
     
     //Function types
-    FunctionT    : list(Type) * list(Type) -> Type
+    FunctionT    : list(Type) * list(Type) -> Type // add VisibilityType
     FunctionModT : list(Type) -> Type
     
     //Mapping types
