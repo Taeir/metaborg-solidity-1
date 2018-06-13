@@ -9,10 +9,10 @@ import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.strategoxt.lang.Context;
 
-public class evm_generate_function_hash_0_0 extends MixedStrategy {
-	public static final evm_generate_function_hash_0_0 instance = new evm_generate_function_hash_0_0();
+public class ebc_generate_function_hash_0_0 extends MixedStrategy {
+	public static final ebc_generate_function_hash_0_0 instance = new ebc_generate_function_hash_0_0();
 	
-	private evm_generate_function_hash_0_0() {}
+	private ebc_generate_function_hash_0_0() {}
 	
 	@Override
 	public IStrategoTerm call(Context context, IStrategoTerm[] terms) throws Exception {

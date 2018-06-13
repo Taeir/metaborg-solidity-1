@@ -15,10 +15,3 @@ rules
    */
   external evm-create-contract(|)
   
-  /**
-   * Generates a function hash for the given function name and type names.
-   *
-   * @param string       - the name of the function
-   * @param list(string) - the list of the function types
-   */
-  external evm-generate-function-hash(|)
