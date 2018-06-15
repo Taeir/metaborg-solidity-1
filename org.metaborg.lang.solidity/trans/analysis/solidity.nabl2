@@ -82,6 +82,11 @@ signature
     reflexive, anti-symmetric, transitive sub  : Type * Type {
       [+sub]
     }
+    
+    reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
+      [+vissub]
+    }
+    
     anti-symmetric, anti-transitive       test : Type * TypeTest
     
     /* ------------------------------> */ cast : Type * Type

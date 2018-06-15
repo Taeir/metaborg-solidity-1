@@ -18,6 +18,16 @@
             <enabled>false</enabled>
           </snapshots>
         </repository>
+        <repository>
+          <id>local-repo</id>
+          <url>file://${basedir}/mvnlib/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
       </repositories>
       <pluginRepositories>
         <pluginRepository>

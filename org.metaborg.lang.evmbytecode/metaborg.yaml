@@ -40,11 +40,13 @@ exports:
   directory: src-gen
   includes:
   - "completion/ebc/*.str"
+  - "completion/abi/*.str"
   - "pp/ebc/*.str"
+  - "pp/abi/*.str"
   - "pp/*.str"
   - "signatures/ebc/*.str"
-  - "signatures/*.str"
   - "signatures/abi/*.str"
+  - "signatures/*.str"
 - directory: lib
 
 pardonedLanguages:

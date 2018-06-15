@@ -1,6 +1,7 @@
 module analysis/modifiertypes
 
 imports
+  analysis/solidity
   analysis/types
 
 signature
@@ -20,10 +21,10 @@ signature
     MemoryT   : StorageLocationType
     StorageT  : StorageLocationType
 
-  relations
-    reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
-      [+vissub]
-    }
+//  relations
+//    reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
+//      [+vissub]
+//    }
 
 rules
   InitVisibility [[ p ^ (programScope) ]] :=

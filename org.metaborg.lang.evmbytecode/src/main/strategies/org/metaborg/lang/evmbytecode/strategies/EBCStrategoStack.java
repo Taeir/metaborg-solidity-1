@@ -32,6 +32,16 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 	}
 	
 	/**
+	 * Creates a new stacked backed by the given list.
+	 * 
+	 * @param list
+	 *     the list to use
+	 */
+	protected EBCStrategoStack(List<IStrategoTerm> list) {
+		this.list = list;
+	}
+	
+	/**
 	 * @return
 	 *     the underlying list of this stack
 	 */
@@ -175,6 +185,13 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 	}
 	
 	/**
+	 * Clears the stack.
+	 */
+	public void clear() {
+		list.clear();
+	}
+	
+	/**
 	 * Swaps the top element with the element at the given index from the top.
 	 * 
 	 * For example, swapTop(10) swaps the element at the top with the element 9 positions below it.
@@ -192,6 +209,16 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 		IStrategoTerm termB = list.get(indexB);
 		list.set(indexA, termB);
 		list.set(indexB, termA);
+	}
+	
+	/**
+	 * Creates a (shallow) copy of this stack.
+	 * 
+	 * @return
+	 *     the copy
+	 */
+	public EBCStrategoStack copy() {
+		return new EBCStrategoStack(new ArrayList<>(this.list));
 	}
 	
 	//---------------------------------------------------------------------------------------------

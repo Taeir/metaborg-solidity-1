@@ -15,6 +15,14 @@ rules
   external ebc-stack-create(|)
   
   /**
+   * Creates a (shallow) copy of the given stack.
+   *
+   * @param  stack - the stack
+   * @return stack - the copy
+   */
+  external ebc-stack-copy(|stack)
+  
+  /**
    * Returns the length of the given stack.
    *
    * @param  stack - the stack
@@ -47,6 +55,15 @@ rules
    * @return stack  - the updated stack
    */
   external ebc-stack-remove(|stack)
+  
+  /**
+   * Clears the stack.
+   *
+   * @param  stack             - the stack
+   * @return list(instruction) - the instructions required to bring the stack
+   *                             to the requested state.
+   */
+  external ebc-stack-clear(|stack)
   
   //---------------------------------------------------------------------------
   //ADVANCED STACK FUNCTIONS

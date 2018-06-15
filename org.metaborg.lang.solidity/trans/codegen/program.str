@@ -4,7 +4,7 @@ imports
   nabl2/api
   
   signatures/ebc/-
-  ebc/ebcshared/evminstructions
+  ebc/ebcshared/ebcfunctions
   ebc/ebcshared/codegen
 
   signatures/-
@@ -46,8 +46,8 @@ rules
   /**
    * Generate the function hash from the function
    */
-  hash-signature: Function(name, params, _, _, _)  -> <evm-generate-function-hash> (name, <map(get-param-type-name)> params)
-  hash-signature: VoidFunction(name, params, _, _) -> <evm-generate-function-hash> (name, <map(get-param-type-name)> params)
+  hash-signature: Function(name, params, _, _, _)  -> <ebc-generate-function-hash> (name, <map(get-param-type-name)> params)
+  hash-signature: VoidFunction(name, params, _, _) -> <ebc-generate-function-hash> (name, <map(get-param-type-name)> params)
   
   get-param-type-name: Param(type, _, _) -> <pp-solidity-string> type
   

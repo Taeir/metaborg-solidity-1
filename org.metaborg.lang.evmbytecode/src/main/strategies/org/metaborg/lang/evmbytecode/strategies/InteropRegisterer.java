@@ -8,10 +8,12 @@ public class InteropRegisterer extends JavaInteropRegisterer {
         super(new Strategy[] {
         		//Stack strategies
         		ebc_stack_create_0_0.instance,
+        		ebc_stack_copy_0_1.instance,
         		ebc_stack_length_0_1.instance,
         		ebc_stack_push_0_1.instance,
         		ebc_stack_pop_0_1.instance,
         		ebc_stack_remove_0_1.instance,
+        		ebc_stack_clear_0_1.instance,
         		
         		//Retaining
         		ebc_retain_value_at_0_1.instance,
