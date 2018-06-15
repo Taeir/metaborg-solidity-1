@@ -41,7 +41,7 @@ public class InteropRegisterer extends JavaInteropRegisterer {
 				sol_hexadecimal_int_to_bigint_0_0.instance,
 				
 				//EVM Fallback
-				evm_generate_function_hash_0_0.instance
+				ebc_generate_function_hash_0_0.instance
 		});
 	}
 }
