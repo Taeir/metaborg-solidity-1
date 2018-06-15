@@ -1,4 +1,4 @@
-package org.metaborg.lang.solidity.strategies;
+package org.metaborg.lang.evmbytecode.strategies;
 
 import java.security.MessageDigest;
 import java.util.stream.Collectors;
@@ -9,15 +9,14 @@ import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.strategoxt.lang.Context;
 
-public class evm_generate_function_hash_0_0 extends MixedStrategy {
-	public static final evm_generate_function_hash_0_0 instance = new evm_generate_function_hash_0_0();
+public class ebc_generate_function_hash_0_0 extends MixedStrategy {
+	public static final ebc_generate_function_hash_0_0 instance = new ebc_generate_function_hash_0_0();
 	
-	private evm_generate_function_hash_0_0() {}
+	private ebc_generate_function_hash_0_0() {}
 	
 	@Override
 	public IStrategoTerm call(Context context, IStrategoTerm[] terms) throws Exception {
 		if (terms.length != 2) {
-			log("evm_generate_function_hash_0_0: EXPECTED 2 ARGUMENTS!");
 			throw new InvalidArgumentsException("Expected 2 arguments");
 		}
 		
@@ -32,7 +31,6 @@ public class evm_generate_function_hash_0_0 extends MixedStrategy {
 		
 		//functionName(int8,int256)
 		String signatureForHash = name + argumentTypes;
-		log("evm_generate_function_hash_0_0: Going to hash signature: \"" + signatureForHash + "\"");
 
 		String hash;
 		MessageDigest md = new Keccak256();
@@ -42,12 +40,8 @@ public class evm_generate_function_hash_0_0 extends MixedStrategy {
 			
 			hash = HexUtils.getHex(digest);
 		} catch (Exception ex) {
-			log("evm_generate_function_hash_0_0: exception: " + ex);
 			hash = "00000000";
 		}
-		
-		log("evm_generate_function_hash_0_0: Hash: " + hash.substring(0, 8));
-		
 		return context.getFactory().makeString(hash.substring(0, 8));
 	}
 }

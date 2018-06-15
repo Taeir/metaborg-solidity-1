@@ -108,7 +108,7 @@ public abstract class SafeStrategy extends Strategy {
 	 */
 	protected void log(String msg) {
 		try {
-			Files.append(msg + "\n", new File("%userprofile%\\test-spoofax.txt"), StandardCharsets.UTF_8);
+			Files.append(msg + "\n", new File("stratego-log.txt"), StandardCharsets.UTF_8);
 		} catch (Exception ioex) {
 			//Swallow
 		}
@@ -124,7 +124,7 @@ public abstract class SafeStrategy extends Strategy {
 	 */
 	protected void log(String msg, Exception ex) {
 		try {
-			Files.append(msg + ": " + ex.toString() + "\n", new File("%userprofile%\\test-spoofax.txt"), StandardCharsets.UTF_8);
+			Files.append(msg + ": " + ex.toString() + "\n", new File("stratego-log.txt"), StandardCharsets.UTF_8);
 		} catch (Exception ioex) {
 			//Swallow
 		}
@@ -138,7 +138,7 @@ public abstract class SafeStrategy extends Strategy {
 	 */
 	protected void log(Exception ex) {
 		try {
-			Files.append(ex.toString() + "\n", new File("%userprofile%\\test-spoofax.txt"), StandardCharsets.UTF_8);
+			Files.append(ex.toString() + "\n", new File("stratego-log.txt"), StandardCharsets.UTF_8);
 		} catch (Exception ioex) {
 			//Swallow
 		}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.metaborg.lang</groupId>
+  <artifactId>evmbytecode</artifactId>
+  <versioning>
+    <versions>
+      <version>0.1.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20180615075816</lastUpdated>
+  </versioning>
+</metadata>

@@ -1,0 +1,96 @@
+module abi/ABI
+
+imports abi/ABILayout
+
+//[{"constant":false,"inputs":[],"name":"simple","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]
+
+context-free start-symbols
+  ABIStart
+
+lexical syntax
+  ABIBoolean    = "false" | "true"
+  
+  ABIString     = "\"" ABIStringChar* "\"" 
+  ABIStringChar = ~[\"\n] 
+  ABIStringChar = "\\\"" 
+  ABIStringChar = BackSlashChar 
+  BackSlashChar = "\\"
+
+lexical restrictions
+  // Backslash chars in strings may not be followed by " 
+  BackSlashChar -/- [\"]
+
+context-free syntax
+  ABIStart = ABI
+  
+  ABI.ABI = <
+    [
+      <{ABIFunction ",\n"}*>
+    ]>
+  
+  //---------------------------------------------------------------------------
+  // Functions
+  
+  ABIFunction.ABIFunction = <
+    {
+      "name": <ABIString>,
+      "inputs": [<{ABIVar ", "}*>],
+      "outputs": [<{ABIVar ", "}*>],
+      "constant": <ABIBoolean>,
+      "payable": <ABIBoolean>,
+      "stateMutability": <ABIString>,
+      "type": "function"
+    }>
+  
+  ABIFunction.ABIConstructor = <
+    {
+      "inputs": [<{ABIVar ", "}*>],
+      "constant": <ABIBoolean>,
+      "payable": <ABIBoolean>,
+      "stateMutability": <ABIString>,
+      "type": "constructor"
+    }>
+  
+  ABIFunction.ABIFallbackFunction = <
+    {
+      "constant": <ABIBoolean>,
+      "payable": <ABIBoolean>,
+      "stateMutability": <ABIString>,
+      "type": "fallback"
+    }>
+  
+  //---------------------------------------------------------------------------
+  // Variables / Parameters
+  ABIVar.ABIVar = <
+    {
+      "name": <ABIString>,
+      <ABIComponents?>
+      "type": <ABIString>
+    }>
+  
+  ABIComponents.ABIComponents = <
+    "components": [
+      <{ABIComponent ",\n"}+>
+    ],>
+
+  ABIComponent = ABIVar
+  
+  //---------------------------------------------------------------------------
+  // Events
+  ABIEvent.ABIEvent = <
+    {
+      "name": <ABIString>,
+      "inputs": [<{ABIEventParam ", "}*>],
+      <ABIAnonymous?>
+      "type": "event"
+    }>
+  
+  ABIAnonymous.ABIAnonymous = <"anonymous": <ABIBoolean>,>
+  
+  ABIEventParam.ABIEventParam = <
+    {
+      "name": <ABIString>,
+      <ABIComponents?>
+      "type": <ABIString>,
+      "indexed": <ABIBoolean>
+    }>

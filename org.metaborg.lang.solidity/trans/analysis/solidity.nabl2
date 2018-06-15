@@ -14,6 +14,8 @@ imports
   analysis/globals
   analysis/interfaces
   analysis/libraries
+  analysis/modifiers
+  analysis/modifiertypes
   analysis/statements
   analysis/statevariables
   analysis/structs
@@ -80,6 +82,11 @@ signature
     reflexive, anti-symmetric, transitive sub  : Type * Type {
       [+sub]
     }
+    
+    reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
+      [+vissub]
+    }
+    
     anti-symmetric, anti-transitive       test : Type * TypeTest
     
     /* ------------------------------> */ cast : Type * Type
@@ -262,7 +269,10 @@ rules
     SubByteArrays     [[ p ^ (programScope) ]],
     SubIntegers       [[ p ^ (programScope) ]],
     
+    //Add globals
     Globals [[ p ^ (programScope) ]],
+    
+    InitVisibility [[ p ^ (programScope) ]],
     
     Map1 [[ elements ^ (programScope) ]],
     

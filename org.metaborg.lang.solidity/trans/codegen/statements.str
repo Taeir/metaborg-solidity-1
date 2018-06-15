@@ -1,0 +1,162 @@
+module codegen/statements
+
+imports
+  codegen/expressions
+  
+  nabl2/api
+  
+  signatures/ebc/-
+  ebc/ebcshared/ebcfunctions
+  ebc/ebcshared/codegen
+  analysis/types
+
+  signatures/statements-sig
+  signatures/expressions-sig
+  desugar/-
+  
+  utils/externals
+
+  libspoofax/stratego/debug
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //Statements
+  //-----------------------------------------------------------------------------------------------
+  
+  /**
+   * Converts a statement to the corresponding ebc instructions.
+   *
+   * @param  stack
+   * @param  statement (current)
+   * @return list(instruction)
+   */
+// stmt-to-ebc(|stack)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Blocks
+  
+  stmt-to-ebc(|stack): Block(stmts) -> <mapconcat(stmt-to-ebc(|stack))> stmts
+  
+  //-----------------------------------------------------------------------------------------------
+  //Expression statements
+  
+  stmt-to-ebc(|stack): ExpStmt(e1) -> <nopush-exp-to-ebc(|stack)> e1
+  
+  //-----------------------------------------------------------------------------------------------
+  //If statements
+  
+  stmt-to-ebc(|stack): If(c, trueStmt, Else(elseStmt)) -> instr
+    where
+    tagFalse   := <newname> "If_ElseBranch";
+    tagAfterIf := <newname> "If_After";
+    condition  := <exp-to-ebc(|stack)> c; ebc-stack-pop(|stack);
+    ifBranch   := <stmt-to-ebc(|stack)> trueStmt;
+    elseBranch := <stmt-to-ebc(|stack)> elseStmt;
+    instr := <concat> [           //
+      condition,                  //  PUSH condition
+      [ ISZERO(),                 //  ISZERO
+        PUSHTAG(tagFalse),        //  PUSHTAG tagFalse
+        JUMPI() ],                //  JUMPI
+      ifBranch,                   //  <IF-BRANCH>
+      [ PUSHTAG(tagAfterIf),      //  PUSHTAG tagAfterIf
+        JUMP(),                   //  JUMP
+                                  //:false
+        JUMPDESTTAG(tagFalse) ],  //  JUMPDEST
+      elseBranch,                 //  <ELSE-BRANCH>
+      [                           //:afterIf
+        JUMPDESTTAG(tagAfterIf) ] //  JUMPDEST
+    ]
+  
+  stmt-to-ebc(|stack): If(e1, trueStmt, None()) -> instr
+    where
+    tagAfterIf := <newname> "If_After";
+    condition  := <exp-to-ebc(|stack)> e1; ebc-stack-pop(|stack);
+    ifBranch   := <stmt-to-ebc(|stack)> trueStmt;
+    instr := <concat> [           //
+      condition,                  //  PUSH condition
+      [ ISZERO(),                 //  ISZERO
+        PUSHTAG(tagAfterIf),      //  PUSHTAG tagAfterIf
+        JUMPI() ],                //  JUMPI
+      ifBranch,                   //  <IF-BRANCH>
+      [                           //:afterIf
+        JUMPDESTTAG(tagAfterIf) ] //  JUMPDEST
+    ]
+  
+  //-----------------------------------------------------------------------------------------------
+  //Loops
+  
+  //TODO For loops
+  
+  stmt-to-ebc(|stack): While(e, body) -> instr
+    where
+    tagLoop       := <newname> "While_Loop";
+    tagAfterWhile := <newname> "While_After";
+    condition := <exp-to-ebc(|stack)> e; ebc-stack-pop(|stack);
+    bodyInstr := <stmt-to-ebc(|stack)> body;
+    
+    instr := <concat> [
+      [                              //:loop
+        JUMPDESTTAG(tagLoop) ],      //  JUMPDEST
+      condition,                     //  PUSH condition
+      [ ISZERO(),                    //  ISZERO
+        PUSHTAG(tagAfterWhile),      //  PUSHTAG tagAfterWhile
+        JUMPI() ],                   //  JUMPI
+      bodyInstr,                     //  <body>
+      [ PUSHTAG(tagLoop),            //  PUSHTAG tagLoop
+        JUMP(),                      //  JUMP
+                                     //:afterWhile
+        JUMPDESTTAG(tagAfterWhile) ] //  JUMPDEST
+    ]
+  
+  //TODO Do While
+  
+  //-----------------------------------------------------------------------------------------------
+  //Control flow
+  
+  //Return statements
+  
+  stmt-to-ebc(|stack): ReturnStatement(name, e1) -> instr
+    where
+    instr := <concat> [
+      <exp-to-ebc(|stack)> e1,
+      //Work on a copy of the stack to ensure that no changes are made.
+      <ebc-retain-value-at(|<ebc-stack-copy(|stack)>)> 0,
+      [ SWAP(1),
+        JUMP() ]
+    ];
+    ebc-stack-pop(|stack)
+  
+  stmt-to-ebc(|stack): VoidReturn(name) -> <concat> [
+    //Work on a copy of the stack to ensure that no changes are made.
+    <ebc-stack-clear(|<ebc-stack-copy(|stack)>)>,
+    [ SWAP(1),
+      JUMP() ]
+  ] where
+    a := <nabl2-get-ast-analysis>;
+    ref-occ := <nabl2-mk-occurrence(|"Function")> name;
+    dec-occ := <nabl2-get-resolved-name(|a); Fst> ref-occ;
+    type    := <nabl2-get-type(|a)> dec-occ;
+    ret-type := <return-type> type
+  
+  //TODO continue
+  //TODO break
+  //TODO throw
+  
+  //TODO emit
+  
+  //-----------------------------------------------------------------------------------------------
+  //Variable declaration
+  
+  //These are already handled by var-to-stack (see functions.str)
+  stmt-to-ebc(|stack): d@DeclareVar(_, _) -> []
+    with <debug(|"Encountered unexpected VarDecl, ignoring: ")> d
+  stmt-to-ebc(|stack): d@DeclareVarAssign(_, x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
+    with <debug(|"Encountered unexpected VarDeclAssign: ")> d
+  
+  //-----------------------------------------------------------------------------------------------
+  //Underscore
+  
+  //TODO Underscore statement
+  
+  return-type: FunctionT(_, [retT]) -> retT
+  

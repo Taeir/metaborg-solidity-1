@@ -1,0 +1,128 @@
+module ebc/ebcshared/ebcfunctions
+
+rules
+
+  //---------------------------------------------------------------------------
+  //STACK FUNCTIONS
+  //---------------------------------------------------------------------------
+  
+  /**
+   * Creates a new stack of the given size.
+   *
+   * @param  int   - initial size (current)
+   * @return stack - the created stack
+   */
+  external ebc-stack-create(|)
+  
+  /**
+   * Creates a (shallow) copy of the given stack.
+   *
+   * @param  stack - the stack
+   * @return stack - the copy
+   */
+  external ebc-stack-copy(|stack)
+  
+  /**
+   * Returns the length of the given stack.
+   *
+   * @param  stack - the stack
+   * @return int   - the length of the stack
+   */
+  external ebc-stack-length(|stack)
+  
+  /**
+   * Returns the index (top = 0) of the given element on the sack.
+   *
+   * @param  stack - the stack
+   * @return int   - the index
+   */
+  external ebc-stack-get-index(|stack)
+
+  /**
+   * Pushes the current element to the given stack.
+   *
+   * @param  stack  - the stack
+   * @param  string - the element (current)
+   * @return stack  - the updated stack
+   */
+  external ebc-stack-push(|stack)
+  
+  /**
+   * Pops an element from the given stack.
+   *
+   * @param  stack  - the stack
+   * @return string - the popped element
+   */
+  external ebc-stack-pop(|stack)
+  
+  /**
+   * Removes the current element from the given stack.
+   *
+   * @param  stack  - the stack
+   * @param  string - the element (current)
+   * @return stack  - the updated stack
+   */
+  external ebc-stack-remove(|stack)
+  
+  /**
+   * Clears the stack.
+   *
+   * @param  stack             - the stack
+   * @return list(instruction) - the instructions required to bring the stack
+   *                             to the requested state.
+   */
+  external ebc-stack-clear(|stack)
+  
+  //---------------------------------------------------------------------------
+  //ADVANCED STACK FUNCTIONS
+  //---------------------------------------------------------------------------
+  /**
+   * Creates a PUSH(1, 0) instruction for every variable on the stack.
+   *
+   * @param  stack             - the stack
+   * @return list(instruction) - the instructions required to bring the stack
+   *                             to the initial state
+   */
+  external ebc-initial-instructions(|stack)
+  
+  /**
+   * Retains only the value at the given index.
+   * All other items on the stack are removed.
+   *
+   * The index is relative to the top of the stack, e.g. an index of 0 is the
+   * top element of the stack, 1 is the item just after the top, and so forth.
+   *
+   * @param  stack             - the stack
+   * @param  int               - the index
+   * @return list(instruction) - the instructions required to bring the stack
+   *                             to the requested state.
+   */
+  external ebc-retain-value-at(|stack)
+  
+  /**
+   * Retains only the variable with the given name.
+   * All other items on the stack are removed.
+   *
+   * NOTE: If the given name occurs multiple times in the stack, then only the
+   *       element that is furthest from the top will be retained.
+   *
+   * @param  stack             - the stack
+   * @param  string            - the name of the variable
+   * @return list(instruction) - the instructions required to bring the stack
+   *                             to the requested state.
+   */
+  external ebc-retain-variable(|stack)
+  
+  //---------------------------------------------------------------------------
+  //OTHER
+  //---------------------------------------------------------------------------
+  
+  /**
+   * Generates a function hash for the given function name and type names.
+   *
+   * @param  string       - the name of the function
+   * @param  list(string) - the list of the function types
+   * @return string       - the function hash
+   */
+  external ebc-generate-function-hash(|)
+  

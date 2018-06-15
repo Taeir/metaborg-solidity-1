@@ -30,6 +30,13 @@
 
   <repositories>
     <repository>
+      <id>my-local-repo</id>
+      <url>file://${basedir}/mvnlib/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
       <id>metaborg-release-repo</id>
       <url>http://artifacts.metaborg.org/content/repositories/releases/</url>
       <releases>
@@ -63,6 +70,13 @@
   </repositories>
 
   <pluginRepositories>
+    <pluginRepository>
+      <id>my-local-repo</id>
+      <url>file://${basedir}/mvnlib/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
     <pluginRepository>
       <id>metaborg-release-repo</id>
       <url>http://artifacts.metaborg.org/content/repositories/releases/</url>

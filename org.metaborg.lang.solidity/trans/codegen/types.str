@@ -1,0 +1,89 @@
+module codegen/types
+
+imports
+  nabl2/api
+  analysis/types
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //Nabl types
+  //-----------------------------------------------------------------------------------------------
+  
+  /*
+      //Numeric types
+    IntT         : INT -> Type
+    UIntT        : INT -> Type
+    FixedT       : INT * INT -> Type
+    UFixedT      : INT * INT -> Type
+    
+    //One word types
+    BoolT        : Type
+    AddressT     : Type
+    StringT      : Type
+    
+    //Byte arrays
+    FBytesT      : INT -> Type
+    DBytesT      : Type
+    
+    //Array types
+    FArrayT      : Type * INT -> Type
+    DArrayT      : Type -> Type
+    
+    //Function types
+    FunctionT    : list(Type) * list(Type) -> Type
+    FunctionModT : list(Type) -> Type
+    
+    //Mapping types
+    MappingT     : Type * Type -> Type
+
+    //User defined types
+    EnumT        : Type
+    EventT       : list(Type) -> Type
+    StructT      : Type
+    ContractT    : Type
+    InterfaceT   : Type
+    LibraryT     : Type
+    BuiltInT     : Type
+    
+    //Named type
+    NamedT       : occurrence * Type -> Type
+    
+    //Var type
+    VarT         : Type
+    
+    //Void type (for functions with no return)
+    VoidT        : Type
+    
+    //Simplified type
+    IntTS        : Type
+    UIntTS       : Type
+    FBytesTS     : Type
+    FixedTS      : Type
+    UFixedTS     : Type
+    FArrayTS     : Type -> Type
+    NamedTS      : Type
+    
+    //More general types for constants
+    NrT          : INT * INT -> Type
+    FractT       : INT * INT * INT * INT -> Type
+    StringLitT   : INT -> Type
+    
+    InvalidType  : Type
+  */
+  
+  return-type: FunctionT(_, [retT]) -> retT
+  
+  /**
+   * Succeeds if the given type is signed. Fails otherwise.
+   */
+  is-signed-type = ?IntT(_)
+  is-signed-type = ?FixedT(_, _)
+  
+  /**
+   * Succeeds if the given type is unsigned. Fails otherwise.
+   */
+  is-unsigned-type = ?UIntT(_)
+  is-unsigned-type = ?UFixedT(_, _)
+  is-unsigned-type = ?AddressT()
+  
+  

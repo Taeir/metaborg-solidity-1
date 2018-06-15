@@ -13,7 +13,6 @@ rules
     Var{"abi" @p} : tyAbi,
     Var{"abi" @p} =I=> abiScope,
     tyAbi == NamedT(Var{"abi" @p}, BuiltInT()),
-//    tyAbi == BuiltInT(Var{"abi" @p}),
     
     //TODO Abi functions (with variable argument counts)
     
@@ -25,7 +24,6 @@ rules
     Var{"msg" @p} : tyMsg,
     Var{"msg" @p} =I=> msgScope,
     tyMsg == NamedT(Var{"msg" @p}, BuiltInT()),
-//    tyMsg == BuiltInT(Var{"msg" @p}),
     
     Var{"data"} <- msgScope,
     Var{"data"} : DBytesT() !!,
@@ -47,7 +45,6 @@ rules
     Var{"block" @p} : tyBlock,
     Var{"block" @p} =I=> blockScope,
     tyBlock == NamedT(Var{"block" @p}, BuiltInT()),
-//    tyBlock == BuiltInT(Var{"block" @p}),
     
     Var{"coinbase"} <- blockScope,
     Var{"coinbase"} : AddressT() !!,
@@ -74,7 +71,6 @@ rules
     Var{"tx" @p} : tyTx,
     Var{"tx" @p} =I=> txScope,
     tyTx == NamedT(Var{"tx" @p}, BuiltInT()),
-//    tyTx == BuiltInT(Var{"tx" @p}),
     
     Var{"gasprice"} <- txScope,
     Var{"gasprice"} : UIntT(256) !!,
@@ -139,13 +135,24 @@ rules
 //    //TODO erecover, addmod, mulmod
 //    
 //    //TODO address balance, send, transfer
-//  Globals2 [[ p ^ (programScope) ]] :=
-//    Function{"blockhash"} <- programScope,
-//    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!.
-//    
-////    Function{"require"} <- programScope,
-////    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
-////    
-////    Function{"revert"} <- programScope,
-////    Function{"revert"} : FunctionT([], [ VoidT() ]) !!.
+  Globals2 [[ p ^ (programScope) ]] :=
     
+    Function{"blockhash"} <- programScope,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    
+    Function{"require"} <- programScope,
+    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
+    
+    Function{"revert"} <- programScope,
+    Function{"revert"} : FunctionT([], [ VoidT() ]) !!.
+    
+  GlobalsStart [[ p ^ (programScope) ]] :=
+    new globalsAScope,
+    programScope -P-> globalsAScope,
+    
+    Globals [[ p ^ (globalsAScope) ]],
+    
+    new globalsBScope,
+    programScope -P-> globalsBScope,
+    
+    Globals2 [[ p ^ (globalsBScope) ]].

@@ -27,6 +27,7 @@ exports:
   directory: syntax
   includes:
   - "ebc/*.sdf3"
+  - "abi/*.sdf3"
 - language: ATerm
   directory: src-gen/syntax
   includes:
@@ -39,8 +40,13 @@ exports:
   directory: src-gen
   includes:
   - "completion/ebc/*.str"
+  - "completion/abi/*.str"
   - "pp/ebc/*.str"
+  - "pp/abi/*.str"
+  - "pp/*.str"
   - "signatures/ebc/*.str"
+  - "signatures/abi/*.str"
+  - "signatures/*.str"
 - directory: lib
 
 pardonedLanguages:
@@ -51,7 +57,7 @@ debug:
   typesmart: false
 language:
   sdf:
-    pretty-print: evmbytecode
+    pretty-print: solidity
     sdf2table: c
     placeholder:
       prefix: "$"

@@ -15,7 +15,7 @@ rules
     where
     (<?None()> mod1; mod := mod2) <+ //First modifier is absent -> use second
     (<?None()> mod2; mod := mod1) <+ //Second modifier is absent -> use first
-    (mod := InvalidMod())            //Both are present -> invalid
+    (mod := InvalidMod("Only one modifier can be present"))
 
   desugar: StateVariable(ty, mod, name, StateVarAssignment(e))                   -> StateVariable(ty, mod, name, Some(e))
   desugar: ConstantStateVariable(ty, mod1, _, mod2, name, None())                -> ConstantStateVariable(ty, mod, name, None())

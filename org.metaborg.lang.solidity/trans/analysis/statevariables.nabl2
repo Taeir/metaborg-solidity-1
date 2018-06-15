@@ -14,8 +14,10 @@ rules
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
     Var{name}.constant := FalseC(),
-    Var{name} : tyStateVar !.
-    //TODO modifier
+    Var{name} : tyStateVar !,
+    
+    //Check modifier
+    [[ mod ^ (s) ]].
   [[ StateVariable(solty, mod, name, Some(exp)) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
     
@@ -25,8 +27,10 @@ rules
     Var{name} : tyStateVar !,
     
     [[ exp ^ (s)    : tyAssignExp ]],
-    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp.
-    //TODO modifier
+    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp,
+    
+    //Check modifier
+    [[ mod ^ (s) ]].
   
   [[ ConstantStateVariable(solty, mod, name, None()) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
@@ -36,8 +40,10 @@ rules
     Var{name}.constant := TrueC(),
     Var{name} : tyStateVar !,
     
+    //Check modifier
+    [[ mod ^ (s) ]],
+    
     false | warning $[Constants should have initializers!].
-    //TODO modifier
     //TODO constant
   [[ ConstantStateVariable(solty, mod, name, Some(exp)) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
@@ -48,6 +54,8 @@ rules
     Var{name} : tyStateVar !,
     
     [[ exp ^ (s)    : tyAssignExp ]],
-    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp.
-    //TODO modifier
+    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp,
+    
+    //Check modifier
+    [[ mod ^ (s) ]].
     //TODO constant

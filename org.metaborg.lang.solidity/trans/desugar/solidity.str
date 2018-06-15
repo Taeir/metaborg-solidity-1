@@ -21,7 +21,7 @@ imports
 signature
   constructors
     //Invalid modifiers
-    InvalidMod : Modifier
+    InvalidMod : String -> Modifier
 
 strategies
   //Desugar, fold constants, name constructors, normalize functions

@@ -5,6 +5,6 @@ imports
   ebc/ebcshared/codegen
   ebc/ebcshared/desugar
   ebc/ebcshared/static-semantics
+  ebc/ebcshared/ebcfunctions
   ebc/ebcshared/evminstructions
-  ebc/ebcshared/ebcpp
   ebc/ebcshared/editor/builders

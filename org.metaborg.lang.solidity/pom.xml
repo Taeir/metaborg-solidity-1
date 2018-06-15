@@ -15,6 +15,14 @@
     <version>2.5.0-SNAPSHOT</version>
   </parent>
   
+  <dependencies>
+    <dependency>
+      <groupId>org.metaborg.lang</groupId>
+      <artifactId>evmbytecode</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+  
   <repositories>
     <repository>
       <id>metaborg-release-repo</id>

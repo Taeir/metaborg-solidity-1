@@ -1,0 +1,11 @@
+module codgen/imports
+
+imports
+  desugar/solimports
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //Imports
+  //-----------------------------------------------------------------------------------------------
+  //TODO Imports. For now, I just ignore imports
+  import-to-ebc: Import(_, _) -> []
