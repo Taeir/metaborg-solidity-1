@@ -1,0 +1,260 @@
+module codegen/expressions
+
+imports
+  codegen/types
+  
+  nabl2/api
+  
+  signatures/ebc/-
+  ebc/ebcshared/ebcfunctions
+
+  signatures/expressions-sig
+  desugar/expressions
+  desugar/numbers
+  analysis/types
+  
+  utils/externals
+
+  libspoofax/stratego/debug
+
+rules
+
+  //-----------------------------------------------------------------------------------------------
+  //Expressions
+  //-----------------------------------------------------------------------------------------------
+  
+  /**
+   * Converts an expression to ebc instructions.
+   * The given stack will be modified by this call.
+   *
+   * @param  stack             - the stack
+   * @return list(instruction) - the instructions
+   */
+// exp-to-ebc(|stack)
+  
+  /**
+   * The same as exp-to-ebc(|stack), but avoids modifying the stack.
+   * The stack before and after this call will be the same.
+   *
+   * @param  stack             - the stack
+   * @return list(instruction) - the instructions
+   */
+// nopush-exp-to-ebc(|stack)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Assignment
+  
+  //TODO Assign to fields
+  
+  exp-to-ebc(|stack): Assign(x, v) -> <concat> [
+    value,
+    [ SWAP(index),
+      POP(),
+      DUP(<dec> index) ]
+  ] where
+    value := <exp-to-ebc(|stack, 1)> v;
+    
+    //TODO Use NaBL to determine if we are assigning a stack element or not, then do some kind of
+    //     desugaring to add that to the assign statment
+    index := <ebc-stack-get-index(|stack)> x;
+    ebc-stack-pop(|stack); <ebc-stack-push(|stack)> v
+  
+  nopush-exp-to-ebc(|stack): Assign(x, v) -> <concat> [
+    value,
+    [ SWAP(index),
+      POP() ]
+  ] where
+    value := <exp-to-ebc(|stack)> v;
+    
+    //TODO Use NaBL to determine if we are assigning a stack element or not, then do some kind of
+    //     desugaring to add that to the assign statment
+    index := <ebc-stack-get-index(|stack)> x;
+    ebc-stack-pop(|stack)
+  
+  //TODO Array assign
+  
+  //-----------------------------------------------------------------------------------------------
+  //Creation
+  
+  //TODO NewObject
+  //TODO NewArray
+  
+  //-----------------------------------------------------------------------------------------------
+  //Deletion
+  
+  //TODO Delete
+  
+  //-----------------------------------------------------------------------------------------------
+  //Function calls
+  
+  //TODO Calls
+  
+  //-----------------------------------------------------------------------------------------------
+  //Casts
+  
+  //TODO Casts
+  
+  //-----------------------------------------------------------------------------------------------
+  //Literals
+  
+  exp-to-ebc(|stack): e@True()  -> [ PUSH(1, 1) ]
+    where
+    <ebc-stack-push(|stack)> e
+  
+  exp-to-ebc(|stack): e@False() -> [ PUSH(1, 0) ]
+    where
+    <ebc-stack-push(|stack)> e
+  
+  //TODO IntLiteral needs to know the type of the target expression.
+  //E.g. int16 x = 10; must become PUSH2 10
+  exp-to-ebc(|stack, push): e@IntLiteral(nr, signed, unsigned) -> [ PUSH(plen, nr) ]
+    where
+    plen := <divi> (signed, 8);
+    <ebc-stack-push(|stack)> e
+    
+  //TODO Literal arrays
+  
+  //TODO this
+  
+  //-----------------------------------------------------------------------------------------------
+  //Ternary if
+  
+  //TODO Ternary if
+  
+  //-----------------------------------------------------------------------------------------------
+  //Unary and binary expressions
+  
+  //NOTE: do not change the order. exp-to-ebc has side effects on the stack, so order matters.
+  
+  //not, 
+  exp-to-ebc(|stack): e@UnExp(op, e1) -> <concat> [ instr, opexp ]
+    where
+    opexp := [ <op-to-ebc> (op, e1) ];
+    instr := <exp-to-ebc(|stack, 1)> e1;
+    ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
+  
+  //+ - *, pow, and, or, xor, eq, lt, gt
+  exp-to-ebc(|stack): e@BinExp(op, e1, e2) -> <concat> [ i1, i2, opexp ]
+    where
+    opexp := [ <op-to-ebc> (op, e1, e2) ];
+    i1    := <exp-to-ebc(|stack)> e1;
+    i2    := <exp-to-ebc(|stack)> e2;
+    ebc-stack-pop(|stack); ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
+  
+  exp-to-ebc(|stack): e@BinExp(NEq(), e1, e2) -> <concat> [ i1, i2, opexp ]
+    where
+    opexp := [ EQ(), ISZERO() ];
+    i1    := <exp-to-ebc(|stack)> e1;
+    i2    := <exp-to-ebc(|stack)> e2;
+    ebc-stack-pop(|stack); ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
+  
+  exp-to-ebc(|stack): e@BinExp(LtEq(), e1, e2) -> instr
+    where
+    opexp := <pick-signed-or-unsigned> (e1, e2, SGT(), GT());
+    instr := <concat> [
+      <exp-to-ebc(|stack)> e1,
+      <exp-to-ebc(|stack)> e2,
+      [ SWAP(1) ],
+      opexp
+    ];
+    ebc-stack-pop(|stack); ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
+  
+  exp-to-ebc(|stack): e@BinExp(GtEq(), e1, e2) -> instr
+    where
+    opexp := <pick-signed-or-unsigned> (e1, e2, SLT(), LT());
+    instr := <concat> [
+      <exp-to-ebc(|stack)> e1,
+      <exp-to-ebc(|stack)> e2,
+      [ SWAP(1) ],
+      opexp
+    ];
+    ebc-stack-pop(|stack); ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
+  
+  //TODO addmod/mulmod
+  
+  nopush-exp-to-ebc(|stack): True()  -> []
+  nopush-exp-to-ebc(|stack): False() -> []
+  nopush-exp-to-ebc(|stack): IntLiteral(_, _, _) -> []
+  nopush-exp-to-ebc(|stack): e@UnExp(_, _) -> <conc> (instr, [ POP() ])
+    where
+    instr := <exp-to-ebc(|stack)> e;
+    ebc-stack-pop(|stack)
+  nopush-exp-to-ebc(|stack): e@BinExp(_, _, _) -> <conc> (instr, [ POP() ])
+    where
+    instr := <exp-to-ebc(|stack)> e;
+    ebc-stack-pop(|stack)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Operators
+  //-----------------------------------------------------------------------------------------------
+  
+  //TODO
+  //  UMinus (-x)
+  //  LShift (x << y)
+  //  RShift (x >> y)
+  //  RetInc/IncRet variants (x++, --y)
+  //  Subscript (a[i])
+  //  Delete (delete x)
+  
+  //Simple operators that will work without any other information
+  op-to-ebc: (Plus(),   _, _) -> ADD()
+  op-to-ebc: (Minus(),  _, _) -> SUB()
+  op-to-ebc: (Mult(),   _, _) -> MUL()
+  op-to-ebc: (Pow(),    _, _) -> EXP()
+  op-to-ebc: (BitAnd(), _, _) -> AND()
+  op-to-ebc: (BitOr(),  _, _) -> OR()
+  op-to-ebc: (BitXor(), _, _) -> XOR()
+  op-to-ebc: (BitNot(), _)    -> NOT()
+  op-to-ebc: (op, e1, e2)     -> ebcop
+    where
+    //Determine types of expressions
+    a := <nabl2-get-ast-analysis>;
+    e1type := <nabl2-get-ast-type(|a)> e1;
+    e2type := <nabl2-get-ast-type(|a)> e2;
+    
+    //Select signed/unsigned
+    if <is-signed-type> e1type <+ <is-signed-type> e2type
+    then ebcop := <signed-op-to-ebc> op
+    else ebcop := <unsigned-op-to-ebc> op
+    end
+
+  //Boolean operators
+  op-to-ebc: (Not(),    _)    -> ISZERO()
+  op-to-ebc: (And(),    _, _) -> AND()
+  op-to-ebc: (Or(),     _, _) -> OR()
+  
+  //Comparison
+  op-to-ebc: (Eq(),     _, _) -> EQ()
+  
+  signed-op-to-ebc: Div()   -> SDIV()
+  signed-op-to-ebc: Mod()   -> SMOD()
+  signed-op-to-ebc: Lt()    -> SLT()
+  signed-op-to-ebc: Gt()    -> SGT()
+  
+  unsigned-op-to-ebc: Div() -> DIV()
+  unsigned-op-to-ebc: Mod() -> MOD()
+  unsigned-op-to-ebc: Lt()  -> LT()
+  unsigned-op-to-ebc: Gt()  -> GT()
+  
+  /**
+   * Returns either signed or unsigned depending on whether e1 and e2 are signed or not.
+   *
+   * @param e1       - the first expression
+   * @param e2       - the second expression
+   * @param signed   - the signed item
+   * @param unsigned - the unsigned item
+   * @return         - signed if either e1 or e2 is signed, unsigned otherwise
+   */
+  pick-signed-or-unsigned: (e1, e2, signed, unsigned) -> picked
+    where
+    //Determine types of expressions
+    a := <nabl2-get-ast-analysis>;
+    e1type := <nabl2-get-ast-type(|a)> e1;
+    e2type := <nabl2-get-ast-type(|a)> e2;
+    
+    //Select signed/unsigned
+    if <is-signed-type> e1type <+ <is-signed-type> e2type
+    then picked := signed
+    else picked := unsigned
+    end
+  
