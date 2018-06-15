@@ -185,7 +185,19 @@ rules
     f1' := <var-to-stack(|stack)> f1;
     ((<?Block([])> f1'; f1'' := None()) <+ f1'' := f1');
     body' := <var-to-stack(|stack)> body
-    
+  
+  //Control flow
+  var-to-stack(|stack): s@Continue()            -> s
+  var-to-stack(|stack): s@Break()               -> s
+  var-to-stack(|stack): s@Throw()               -> s
+  var-to-stack(|stack): s@Emit(_)               -> s
+  var-to-stack(|stack): s@VoidReturn(_)         -> s
+  var-to-stack(|stack): s@ReturnStatement(_, _) -> s
+  
+  //Other
+  var-to-stack(|stack): s@Underscore()          -> s
+  var-to-stack(|stack): s@Print(_)              -> s
+  
   //-----------------------------------------------------------------------------------------------
   //Other
   
