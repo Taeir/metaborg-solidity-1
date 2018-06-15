@@ -142,10 +142,14 @@ rules
 //    type    := <nabl2-get-type(|a)> dec-occ;
 //    param-types := <param-types> type
 
-  fun-body-to-ebc: stmts -> <mapconcat(\ stmt -> <stmt-to-ebc(|stack)> stmt \)> stmts'
-    where
-    stack := <ebc-stack-create> 16;
-    stmts' := <map(var-to-stack(|stack))> stmts
+  fun-body-to-ebc: stmts -> <concat> [
+    varinit,
+    instr
+  ] where
+    stack   := <ebc-stack-create> 16;
+    stmts'  := <map(var-to-stack(|stack))> stmts;
+    varinit := <ebc-initial-instructions(|stack)> 1;
+    instr   := <mapconcat(stmt-to-ebc(|stack))> stmts'
   
   //-----------------------------------------------------------------------------------------------
   //Variables

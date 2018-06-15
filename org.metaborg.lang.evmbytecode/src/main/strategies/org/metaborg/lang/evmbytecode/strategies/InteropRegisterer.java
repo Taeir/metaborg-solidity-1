@@ -16,6 +16,9 @@ public class InteropRegisterer extends JavaInteropRegisterer {
         		ebc_stack_remove_0_1.instance,
         		ebc_stack_clear_0_1.instance,
         		
+        		//Initialization
+        		ebc_initial_instructions_0_1.instance,
+        		
         		//Retaining
         		ebc_retain_value_at_0_1.instance,
         		ebc_retain_variable_0_1.instance,

@@ -76,6 +76,14 @@ rules
   //---------------------------------------------------------------------------
   //ADVANCED STACK FUNCTIONS
   //---------------------------------------------------------------------------
+  /**
+   * Creates a PUSH(1, 0) instruction for every variable on the stack.
+   *
+   * @param  stack             - the stack
+   * @return list(instruction) - the instructions required to bring the stack
+   *                             to the initial state
+   */
+  external ebc-initial-instructions(|stack)
   
   /**
    * Retains only the value at the given index.

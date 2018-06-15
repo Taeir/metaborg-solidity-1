@@ -26,7 +26,8 @@ public class StackUtil {
 	 *     the list of instructions
 	 */
 	public static void retainZeroAnd(Context context, EBCStrategoStack stack, int index, List<IStrategoTerm> instructions) {
-		while (stack.size() != 2) {
+		int i = 0;
+		for (; stack.size() != 2 && i < 100; i++) {
 			//First pop elements until the element we want to return is at the top of the stack
 			int pops = stack.size() - index - 1;
 			addNPops(context, instructions, pops);
@@ -39,6 +40,10 @@ public class StackUtil {
 			int swapIndex = Math.min(16, stack.size() - 2);
 			instructions.add(createSwap(context, swapIndex));
 			stack.swapTop(swapIndex);
+		}
+		
+		if (i == 100) {
+			throw new IllegalStateException("Assertion failed: infinite loop!");
 		}
 	}
 	
@@ -60,7 +65,8 @@ public class StackUtil {
 	public static void retainOnly(Context context, EBCStrategoStack stack, int index, List<IStrategoTerm> instructions) {
 		if (index < 0 || index >= stack.size()) throw new IndexOutOfBoundsException("" + index);
 		
-		while (stack.size() > 1) {
+		int i = 0;
+		for (; stack.size() > 1 && i < 100; i++) {
 			//First pop elements until the element we want to return is at the top of the stack
 			int pops = stack.size() - index - 1;
 			addNPops(context, instructions, pops);
@@ -72,6 +78,10 @@ public class StackUtil {
 			int swapIndex = Math.min(16, stack.size() - 1);
 			instructions.add(createSwap(context, swapIndex));
 			stack.swapTop(swapIndex);
+		}
+		
+		if (i == 100) {
+			throw new IllegalStateException("Assertion failed: infinite loop!");
 		}
 		
 		//TODO This is a temporary assertion
@@ -124,5 +134,25 @@ public class StackUtil {
 		return context.getFactory().makeAppl(
 				context.getFactory().makeConstructor("SWAP", 1),
 				context.getFactory().makeString(Integer.toString(n)));
+	}
+
+	/**
+	 * Creates a push instruction.
+	 * 
+	 * @param context
+	 *     the context
+	 * @param size
+	 *     the size of the push (1-32)
+	 * @param n
+	 *     the number to push
+	 * 
+	 * @return
+	 *     the push instruction
+	 */
+	public static IStrategoAppl createPush(Context context, int size, int n) {
+		return context.getFactory().makeAppl(
+				context.getFactory().makeConstructor("PUSH", 2),
+				context.getFactory().makeInt(size),
+				context.getFactory().makeInt(n));
 	}
 }

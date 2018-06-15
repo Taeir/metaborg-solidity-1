@@ -8,8 +8,10 @@ imports
   signatures/ebc/-
   ebc/ebcshared/ebcfunctions
   ebc/ebcshared/codegen
+  analysis/types
 
   signatures/statements-sig
+  signatures/expressions-sig
   desugar/-
   
   utils/externals
@@ -43,11 +45,11 @@ rules
   //-----------------------------------------------------------------------------------------------
   //If statements
   
-  stmt-to-ebc(|stack): If(e1, trueStmt, Else(elseStmt)) -> instr
+  stmt-to-ebc(|stack): If(c, trueStmt, Else(elseStmt)) -> instr
     where
     tagFalse   := <newname> "If_ElseBranch";
     tagAfterIf := <newname> "If_After";
-    condition  := <exp-to-ebc(|stack)> e1; ebc-stack-pop(|stack);
+    condition  := <exp-to-ebc(|stack)> c; ebc-stack-pop(|stack);
     ifBranch   := <stmt-to-ebc(|stack)> trueStmt;
     elseBranch := <stmt-to-ebc(|stack)> elseStmt;
     instr := <concat> [           //
@@ -113,15 +115,20 @@ rules
   
   //Return statements
   
-  stmt-to-ebc(|stack): ReturnStatement(name, e1) -> <concat> [
-    <exp-to-ebc(|stack)> e1,
-    <ebc-retain-value-at(|stack)> 0,
-    [ SWAP(1),
-      JUMP() ]
-  ]
+  stmt-to-ebc(|stack): ReturnStatement(name, e1) -> instr
+    where
+    instr := <concat> [
+      <exp-to-ebc(|stack)> e1,
+      //Work on a copy of the stack to ensure that no changes are made.
+      <ebc-retain-value-at(|<ebc-stack-copy(|stack)>)> 0,
+      [ SWAP(1),
+        JUMP() ]
+    ];
+    ebc-stack-pop(|stack)
   
   stmt-to-ebc(|stack): VoidReturn(name) -> <concat> [
-    <ebc-stack-clear(|stack)>,
+    //Work on a copy of the stack to ensure that no changes are made.
+    <ebc-stack-clear(|<ebc-stack-copy(|stack)>)>,
     [ SWAP(1),
       JUMP() ]
   ] where
@@ -142,12 +149,14 @@ rules
   
   //These are already handled by var-to-stack (see functions.str)
   stmt-to-ebc(|stack): d@DeclareVar(_, _) -> []
-    with <debug(|"Encountered unexpected VarDecl, ignoring")> d
+    with <debug(|"Encountered unexpected VarDecl, ignoring: ")> d
   stmt-to-ebc(|stack): d@DeclareVarAssign(_, x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
-    with <debug(|"Encountered unexpected VarDeclAssign, ")> d
+    with <debug(|"Encountered unexpected VarDeclAssign: ")> d
   
   //-----------------------------------------------------------------------------------------------
   //Underscore
   
   //TODO Underscore statement
+  
+  return-type: FunctionT(_, [retT]) -> retT
   

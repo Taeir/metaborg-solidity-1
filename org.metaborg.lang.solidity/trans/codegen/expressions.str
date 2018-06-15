@@ -52,7 +52,7 @@ rules
       POP(),
       DUP(<dec> index) ]
   ] where
-    value := <exp-to-ebc(|stack, 1)> v;
+    value := <exp-to-ebc(|stack)> v;
     
     //TODO Use NaBL to determine if we are assigning a stack element or not, then do some kind of
     //     desugaring to add that to the assign statment
@@ -72,6 +72,11 @@ rules
     ebc-stack-pop(|stack)
   
   //TODO Array assign
+  
+  //-----------------------------------------------------------------------------------------------
+  //Variable reference
+  
+  //TODO variable reference
   
   //-----------------------------------------------------------------------------------------------
   //Creation
@@ -107,7 +112,7 @@ rules
   
   //TODO IntLiteral needs to know the type of the target expression.
   //E.g. int16 x = 10; must become PUSH2 10
-  exp-to-ebc(|stack, push): e@IntLiteral(nr, signed, unsigned) -> [ PUSH(plen, nr) ]
+  exp-to-ebc(|stack): e@IntLiteral(nr, signed, unsigned) -> [ PUSH(plen, nr) ]
     where
     plen := <divi> (signed, 8);
     <ebc-stack-push(|stack)> e
@@ -130,7 +135,7 @@ rules
   exp-to-ebc(|stack): e@UnExp(op, e1) -> <concat> [ instr, opexp ]
     where
     opexp := [ <op-to-ebc> (op, e1) ];
-    instr := <exp-to-ebc(|stack, 1)> e1;
+    instr := <exp-to-ebc(|stack)> e1;
     ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
   
   //+ - *, pow, and, or, xor, eq, lt, gt
