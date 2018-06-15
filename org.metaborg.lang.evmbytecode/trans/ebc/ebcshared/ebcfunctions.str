@@ -29,6 +29,14 @@ rules
    * @return int   - the length of the stack
    */
   external ebc-stack-length(|stack)
+  
+  /**
+   * Returns the index (top = 0) of the given element on the sack.
+   *
+   * @param  stack - the stack
+   * @return int   - the index
+   */
+  external ebc-stack-get-index(|stack)
 
   /**
    * Pushes the current element to the given stack.
