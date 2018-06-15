@@ -1,0 +1,335 @@
+module codegen/functions
+
+imports
+  codegen/statements
+  codegen/util
+  
+  signatures/-
+  signatures/ebc/-
+  desugar/-
+  analysis/types
+  
+  pp
+  
+  ebc/ebcshared/ebcfunctions
+  ebc/ebcshared/codegen
+
+rules
+
+  //-----------------------------------------------------------------------------------------------
+  //Functions
+  //-----------------------------------------------------------------------------------------------
+  
+  //In the first tag, there is matching of function hashes to their initial jump points
+  
+  //Then, there is, for each function, thus a jump point, which initiates the call as follows:
+  // 1. check that the CALLVALUE ISZERO, if it is, continue to the next jump point, otherwise revert.
+  // 2. Create a stack frame for the function, push return address and load arguments
+  // 3. Actual function
+  // 4. Post function jumppoint, returns the correct value
+  
+  fun-to-ebc: f@Function(name, params, _, retParams, Block(stmts)) -> (
+    //PART1: Check if this is the function being called, and if so, jump to funInit
+    [
+      DUP(1),
+      PUSH(4, <conc-strings> ("0x", <hash-signature> f)), //The hash of the function determines which function is being called.
+      EQ(),
+      PUSHTAG(tagFunInit),
+      JUMPI()
+    ],
+    
+    <concat> [
+      //PART2: Check if CALLVALUE is ZERO -> jump to pre, else, REVERT
+      [ JUMPDESTTAG(tagFunInit),
+        CALLVALUE(),
+        DUP(1),
+        ISZERO(),
+        PUSHTAG(tagFunPre),
+        JUMPI(),
+        PUSH(1, 0),
+        DUP(1),
+        REVERT() ],
+      
+      //PART3: Create stack frame for function (load arguments)
+      //0-argument function
+      [ JUMPDESTTAG(tagFunPre),
+        POP(),
+        PUSHTAG(tagFunPost),
+        
+        //TODO LOAD ARGUMENTS HERE
+        
+        PUSHTAG(tagFunStart),
+        JUMP() ],
+      
+      /*
+      //1-argument function
+      <concat> [
+        [ JUMPDESTTAG(tagFunPre),
+          POP(),
+          PUSHTAG(tagFunPost),
+          PUSH(0, 4),
+          DUP(1),
+          CALLDATASIZE(),
+          SUB(),
+          DUP(2),
+          ADD(),
+          SWAP(1),
+          DUP(1),
+          DUP(1),
+          CALLDATALOAD() ],
+          
+          //Extend value to 32 bytes
+          <extend-to-32-bytes> type
+          
+          [ SWAP(1),
+          PUSH(1, "0x20"),
+          ADD(),
+          SWAP(1),
+          SWAP(3),
+          SWAP(2),
+          SWAP(1),
+          POP(),
+          POP(),
+          POP(),
+          PUSHTAG(tagFunStart),
+          JUMP() ]
+      ],
+      */
+      
+      //PART4: store result
+      [ JUMPDESTTAG(tagFunPost),
+        PUSH(1, "0x40"),
+        MLOAD(),
+        DUP(1),
+        DUP(3),
+        PUSH(1, 0),
+        SIGNEXTEND(),
+        PUSH(1, 0),
+        SIGNEXTEND(),
+        DUP(2),
+        MSTORE(),
+        PUSH(1, "0x20"),
+        ADD(),
+        SWAP(2),
+        POP(),
+        POP(),
+        PUSH(1, "0x40"),
+        MLOAD(),
+        DUP(1),
+        SWAP(2),
+        SUB(),
+        SWAP(1),
+        RETURN() ],
+      
+      //PART5: Actual function
+      <concat> [
+        //Return address is on the stack
+        [ JUMPDESTTAG(tagFunStart) ],
+        //TODO params
+        <fun-body-to-ebc> stmts
+      ]
+    ]
+    ) where
+    tagFunInit  := <newname> "Fun_Init";
+    tagFunPre   := <newname> "Fun_Pre";
+    tagFunPost  := <newname> "Fun_Post";
+    tagFunStart := <newname> "Fun_Start"
+    
+    //Determine type of function
+//    a := <nabl2-get-ast-analysis>;
+//    ref-occ := <nabl2-mk-occurrence(|"Function")> name;
+//    dec-occ := <nabl2-get-resolved-name(|a); Fst> ref-occ;
+//    type    := <nabl2-get-type(|a)> dec-occ;
+//    param-types := <param-types> type
+
+  fun-body-to-ebc: stmts -> <mapconcat(\ stmt -> <stmt-to-ebc(|stack)> stmt \)> stmts'
+    where
+    stack := <ebc-stack-create> 16;
+    stmts' := <map(var-to-stack(|stack))> stmts
+  
+  //-----------------------------------------------------------------------------------------------
+  //Variables
+  
+  //We need to extract all variables and assign them stack locations.
+  //We then treat all vardecls as simple assignments instead / ignore them (when they don't have an
+  //assignment).
+  
+  /**
+   * Assigns all variables a place on the stack and removes variable declarations.
+   *
+   * @param  stack       - the stack
+   * @param  instruction - the instruction (current)
+   * @return instruction - the replacement instruction
+   */
+  //Variable declarations
+  var-to-stack(|stack): DeclareVar(_, x) -> Block([])
+    with <ebc-stack-push(|stack)> x
+  var-to-stack(|stack): DeclareVarAssign(_, x, v) -> ExpStmt(Assign(x, v))
+    with <ebc-stack-push(|stack)> x
+  
+  //Blocks
+  var-to-stack(|stack): Block(stmts) -> Block(<map(var-to-stack(|stack))> stmts)
+  
+  //If else
+  var-to-stack(|stack): If(c, a, b) -> If(c, <var-to-stack(|stack)> a, <var-to-stack(|stack)> b)
+  var-to-stack(|stack): Else(body) -> e'
+    where
+    body' := <var-to-stack(|stack)> body;
+    ((<?Block([])> body'; e' := None()) <+ e' := Else(body'))
+  
+  //Loops
+  var-to-stack(|stack): While(c, body) -> While(c, <var-to-stack(|stack)> body)
+  var-to-stack(|stack): DoWhile(body, c) -> DoWhile(<var-to-stack(|stack)> body, c)
+  var-to-stack(|stack): For(f1, f2, f3, body) -> For(f1'', f2, f3, body')
+    where
+    f1' := <var-to-stack(|stack)> f1;
+    ((<?Block([])> f1'; f1'' := None()) <+ f1'' := f1');
+    body' := <var-to-stack(|stack)> body
+    
+  //-----------------------------------------------------------------------------------------------
+  //Other
+  
+  /**
+   * Generate the function hash from the function
+   *
+   * @param  function
+   * @return string (hash)
+   */
+  hash-signature: Function(name, params, _, _, _)  -> <ebc-generate-function-hash> (name, <map(get-param-type-name)> params)
+  hash-signature: VoidFunction(name, params, _, _) -> <ebc-generate-function-hash> (name, <map(get-param-type-name)> params)
+  
+  /**
+   * Gets the pretty printed name of the type of the given parameter.
+   *
+   * @param  Param
+   * @return string
+   */
+  get-param-type-name: Param(type, _, _) -> <pp-solidity-string> type
+
+  /**
+   * Retain only the functions in the given list.
+   *
+   * @param  list
+   * @return list
+   */
+  filter-fun: [] -> []
+  filter-fun: [head | tail] -> [head | <filter-fun> tail]
+    where
+    <?Function(_, _, _, _, _) + ?VoidFunction(_, _, _, _)> head
+  filter-fun: [head | tail] -> <filter-fun> tail
+    where
+    not(<?Function(_, _, _, _, _) + ?VoidFunction(_, _, _, _)> head)
+  
+  /*
+      //For a string return, we get this giant mess
+      JUMPDESTTAG(tagFunPost),
+      PUSH(1, "0x40"),
+      MLOAD(),
+      DUP(1),
+      DUP(1),
+      PUSH(1, "0x20"),
+      ADD(),
+      DUP(3),
+      DUP(2),
+      SUB(),
+      DUP(3),
+      MSTORE(),
+      DUP(4),
+      DUP(2),
+      DUP(2),
+      MLOAD(),
+      DUP(2),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(2),
+      POP(),
+      DUP(1),
+      MLOAD(),
+      SWAP(1),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(1),
+      DUP(1),
+      DUP(4),
+      DUP(4),
+      PUSH(0),
+      
+      //Tag 6: some kind of loop
+      JUMPDESTTAG(tag6),
+      DUP(4),
+      DUP(2),
+      LT(),
+      ISZERO(),
+      PUSHTAG(tag7),
+      JUMPI(),
+      DUP(1),
+      DUP(3),
+      ADD(),
+      MLOAD(),
+      DUP(2),
+      DUP(5),
+      ADD(),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      DUP(2),
+      ADD(),
+      SWAP(1),
+      POP(),
+      PUSHTAG(tag6),
+      JUMP()
+      
+      //Tag7
+      JUMPDESTTAG(tag7),
+      POP(),
+      POP(),
+      POP(),
+      POP(),
+      SWAP(1),
+      POP(),
+      SWAP(1),
+      DUP(2),
+      ADD(),
+      SWAP(1),
+      PUSH(1, "0x1F"),
+      AND(),
+      DUP(1),
+      ISZERO(),
+      PUSHTAG(tag9),
+      JUMPI(),
+      DUP(1),
+      DUP(3),
+      SUB(),
+      DUP(1),
+      MLOAD(),
+      PUSH(1, 1),
+      DUP(4),
+      PUSH(1, "0x20"),
+      SUB(),
+      PUSH(1, "0x100"),
+      EXP(),
+      SUB(),
+      NOT(),
+      AND(),
+      DUP(2),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(2),
+      POP(),
+      
+      //tag 9
+      JUMPDESTTAG(tag9),
+      POP(),
+      SWAP(3),
+      POP(),
+      POP(),
+      POP(),
+      PUSH(1, "0x40"),
+      MLOAD(),
+      DUP(1),
+      SWAP(2),
+      SUB(),
+      SWAP(1),
+      RETURN()
+      */

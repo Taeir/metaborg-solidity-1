@@ -1,0 +1,11 @@
+module codegen/pragmas
+
+imports
+  signatures/pragmas-sig
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //Pragmas
+  //-----------------------------------------------------------------------------------------------
+  //We can completely ignore pragmas
+  pragma-to-ebc: Pragma(_, _) -> []

@@ -1,0 +1,12 @@
+module codegen/functionmodifiers
+
+imports
+  signatures/functionmodifiers-sig
+
+rules
+
+  //-----------------------------------------------------------------------------------------------
+  //Function modifiers
+  //-----------------------------------------------------------------------------------------------
+  
+  funmoddecl-to-ebc: FunctionModifier(name, params, stmts) -> [] //TODO

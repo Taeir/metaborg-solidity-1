@@ -1,0 +1,15 @@
+module codegen/statevariables
+
+imports
+  signatures/statevariables-sig
+  desugar/-
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //State variables
+  //-----------------------------------------------------------------------------------------------
+  
+  statevar-to-ebc: StateVariable(ty, mod, name, None())  -> [] //TODO
+  statevar-to-ebc: StateVariable(ty, mod, name, Some(e)) -> [] //TODO
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, None())  -> [] //TODO Not supported?
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, Some(e)) -> [] //TODO

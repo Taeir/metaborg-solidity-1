@@ -1,0 +1,89 @@
+module codegen/contracts
+
+imports
+  signatures/ebc/-
+  signatures/contracts-sig
+  signatures/interfaces-sig
+  signatures/libraries-sig
+  
+  codegen/statevariables
+  codegen/functions
+  codegen/events
+  codegen/enums
+  codegen/structs
+  codegen/functionmodifiers
+  
+  libspoofax/stratego/debug
+
+rules
+  //-----------------------------------------------------------------------------------------------
+  //Contract-like
+  //-----------------------------------------------------------------------------------------------
+  //TODO Interfaces
+  interface-to-ebc: Interface(name, content) -> [] //TODO
+  
+  //Treat libraries like contracts
+  library-to-ebc: Library(name, content) -> <contract-to-ebc> Contract(name, content)
+  
+  contract-to-ebc: Contract(name, content) -> <concat> [
+    //Allocate 128 bytes 
+    [ PUSH(1, "0x80"),
+      PUSH(1, "0x40"),
+      MSTORE(),
+      PUSH(1, 4),
+      CALLDATASIZE(),
+      LT(),
+      PUSHTAG(tagFailHandler),
+      JUMPI(),
+      PUSH(1, 0),
+      
+      //Determine the function being called
+      CALLDATALOAD(),
+      PUSH(29, "0x100000000000000000000000000000000000000000000000000000000"),
+      SWAP(1),
+      DIV(),
+      PUSH(4, "0xFFFFFFFF"),
+      AND() ],
+    
+    selectFunctionSequence,
+    
+    //Tag Fail Handler: Revert
+    [ JUMPDESTTAG(tagFailHandler),
+      PUSH(1, 0),
+      DUP(1),
+      REVERT() ],
+    
+    //Function definitions
+    functionBlocks
+    
+    //TODO Other content
+    //<map(content-to-ebc)> content
+      
+  ] where
+    <newname> "FailHandler" => tagFailHandler;
+    
+    //Create the code for the functions
+    functions := <filter-fun> content;
+    <ppdebugna0> functions;
+    
+    funtuples := <map(fun-to-ebc)> functions;
+    
+    //The select function sequence is the first element of the tuple, concatenated.
+    //It determines which function is selected upon calling
+    <ppdebugna1> funtuples;
+    selectFunctionSequence := <concat> <map(\ (i, _) -> i \)> funtuples;
+    
+    //The blocks of instructions for the different functions
+    functionBlocks         := <concat> <map(\ (_, f) -> f \)> funtuples;
+    <ppdebugna2> functionBlocks
+  
+  //-----------------------------------------------------------------------------------------------
+  //Contract content
+  //-----------------------------------------------------------------------------------------------
+  //Support statevariables, functions, event, enum and struct definitions
+  content-to-ebc = statevar-to-ebc
+  content-to-ebc = fun-to-ebc
+  content-to-ebc = eventdecl-to-ebc
+  content-to-ebc = enumdecl-to-ebc
+  content-to-ebc = structdecl-to-ebc
+  content-to-ebc = funmoddecl-to-ebc
