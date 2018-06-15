@@ -125,21 +125,4 @@ public class StackUtil {
 				context.getFactory().makeConstructor("SWAP", 1),
 				context.getFactory().makeString(Integer.toString(n)));
 	}
-	
-	/**
-	 * Creates a swap instruction.
-	 * 
-	 * @param context
-	 *     the context
-	 * @param n
-	 *     the amount to swap with
-	 * 
-	 * @return
-	 *     the swap instruction
-	 */
-	public static IStrategoAppl createDup(Context context, int n) {
-		return context.getFactory().makeAppl(
-				context.getFactory().makeConstructor("DUP", 1),
-				context.getFactory().makeString(Integer.toString(n)));
-	}
 }
