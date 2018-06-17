@@ -5,6 +5,7 @@ imports
 
 template options
   tokenize : "(;"
+  keyword -/- [a-zA-Z0-9]
 
 context-free start-symbols
   Pragma

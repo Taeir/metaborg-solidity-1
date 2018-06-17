@@ -3,6 +3,9 @@ module modifiers
 imports
   Common
 
+template options
+  keyword -/- [a-zA-Z0-9]
+
 lexical syntax
   //Visibility
   Internal = "internal"

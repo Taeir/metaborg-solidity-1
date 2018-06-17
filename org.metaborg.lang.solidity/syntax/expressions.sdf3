@@ -24,7 +24,6 @@ sorts
 
 context-free start-symbols
   Exp
-  //LitNumber
   
 context-free syntax
   Exp = < (<Exp>) > {bracket}
