@@ -26,32 +26,34 @@ rules
   /**
    * Converts a statement to the corresponding ebc instructions.
    *
-   * @param  stack
-   * @param  statement (current)
-   * @return list(instruction)
+   * @param  stack               - the stack
+   * @param  stack               - a stack of tags used for continue
+   * @param  stack               - a stack of tags used for breaks
+   * @param  statement (current) - the statement to convert
+   * @return list(instruction)   - the ebc instructions that represent the statement
    */
-// stmt-to-ebc(|stack)
+// stmt-to-ebc(|stack, continues, breaks)
   
   //-----------------------------------------------------------------------------------------------
   //Blocks
   
-  stmt-to-ebc(|stack): Block(stmts) -> <mapconcat(stmt-to-ebc(|stack))> stmts
+  stmt-to-ebc(|stack, c, b): Block(stmts) -> <mapconcat(stmt-to-ebc(|stack, c, b))> stmts
   
   //-----------------------------------------------------------------------------------------------
   //Expression statements
   
-  stmt-to-ebc(|stack): ExpStmt(e1) -> <nopush-exp-to-ebc(|stack)> e1
+  stmt-to-ebc(|stack, c, b): ExpStmt(e1) -> <nopush-exp-to-ebc(|stack)> e1
   
   //-----------------------------------------------------------------------------------------------
   //If statements
   
-  stmt-to-ebc(|stack): If(c, trueStmt, Else(elseStmt)) -> instr
+  stmt-to-ebc(|stack, c, b): If(condExp, trueStmt, Else(elseStmt)) -> instr
     where
     tagFalse   := <newname> "If_ElseBranch";
     tagAfterIf := <newname> "If_After";
-    condition  := <exp-to-ebc(|stack)> c; ebc-stack-pop(|stack);
-    ifBranch   := <stmt-to-ebc(|stack)> trueStmt;
-    elseBranch := <stmt-to-ebc(|stack)> elseStmt;
+    condition  := <exp-to-ebc(|stack)> condExp; ebc-stack-pop(|stack);
+    ifBranch   := <stmt-to-ebc(|stack, c, b)> trueStmt;
+    elseBranch := <stmt-to-ebc(|stack, c, b)> elseStmt;
     instr := <concat> [           //
       condition,                  //  PUSH condition
       [ ISZERO(),                 //  ISZERO
@@ -67,11 +69,11 @@ rules
         JUMPDESTTAG(tagAfterIf) ] //  JUMPDEST
     ]
   
-  stmt-to-ebc(|stack): If(e1, trueStmt, None()) -> instr
+  stmt-to-ebc(|stack, c, b): If(condExp, trueStmt, None()) -> instr
     where
     tagAfterIf := <newname> "If_After";
-    condition  := <exp-to-ebc(|stack)> e1; ebc-stack-pop(|stack);
-    ifBranch   := <stmt-to-ebc(|stack)> trueStmt;
+    condition  := <exp-to-ebc(|stack)> condExp; ebc-stack-pop(|stack);
+    ifBranch   := <stmt-to-ebc(|stack, c, b)> trueStmt;
     instr := <concat> [           //
       condition,                  //  PUSH condition
       [ ISZERO(),                 //  ISZERO
@@ -86,13 +88,15 @@ rules
   //Loops
   
   //TODO For loops
-  
-  stmt-to-ebc(|stack): While(e, body) -> instr
+  stmt-to-ebc(|stack, continues, breaks): While(e, body) -> instr
     where
     tagLoop       := <newname> "While_Loop";
     tagAfterWhile := <newname> "While_After";
     condition := <exp-to-ebc(|stack)> e; ebc-stack-pop(|stack);
-    bodyInstr := <stmt-to-ebc(|stack)> body;
+    
+    continues' := [tagLoop | continues];
+    breaks'    := [tagAfterWhile | breaks];
+    bodyInstr := <stmt-to-ebc(|stack, continues', breaks')> body;
     
     instr := <concat> [
       [                              //:loop
@@ -108,14 +112,38 @@ rules
         JUMPDESTTAG(tagAfterWhile) ] //  JUMPDEST
     ]
   
-  //TODO Do While
+  stmt-to-ebc(|stack, continues, breaks): DoWhile(body, e) -> instr
+    where
+    tagLoop       := <newname> "DoWhile_Loop";
+    tagCondition  := <newname> "DoWhile_Condition";
+    tagAfterWhile := <newname> "DoWhile_After";
+    condition := <exp-to-ebc(|stack)> e; ebc-stack-pop(|stack);
+    
+    continues' := [tagCondition | continues];
+    breaks'    := [tagAfterWhile | breaks];
+    bodyInstr := <stmt-to-ebc(|stack, continues', breaks')> body;
+    
+    instr := <concat> [
+      [                              //:loop
+        JUMPDESTTAG(tagLoop) ],      //  JUMPDEST
+      bodyInstr,                     //  <body>
+      [                              //:condition  (for continue)
+        JUMPDESTTAG(tagCondition) ], //  JUMPDEST
+      condition,                     //  PUSH condition
+      [ ISZERO(),                    //  ISZERO
+        ISZERO(),                    //  ISZERO
+        PUSHTAG(tagLoop),            //  PUSHTAG tagLoop
+        JUMPI(),                     //  JUMPI
+                                     //:afterWhile
+        JUMPDESTTAG(tagAfterWhile) ] //  JUMPDEST
+    ]
   
   //-----------------------------------------------------------------------------------------------
   //Control flow
   
   //Return statements
   
-  stmt-to-ebc(|stack): ReturnStatement(name, e1) -> instr
+  stmt-to-ebc(|stack, c, b): ReturnStatement(name, e1) -> instr
     where
     instr := <concat> [
       <exp-to-ebc(|stack)> e1,
@@ -126,7 +154,7 @@ rules
     ];
     ebc-stack-pop(|stack)
   
-  stmt-to-ebc(|stack): VoidReturn(name) -> <concat> [
+  stmt-to-ebc(|stack, c, b): VoidReturn(name) -> <concat> [
     //Work on a copy of the stack to ensure that no changes are made.
     <ebc-stack-clear(|<ebc-stack-copy(|stack)>)>,
     [ SWAP(1),
@@ -138,8 +166,14 @@ rules
     type    := <nabl2-get-type(|a)> dec-occ;
     ret-type := <return-type> type
   
-  //TODO continue
-  //TODO break
+  stmt-to-ebc(|stack, continues, b): Continue() -> [ PUSHTAG(tag), JUMP() ]
+    where
+    tag := <ebc-stack-pop(|continues)>
+  
+  stmt-to-ebc(|stack, c, breaks): Break() -> [ PUSHTAG(tag), JUMP() ]
+    where
+    tag := <ebc-stack-pop(|breaks)>
+
   //TODO throw
   
   //TODO emit
@@ -148,11 +182,11 @@ rules
   //Variable declaration
   
   //These are already handled by var-to-stack (see functions.str)
-  stmt-to-ebc(|stack): d@DeclareVar(_, _, _) -> []
+  stmt-to-ebc(|stack, c, b): d@DeclareVar(_, _, _) -> []
     with <debug(|"Encountered unexpected VarDecl, ignoring: ")> d
-  stmt-to-ebc(|stack): d@DeclareVarAssign(_, _, x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
+  stmt-to-ebc(|stack, c, b): d@DeclareVarAssign(_, _, x, v) -> <stmt-to-ebc(|stack, c, b)> ExpStmt(Assign(x, v))
     with <debug(|"Encountered unexpected VarDeclAssign: ")> d
-  stmt-to-ebc(|stack): d@DeclareVarVar(x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
+  stmt-to-ebc(|stack, c, b): d@DeclareVarVar(x, v) -> <stmt-to-ebc(|stack, c, b)> ExpStmt(Assign(x, v))
     with <debug(|"Encountered unexpected VarDeclAssign: ")> d
   
   //-----------------------------------------------------------------------------------------------

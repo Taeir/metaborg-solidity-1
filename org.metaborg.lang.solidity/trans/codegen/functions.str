@@ -142,14 +142,27 @@ rules
 //    type    := <nabl2-get-type(|a)> dec-occ;
 //    param-types := <param-types> type
 
+  /**
+   * Converts the statements in a function to ebc instructions.
+   *
+   * This function creates 3 stacks:
+   * 1. a stack that contains the state of the stack at runtime
+   * 2. a stack that contains the tags that should be jumped to by continue statements
+   * 3. a stack that contains the tags that should be jumped to by break statements
+   *
+   * @param  list(statement)   - the statements to convert
+   * @return list(instruction) - the ebc instructions that correspond to the statements
+   */
   fun-body-to-ebc: stmts -> <concat> [
     varinit,
     instr
   ] where
-    stack   := <ebc-stack-create> 16;
-    stmts'  := <map(var-to-stack(|stack))> stmts;
-    varinit := <ebc-initial-instructions(|stack)> 1;
-    instr   := <mapconcat(stmt-to-ebc(|stack))> stmts'
+    stack     := <ebc-stack-create> 16;
+    continues := <ebc-stack-create> 4;
+    breaks    := <ebc-stack-create> 4;
+    stmts'    := <map(var-to-stack(|stack))> stmts;
+    varinit   := <ebc-initial-instructions(|stack)> 1;
+    instr     := <mapconcat(stmt-to-ebc(|stack, continues, breaks))> stmts'
   
   //-----------------------------------------------------------------------------------------------
   //Variables
@@ -192,17 +205,9 @@ rules
     ((<?Block([])> f1'; f1'' := None()) <+ f1'' := f1');
     body' := <var-to-stack(|stack)> body
   
-  //Control flow
-  var-to-stack(|stack): s@Continue()            -> s
-  var-to-stack(|stack): s@Break()               -> s
-  var-to-stack(|stack): s@Throw()               -> s
-  var-to-stack(|stack): s@Emit(_)               -> s
-  var-to-stack(|stack): s@VoidReturn(_)         -> s
-  var-to-stack(|stack): s@ReturnStatement(_, _) -> s
-  
   //Other
-  var-to-stack(|stack): s@Underscore()          -> s
-  var-to-stack(|stack): s@Print(_)              -> s
+  var-to-stack(|stack): s -> s
+
   
   //-----------------------------------------------------------------------------------------------
   //Other
