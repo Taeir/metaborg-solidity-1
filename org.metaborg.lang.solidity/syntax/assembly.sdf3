@@ -8,14 +8,17 @@ template options
 
 lexical syntax
   //Anything is not a newline or bracket
-  Anything = ~[\n\{\}]+
+  Anything = [a-zA-Z0-9\-\_\+\=\[\]\;\:\'\"\,\.\/\<\>\?\\\|\~\`\!\@\#\$\%\^\&\*\(\) ]+
   
   //Define as keyword
   KEYWORD = ASMKEYWORD
   ASMKEYWORD = "assembly"
+
+lexical restrictions
+  Anything -/- [a-zA-Z0-9\-\_\+\=\[\]\;\:\'\"\,\.\/\<\>\?\\\|\~\`\!\@\#\$\%\^\&\*\(\) ]
   
 context-free syntax
-  AssemblyStatement.Assembly = <assembly <STRING> <AssemblyBlock>>
+  AssemblyStatement.Assembly = <assembly <AssemblyBlock>>
   AssemblyBlock.ASMBlock = <
     {
       <{AssemblyItem "\n"}*>
@@ -24,4 +27,3 @@ context-free syntax
   //We don't actually support the inline assembly, so we allow anything to just parse it into the AST
   AssemblyItem = AssemblyBlock
   AssemblyItem = Anything
-  AssemblyItem.AnyBlock = <<Anything> <AssemblyBlock>>
