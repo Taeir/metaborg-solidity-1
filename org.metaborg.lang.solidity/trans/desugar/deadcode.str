@@ -4,6 +4,7 @@ imports
   //Works with normalized return signatures
   desugar/functions
   desugar/statements
+  signatures/statements-sig
 
 signature
   constructors

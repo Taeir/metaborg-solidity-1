@@ -43,13 +43,13 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: For(Some(ExpStmt(e)), b, c, body)                -> For(SomeA(ExpStmt(e)), b, c, body)
-  resugar: For(Some(DeclareVar(t, v)), b, c, body)          -> For(SomeB(DeclareVar(t, v)), b, c, body)
-  resugar: For(Some(DeclareVarAssign(t, v, a)), b, c, body) -> For(SomeB(DeclareVarAssign(t, v, a)), b, c, body)
-  resugar: For(a, b, c, body)                               -> For(a, Some(b), c, body)
+  resugar: For(Some(ExpStmt(e)), b, c, body)                   -> For(SomeA(ExpStmt(e)), b, c, body)
+  resugar: For(Some(DeclareVar(t, m, v)), b, c, body)          -> For(SomeB(DeclareVar(t, m, v)), b, c, body)
+  resugar: For(Some(DeclareVarAssign(t, m, v, a)), b, c, body) -> For(SomeB(DeclareVarAssign(t, m, v, a)), b, c, body)
+  resugar: For(a, b, c, body)                                  -> For(a, Some(b), c, body)
     where
     not(<?Some(_)> b)
-  resugar: Emit(r, a)                                       -> Emit(FunctionCall(<restore-type-path> r, a))
+  resugar: Emit(r, a)                                          -> Emit(FunctionCall(<restore-type-path> r, a))
 
   //Convert from TypeRefs to VarRef/Member statements
   restore-type-path: TypeRef(n)    -> VarRef(n)

@@ -10,18 +10,8 @@ template options
   tokenize : "(;"
 
 context-free start-symbols
-  LocalVar
-  LocalVarDecl
-  
   VarRef
 
 context-free syntax
-  LocalVar.LocalVar               = <<LocalVarType> <ModLocation?> <ID>>
-  LocalVarDecl.LocalVarDecl       = <<LocalVar>;>
-  LocalVarDecl.LocalVarDeclAssign = <<LocalVar> = <Exp>;>
-  LocalVarDecl.LocalVarTupleDeclAssign = <<LocalVarType> (<{TupleName ", "}+>) = <Exp>;>
-  
-  TupleName.TupleName = <<ID?>>
-  
   VarRef.VarRef = ID
   VarRef.Member = < <Exp>.<ID> > {left}

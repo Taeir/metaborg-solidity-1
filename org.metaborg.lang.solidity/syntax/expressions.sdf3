@@ -5,9 +5,11 @@ imports
   Common
   types
   vars
+  tuples
 
 template options
   tokenize : "({["
+  keyword -/- [a-zA-Z0-9]
 
 lexical syntax
   //Define as keyword
@@ -161,7 +163,4 @@ context-free priorities
   {right: Exp.Ternary} >
   {Exp.Assign Exp.AssignArray Exp.AssignTuple Exp.LValAssign},
   //TODO Solve problems between casts and calls by only making the distinction in the desugaring/nabl?
-  {right: Exp.Cast} > {left: FunctionCall.FunctionCall},
-  
-  //Tuple variable declaration over tuple assignment
-  {LocalVarDecl.LocalVarTupleDeclAssign} > {Exp.AssignTuple}
+  {right: Exp.Cast} > {left: FunctionCall.FunctionCall}

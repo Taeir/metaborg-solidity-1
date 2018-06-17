@@ -96,15 +96,17 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Variable declarations
-  [[ DeclareVar(stype, name) ^ (s) ]] :=
+  [[ DeclareVar(stype, mod, name) ^ (s) ]] :=
     [[ stype ^ (s) : tyVarDecl ]],
+    [[ mod   ^ (s) ]],
     Var{name} <- s,
     Var{name}.origin := Local(),
     Var{name} : tyVarDecl !.
   
-  [[ DeclareVarAssign(stype, name, exp) ^ (s) ]] :=
+  [[ DeclareVarAssign(stype, mod, name, exp) ^ (s) ]] :=
     [[ stype ^ (s) : tyVarDecl ]],
     [[ exp   ^ (s) : tyVarInit ]],
+    [[ mod   ^ (s) ]],
     //TODO Assignable from relation for initializers
     tyVarInit <sub? tyVarDecl | error $[Initializer type [tyVarInit] does not match defined type [tyVarDecl]] @exp,
     
@@ -123,10 +125,11 @@ rules
   
   //var x;
   [[ DeclareVarVar(name) ^ (s) ]] :=
+    //Because we have unification, we actually do support this partially.
     Var{name} <- s,
     Var{name}.origin := Local(),
     Var{name} : tyVarVar !,
-    false | warning $[Using var without immediate assignment is not supported!].
+    false | error $[Assignment is required when using var!].
 
   //-----------------------------------------------------------------------------------------------
   //Expression statements

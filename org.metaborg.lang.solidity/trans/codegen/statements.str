@@ -148,9 +148,11 @@ rules
   //Variable declaration
   
   //These are already handled by var-to-stack (see functions.str)
-  stmt-to-ebc(|stack): d@DeclareVar(_, _) -> []
+  stmt-to-ebc(|stack): d@DeclareVar(_, _, _) -> []
     with <debug(|"Encountered unexpected VarDecl, ignoring: ")> d
-  stmt-to-ebc(|stack): d@DeclareVarAssign(_, x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
+  stmt-to-ebc(|stack): d@DeclareVarAssign(_, _, x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
+    with <debug(|"Encountered unexpected VarDeclAssign: ")> d
+  stmt-to-ebc(|stack): d@DeclareVarVar(x, v) -> <stmt-to-ebc(|stack)> ExpStmt(Assign(x, v))
     with <debug(|"Encountered unexpected VarDeclAssign: ")> d
   
   //-----------------------------------------------------------------------------------------------

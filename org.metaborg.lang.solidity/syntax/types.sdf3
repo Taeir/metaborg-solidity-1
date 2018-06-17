@@ -105,10 +105,12 @@ context-free syntax
   MappingKeyType = DAType
   
   //Local variables can have their type inferred
-  LocalVarType.Var = <var>
+  VarType.Var = <var>
+  LocalVarType = VarType
   LocalVarType = Type
 
 context-free restrictions
+  VarType    -/- [a-zA-Z0-9]
   FAType     -/- [a-zA-Z0-9]
   DAType     -/- [a-zA-Z0-9]
   SimpleType -/- [a-zA-Z0-9]

@@ -166,9 +166,11 @@ rules
    * @return instruction - the replacement instruction
    */
   //Variable declarations
-  var-to-stack(|stack): DeclareVar(_, x) -> Block([])
+  var-to-stack(|stack): DeclareVar(_, _, x) -> Block([])
     with <ebc-stack-push(|stack)> x
-  var-to-stack(|stack): DeclareVarAssign(_, x, v) -> ExpStmt(Assign(x, v))
+  var-to-stack(|stack): DeclareVarAssign(_, _, x, v) -> ExpStmt(Assign(x, v))
+    with <ebc-stack-push(|stack)> x
+  var-to-stack(|stack): DeclareVarVar(x, v) -> ExpStmt(Assign(x, v))
     with <ebc-stack-push(|stack)> x
   
   //Blocks

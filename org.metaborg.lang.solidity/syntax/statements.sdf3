@@ -3,6 +3,8 @@ module statements
 imports
   Common
   expressions
+  modifiers
+  tuples
   types
   vars
   assembly
@@ -30,7 +32,7 @@ context-free start-symbols
   Statement
 
 context-free syntax
-  //-----------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Control Flow
   Statement.Block    = <
     {
@@ -55,37 +57,40 @@ context-free syntax
   Statement.Throw    = <throw;>
   Statement.Emit     = <emit <FunctionCall>;>
   
-  //-----------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Local variable declaration
-  VarDeclStatement.DeclareVar       = <<LocalVarType> <ID>;>
-  VarDeclStatement.DeclareVarAssign = <<LocalVarType> <ID> = <Exp>;>
-  Statement                         = VarDeclStatement
+  VarDeclStatement.DeclareVar            = <<LocalVarType> <ModVarDecl> <ID>;>
+  VarDeclStatement.DeclareVarAssign      = <<LocalVarType> <ModVarDecl> <ID> = <Exp>;>
+  VarDeclStatement.DeclareTupleVarAssign = <<VarType> (<{TupleName ", "}+>) = <Exp>;>
+  Statement                              = VarDeclStatement
   
-  //---------------------------------------------------------------------------
+  ModVarDecl.NoModifier = <>
+  ModVarDecl = ModLocation
+  
+  //-----------------------------------------------------------------------------------------------
   //Underscore statement (modifiers)
   UnderscoreStatement.Underscore = <_;> {prefer}
   Statement                      = UnderscoreStatement
   
-  //-----------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Arbitrary Expressions
   ExpStatement.ExpStmt = <<Exp>;>
   Statement            = ExpStatement
   
-  //-----------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Return statements
   ReturnStatement.VoidReturn      = <return;>
   ReturnStatement.ReturnStatement = <return <Exp>;>
   Statement                       = ReturnStatement
   
-  //-----------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Inline assembly
   Statement            = AssemblyStatement
 
-  //-----------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Added Print statement for usefullness
   ExtraStatement.Print = < print(<Exp>); >
   Statement = ExtraStatement
-
 
 context-free priorities
   UnderscoreStatement.Underscore > ExpStatement.ExpStmt

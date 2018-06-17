@@ -5,9 +5,10 @@ imports
   desugar/functions
   
 rules
-  [[ Visibility(_) ^ (s) ]].
+  [[ Visibility(_)      ^ (s) ]].
   [[ StateMutability(_) ^ (s) ]].
-  [[ NoModifier() ^ (s) ]].
+  [[ Location(_)        ^ (s) ]].
+  [[ NoModifier()       ^ (s) ]].
   
   [[ InvalidMod(reason) ^ (s) ]] :=
     false | error $[Invalid modifiers: [reason]].
