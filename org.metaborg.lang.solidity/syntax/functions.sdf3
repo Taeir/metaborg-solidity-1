@@ -27,14 +27,8 @@ context-free start-symbols
   Returns
 
 context-free syntax
+  //---------------------------------------------------------------------------
   //Function declarations
-//  Function.Function = <
-//    function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
-//      <{Statement "\n"}*>
-//      <ReturnStatement>
-//    }>
-  
-// Full function
   Function.Function = <
     function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns> {
       <{Statement "\n"}*>
@@ -52,6 +46,7 @@ context-free syntax
     }>
   
   //---------------------------------------------------------------------------
+  //Abstract functions
   Function = AbstractFunction
   
   AbstractFunction.AbstractFunction = <function <ID>(<{Param ", "}*>) <ModifiersFun*> <Returns?>;>

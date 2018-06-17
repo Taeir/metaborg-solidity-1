@@ -22,4 +22,5 @@ context-free syntax
   
   UsingForItem.ForStar = <*>
   UsingForItem.ForType = <<ElementaryType>>
+  UsingForItem.ForUserType = <<UserDefinedType>> {avoid}
   

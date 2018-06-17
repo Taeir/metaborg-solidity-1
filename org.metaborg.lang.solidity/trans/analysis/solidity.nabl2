@@ -20,6 +20,7 @@ imports
   analysis/statevariables
   analysis/structs
   analysis/types
+  analysis/usingfor
   analysis/vars
   
   analysis/subtypes/addresses

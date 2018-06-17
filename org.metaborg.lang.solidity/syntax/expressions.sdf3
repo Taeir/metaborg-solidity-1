@@ -130,10 +130,13 @@ context-free syntax
   
   Exp.LValAssign    = LVal
   
+  //-----------------------------------------------------------------
+  //Tuples
   //TODO TupleExp
+//  Exp.TupleExp = <()>
 
 context-free priorities
-  {left:
+  {//left:
     Exp.RetInc Exp.RetDec
     Exp.NewObject
     Exp.Subscript

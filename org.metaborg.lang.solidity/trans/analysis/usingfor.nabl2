@@ -1,0 +1,5 @@
+module analysis/usingfor
+
+rules
+  [[ UsingFor(name, for) ^ (s) ]] :=
+    false | note $[Using ... for statements are not (yet) supported].
