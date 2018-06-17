@@ -22,6 +22,7 @@ imports
   analysis/types
   analysis/vars
   
+  analysis/subtypes/addresses
   analysis/subtypes/bytearrays
   analysis/subtypes/integers
   analysis/subtypes/numberliterals
@@ -268,6 +269,7 @@ rules
     SubStringLiterals [[ p ^ (programScope) ]],
     SubByteArrays     [[ p ^ (programScope) ]],
     SubIntegers       [[ p ^ (programScope) ]],
+    SubAddresses      [[ p ^ (programScope) ]],
     
     //Add globals
     Globals [[ p ^ (programScope) ]],
