@@ -80,16 +80,16 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Modifiers
-  ModifiersFun.Visibility      = <<ModVisibilityFun>>
-  ModifiersFun.StateMutability = <<ModStateMutability>>
-  ModifiersFun.UserDefined     = <<ModUserDefined>>
+  ModifiersFun = ModVisibility
+  ModifiersFun = ModStateMutability
+  ModifiersFun.UserDefined = <<ModUserDefined>>
   
   ModUserDefined.SimpleUMod = <<ID>>
   ModUserDefined.ExtUMod    = <<ID>(<{Exp ", "}*>)>
   
   //Constructors can be internal or public
-  ModifierCon = Internal
-  ModifierCon = Public
+  ModifierCon = ModVisibilityInternal
+  ModifierCon = ModVisibilityPublic
   
   //Calls to base constructors can be done with modifier like syntax
   ModifierConSuper.ModSuperCall = <<ID>(<{Exp ", "}*>)>

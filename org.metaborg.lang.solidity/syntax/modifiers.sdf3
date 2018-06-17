@@ -35,25 +35,57 @@ lexical syntax
   MODKEYWORD = "memory"
   MODKEYWORD = "storage"
   ID = MODKEYWORD {reject}
+  
+  
+  ID = "internal" {reject}
+  ID = "external" {reject}
+  ID = "public"   {reject}
+  ID = "private"  {reject}
+  ID = "constant" {reject}
+  ID = "pure"     {reject}
+  ID = "view"     {reject}
+  ID = "payable"  {reject}
+  ID = "memory"   {reject}
+  ID = "storage"  {reject}
 
 context-free syntax
 
-  //------------------------------------------------------------------
-  //Visibility rules
-  ModVisibilityIntExt = Internal
-  ModVisibilityIntExt = External
+  //---------------------------------------------------------------------------
+  //Visibility
+  ModVisibilityPublic.Visibility   = Public
+  ModVisibilityPrivate.Visibility  = Private
+  ModVisibilityInternal.Visibility = Internal
+  ModVisibilityExternal.Visibility = External
   
-  //Functions can have any visibility
-  ModVisibilityFun = ModVisibilityIntExt
-  ModVisibilityFun = Public
-  ModVisibilityFun = Private
+  ModVisibilityIntExt  = ModVisibilityInternal
+  ModVisibilityIntExt  = ModVisibilityExternal
   
-  ModStateMutability = Pure
-  ModStateMutability = Constant
-  ModStateMutability = View
-  ModStateMutability = Payable
+  ModVisibilityPubPriv = ModVisibilityPublic
+  ModVisibilityPubPriv = ModVisibilityPrivate
   
-  ModLocation = Memory
-  ModLocation = Storage
+  ModVisibility = ModVisibilityPublic
+  ModVisibility = ModVisibilityPrivate
+  ModVisibility = ModVisibilityInternal
+  ModVisibility = ModVisibilityExternal
+  
+  //---------------------------------------------------------------------------
+  //State mutability
+  ModStateMutabilityPure.StateMutability     = Pure
+  ModStateMutabilityConstant.StateMutability = Constant
+  ModStateMutabilityView.StateMutability     = View
+  ModStateMutabilityPayable.StateMutability  = Payable
+    
+  ModStateMutability = ModStateMutabilityPure
+  ModStateMutability = ModStateMutabilityConstant
+  ModStateMutability = ModStateMutabilityView
+  ModStateMutability = ModStateMutabilityPayable
+  
+  //---------------------------------------------------------------------------
+  //Location
+  ModLocationMemory.Location  = Memory
+  ModLocationStorage.Location = Storage
+  
+  ModLocation = ModLocationMemory
+  ModLocation = ModLocationStorage
   
   //TODO: Write bit about how modifiers are difficult in spoofax

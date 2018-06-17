@@ -25,12 +25,12 @@ context-free syntax
   StateVarAssignment.StateVarAssignment = <= <Exp>>
   
   //State variables cannot have external
-  ModifiersStateVar = <<Constant>>
-  ModifiersStateVar = <<Internal>>
-  ModifiersStateVar = <<Public>>
-  ModifiersStateVar = <<Private>>
+  ModifiersStateVar = ModStateMutabilityConstant
+  ModifiersStateVar = ModVisibilityInternal
+  ModifiersStateVar = ModVisibilityPublic
+  ModifiersStateVar = ModVisibilityPrivate
   
-  ModifiersStateVarVis.None = <>
-  ModifiersStateVarVis = <<Internal>>
-  ModifiersStateVarVis = <<Public>>
-  ModifiersStateVarVis = <<Private>>
+  ModifiersStateVarVis.NoModifier = <>
+  ModifiersStateVarVis = ModVisibilityInternal
+  ModifiersStateVarVis = ModVisibilityPublic
+  ModifiersStateVarVis = ModVisibilityPrivate

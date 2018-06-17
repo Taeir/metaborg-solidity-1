@@ -92,14 +92,12 @@ context-free syntax
   Exp.LitArray  = < [<{Exp ", "}+>] >
   Exp           = VarRef
   
-  //TODO TupleExp
-  
   //---------------------------------------------------------------------------
   //Create and delete
   //TODO
   Exp.NewObject = <new <PATH>(<{Exp ", "}*>)> {prefer}
   Exp.NewArray  = <new <Type>(<Exp>)>
-  Exp.Delete    = <delete <Exp>> {right}
+  Exp.Delete    = <delete <Exp>>              {right}
   
   //---------------------------------------------------------------------------
   //Cast
@@ -107,12 +105,13 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Tenary if statement
-  Exp.Ternary = < <Exp> ? <Exp> : <Exp> > {left} //TODO Correct?
+  Exp.Ternary = < <Exp> ? <AlsoExp> : <AlsoExp> > {right} //TODO Correct?
   
   //-----------------------------------------------------------------
   //Assignment
-  Exp.Assign      = <<VarRef> = <Exp>>        {right}
-  Exp.AssignArray = <<Exp>[<Exp>] = <Exp>> {right}
+  Exp.Assign      = <<VarRef> = <Exp>>              {right}
+  Exp.AssignArray = <<Exp>[<Exp>] = <Exp>>          {right}
+  Exp.AssignTuple = <(<{TupleName ", "}*>) = <Exp>> {avoid}
   
   //-----------------------------------------------------------------
   //LValue shorthands
@@ -156,7 +155,10 @@ context-free priorities
   {non-assoc: Exp.Eq Exp.NEq} >
   {non-assoc: Exp.And} >
   {non-assoc: Exp.Or} >
-  {left: Exp.Ternary} >
-  {right: Exp.Assign Exp.AssignArray Exp.LValAssign},
+  {right: Exp.Ternary} >
+  {Exp.Assign Exp.AssignArray Exp.AssignTuple Exp.LValAssign},
   //TODO Solve problems between casts and calls by only making the distinction in the desugaring/nabl?
-  {right: Exp.Cast} > {left: FunctionCall.FunctionCall}
+  {right: Exp.Cast} > {left: FunctionCall.FunctionCall},
+  
+  //Tuple variable declaration over tuple assignment
+  {LocalVarDecl.LocalVarTupleDeclAssign} > {Exp.AssignTuple}

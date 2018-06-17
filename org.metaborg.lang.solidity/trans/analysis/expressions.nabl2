@@ -68,7 +68,7 @@ rules
     //TODO Confirm that this works as intended
     tyTernary is sub.lub of (tyTernaryExp1, tyTernaryExp2),
     tyTernary_2 is simplifyType of tyTernary,
-    tyTernary_2 <? IsType() | error $[No common subtype between branches! Found types: [tyTernaryExp1] and [tyTernaryExp2]].
+    tyTernary_2 <test? IsType() | error $[No common subtype between branches! Found types: [tyTernaryExp1] and [tyTernaryExp2]].
   
   //-----------------------------------------------------------------------------------------------
   // Operators
@@ -339,7 +339,7 @@ rules
   [[ UnExp(Delete(), exp) ^ (s) : ty ]] :=
     [[ exp ^ (s) : tyDeleteExp ]],
     tyDeleteExp_2 is simplifyType of tyDeleteExp,
-    tyDeleteExp_2 <? IsType() | warning $[Unable to determine type of expression] @exp.
+    tyDeleteExp_2 <test? IsType() | warning $[Unable to determine type of expression] @exp.
   
   //-----------------------------------------------------------------------------------------------
 
