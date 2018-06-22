@@ -1,6 +1,5 @@
 module codegen/build
 
-//TODO Build codegen similar to jasmin
 imports
   signatures/ebc/EBC-sig
   
@@ -16,7 +15,6 @@ rules
    *
    * @type Solidity AST -> EVM AST
    */
-   //show-jbc -> show-ebc
   show-ebc:
     (selected, _, ast, path, project-path) -> (filename, result)
     with
@@ -28,7 +26,6 @@ rules
    *
    * @type Solidity AST -> None
    */
-   //generate-jbc -> generate-ebc
   generate-ebc:
     (selected, _, ast, path, project-path) -> None()
     with
@@ -36,34 +33,6 @@ rules
     ; <try(mkdir)> dir
     ; <program-to-ebc; map(set-ebc-source(|path)); map(write-ebc(|dir))> ast
 
-//  /**
-//   * Generate bytecode (.class files) for each of the classes in the Solidity AST.
-//   *
-//   * @type Solidity AST -> None
-//   */
-//   //TODO Generate hexadecimal strings?
-//  generate-jc:
-//    (selected, _, ast, path, project-path) -> None()
-//    with
-//      dir := <remove-extension> path
-//    ; <try(mkdir)> dir
-//    ; <program-to-ebc; map(set-jasmin-source(|path)); map(jasmin-generate(|project-path))> ast
-//
-//  //TODO Generate extra info files
-//
-//  /**
-//   * Generate bytecode (.class files) for each of the classes in the MiniJava AST
-//   * and run the main class.
-//   */
-//  run-jc:
-//    (selected, _, ast, path, project-path) -> result
-//    with
-//      dir := <remove-extension> path
-//    ; <try(mkdir)> dir
-//    ; jbc-class* := <program-to-ebc; map(set-jasmin-source(|path))> ast
-//    ; <map(jasmin-generate(|project-path))> jbc-class*
-//    ; result := <Hd; jasmin-execute(|project-path)> jbc-class*
-//
 rules
 
   set-ebc-source(|path) = EBCFile(!<double-quote> path, id, id)
@@ -73,9 +42,3 @@ rules
     where
       fn  := $[[dir]/[fileName].ebc]
     ; <fputs; fclose> (<ebc-pp> f, <fopen> (fn, "w"))
-      
-//  run-jc-trim:
-//    selected -> trimmed
-//    with
-//      (_, output) := <run-jc> (selected, None(), selected, "Main.spt", <project-path>)
-//    ; trimmed     := <string-replace(|"\n", "");string-replace(|"\r", "")> output
