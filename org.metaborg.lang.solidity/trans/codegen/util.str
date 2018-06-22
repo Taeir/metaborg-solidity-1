@@ -16,16 +16,19 @@ strategies
 
 rules
   
-  //utin8   = PUSH FF, AND
-  //uint16  = PUSH FFFF, AND
-  //uint24  = PUSH FFFFFF, AND
-  //etc.
-  
-  //int8    = PUSH 0, SIGNEXTEND
-  //int16   = PUSH 1, SIGNEXTEND
-  //int24   = PUSH 2, SIGNEXTEND
-  //etc.
-  
+
+  /**
+   * Creates instructions to extend a variable of the given type to the full length.
+   *
+   * Examples:
+   * utin8   = PUSH FF, AND
+   * uint16  = PUSH FFFF, AND
+   * uint24  = PUSH FFFFFF, AND
+   *
+   * int8    = PUSH 0, SIGNEXTEND
+   * int16   = PUSH 1, SIGNEXTEND
+   * int24   = PUSH 2, SIGNEXTEND
+   */
   extend-to-32-bytes: BoolT() -> [
     ISZERO(),
     ISZERO()
@@ -41,11 +44,12 @@ rules
     AND()
   ] where n' := <divi> (n, 8)
   
+  /**
+   * Appends FF to the given string.
+   */
   append-FF: s -> <conc-strings> (s, "FF")
   
   /**
    * Creates a push instruction of the appropriate size (smallest length fitting the given number).
    */
-  //TODO biginteger division instead of integer division
   create-push: nr    -> PUSH(<addi> (<divi> (nr, 256), 1), nr)
-  //create-push: nrHex -> PUSH(<addHex> (<divHex> (nrHex, "0x100"), "0x1"), nrHex)

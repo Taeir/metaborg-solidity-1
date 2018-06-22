@@ -19,8 +19,8 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Contract-like
   //-----------------------------------------------------------------------------------------------
-  //TODO Interfaces
-  interface-to-ebc: Interface(name, content) -> [] //TODO
+  //Interfaces cannot be compiled
+  interface-to-ebc: Interface(name, content) -> []
   
   //Treat libraries like contracts
   library-to-ebc: Library(name, content) -> <contract-to-ebc> Contract(name, content)
@@ -55,27 +55,21 @@ rules
     
     //Function definitions
     functionBlocks
-    
-    //TODO Other content
-    //<map(content-to-ebc)> content
-      
   ] where
     <newname> "FailHandler" => tagFailHandler;
     
     //Create the code for the functions
     functions := <filter-fun> content;
-    <ppdebugna0> functions;
     
+    //Compile all the functions
     funtuples := <map(fun-to-ebc)> functions;
     
     //The select function sequence is the first element of the tuple, concatenated.
     //It determines which function is selected upon calling
-    <ppdebugna1> funtuples;
     selectFunctionSequence := <concat> <map(\ (i, _) -> i \)> funtuples;
     
     //The blocks of instructions for the different functions
-    functionBlocks         := <concat> <map(\ (_, f) -> f \)> funtuples;
-    <ppdebugna2> functionBlocks
+    functionBlocks         := <concat> <map(\ (_, f) -> f \)> funtuples
   
   //-----------------------------------------------------------------------------------------------
   //Contract content

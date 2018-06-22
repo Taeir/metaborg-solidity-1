@@ -8,5 +8,5 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Events
   //-----------------------------------------------------------------------------------------------
-  
-  eventdecl-to-ebc: Event(name, params, anonymous) -> [] //TODO
+  //Events are not supported in compilation
+  eventdecl-to-ebc: Event(name, params, anonymous) -> []

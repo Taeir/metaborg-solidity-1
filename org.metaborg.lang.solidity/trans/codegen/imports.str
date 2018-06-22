@@ -7,5 +7,5 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Imports
   //-----------------------------------------------------------------------------------------------
-  //TODO Imports. For now, I just ignore imports
+  //Imports are not supported yet (external calls are not supported).
   import-to-ebc: Import(_, _) -> []

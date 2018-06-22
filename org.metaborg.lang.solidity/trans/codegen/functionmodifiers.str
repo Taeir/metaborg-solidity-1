@@ -8,5 +8,5 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Function modifiers
   //-----------------------------------------------------------------------------------------------
-  
-  funmoddecl-to-ebc: FunctionModifier(name, params, stmts) -> [] //TODO
+  //Function modifiers are not supported in the compilation
+  funmoddecl-to-ebc: FunctionModifier(name, params, stmts) -> []

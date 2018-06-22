@@ -174,9 +174,7 @@ rules
     where
     tag := <ebc-stack-pop(|breaks)>
 
-  //TODO throw
-  
-  //TODO emit
+  //Throw and emit are not yet supported
   
   //-----------------------------------------------------------------------------------------------
   //Variable declaration
@@ -192,7 +190,5 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Underscore
   
-  //TODO Underscore statement
-  
-  return-type: FunctionT(_, [retT]) -> retT
+  //Underscore statement is not yet supported
   

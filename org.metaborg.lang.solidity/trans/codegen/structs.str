@@ -7,5 +7,5 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Structs
   //-----------------------------------------------------------------------------------------------
-  
-  structdecl-to-ebc: Struct(name, fields) -> [] //TODO
+  //Structs are not yet supported.
+  structdecl-to-ebc: Struct(name, fields) -> []

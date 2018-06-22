@@ -8,8 +8,8 @@ rules
   //-----------------------------------------------------------------------------------------------
   //State variables
   //-----------------------------------------------------------------------------------------------
-  
-  statevar-to-ebc: StateVariable(ty, mod, name, None())  -> [] //TODO
-  statevar-to-ebc: StateVariable(ty, mod, name, Some(e)) -> [] //TODO
-  statevar-to-ebc: ConstantStateVariable(ty, mod, name, None())  -> [] //TODO Not supported?
-  statevar-to-ebc: ConstantStateVariable(ty, mod, name, Some(e)) -> [] //TODO
+  //State variables are not yet supported.
+  statevar-to-ebc: StateVariable(ty, mod, name, None())  -> []
+  statevar-to-ebc: StateVariable(ty, mod, name, Some(e)) -> []
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, None())  -> []
+  statevar-to-ebc: ConstantStateVariable(ty, mod, name, Some(e)) -> []

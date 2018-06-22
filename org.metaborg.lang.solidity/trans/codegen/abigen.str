@@ -158,9 +158,7 @@ rules
   
   //Mapping type is not allowed (storage type)
   
-  //TODO Structs are translated to tuples
-  
-  //TODO Tuple types
+  //Tuple types are not supported in compilation, structs are translated to tuples
   tuple-to-abi: _ -> None()
   
   //-----------------------------------------------------------------------------------------------
