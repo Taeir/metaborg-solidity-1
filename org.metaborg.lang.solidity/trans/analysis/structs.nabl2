@@ -27,7 +27,6 @@ rules
     
     distinct/name D(structScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    //Make scope importable
     Struct{name}         =I=> structScope,
     TypeReferrable{name} =I=> structScope.
   

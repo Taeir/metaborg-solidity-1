@@ -49,19 +49,11 @@ rules
   [[ Break()      ^ (s) ]].
   [[ Continue()   ^ (s) ]].
   [[ Throw()      ^ (s) ]].
-//  [[ Emit(name, args) ^ (s) ]] :=
-//    Event{name} -> s,
-//    Event{name} |-> event | error $[Unable to find event [name]] @name,
-//    event : tyEvent,
-//    tyEvent == NamedT(event, EventT(paramTys)),
-//    
-//    Map1T [[ args ^ (s) : argTys ]],
-//    argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the event parameter types [paramTys]].
 
   [[ Emit(ref, args) ^ (s) ]] :=
     [[ ref ^ (s) : tyRef ]],
-    tyRef == NamedT(event, tyEvent) | error $[Cannot find event [ref]], //place at args to fix incorrect placement
-    tyEvent == EventT(paramTys)     | error $[[ref] is not an event],   //place at args to fix incorrect placement
+    tyRef == NamedT(event, tyEvent) | error $[Cannot find event [ref]],
+    tyEvent == EventT(paramTys)     | error $[[ref] is not an event],
     
     Map1T [[ args ^ (s) : argTys ]],
     argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the event parameter types [paramTys]].
@@ -69,8 +61,6 @@ rules
   [[ Emit(call)   ^ (s) ]] :=
     false | note $[Failed to desugar emit],
     [[ call ^ (s) : ty ]].
-  
-  //TODO Idea: Have different named rules in nabl for return statements in different contexts?
   
   //Return statements in constructor
   [[ VoidReturn() ^ (s) ]].
@@ -83,16 +73,17 @@ rules
     //Check if corresponding function doesn't have a return type
     Function{funName} -> s,
     Function{funName} |-> fun | error $[Unable to find function corresponding to this return statement. Name: [funName]],
-    fun : FunctionT(paramTys, retTys) | warning $[Actual return type (void) does not match expected return type [retTys]!],
-    retTys == [] | warning $[Actual return type (void) does not match expected return type [retTys]!].
+    fun : FunctionT(paramTys, retTy) | warning $[Actual return type (void) does not match expected return type [retTy]!],
+    retTy == VoidT() | warning $[Actual return type (void) does not match expected return type [retTy]!].
+
   [[ ReturnStatement(funName, exp) ^ (s) ]] :=
     [[ exp ^ (s) : expRetTy ]],
     //Check if corresponding function has a matching return type
     Function{funName} -> s,
     Function{funName} |-> fun | error $[Unable to find function corresponding to this return statement. Name: [funName]],
     fun : tyFun,
-    tyFun == FunctionT(paramTys, retTys),
-    [expRetTy] <sub? retTys | warning $[Actual return type [expRetTy] does not match expected return type [retTys]].
+    tyFun == FunctionT(paramTys, retTy),
+    expRetTy <sub? retTy | warning $[Actual return type [expRetTy] does not match expected return type [retTy]].
   
   //-----------------------------------------------------------------------------------------------
   //Variable declarations
@@ -107,7 +98,6 @@ rules
     [[ stype ^ (s) : tyVarDecl ]],
     [[ exp   ^ (s) : tyVarInit ]],
     [[ mod   ^ (s) ]],
-    //TODO Assignable from relation for initializers
     tyVarInit <sub? tyVarDecl | error $[Initializer type [tyVarInit] does not match defined type [tyVarDecl]] @exp,
     
     Var{name} <- s,
@@ -116,15 +106,13 @@ rules
   
   [[ DeclareVarVar(name, exp) ^ (s) ]] :=
     [[ exp   ^ (s) : tyVarInit ]],
-//    tyVarInit <test? IsType() | error $[Unable [tyVarInit] does not match defined type [tyVarDecl]] @exp,
     
     Var{name} <- s,
     Var{name}.origin := Local(),
     Var{name} : tyVarInit !.
   
-  //var x;
   [[ DeclareVarVar(name) ^ (s) ]] :=
-    //Because we have unification, we actually do support this partially.
+    //Because we have unification, we actually could support this partially.
     Var{name} <- s,
     Var{name}.origin := Local(),
     Var{name} : tyVarVar !,

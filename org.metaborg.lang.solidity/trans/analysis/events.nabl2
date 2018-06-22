@@ -18,11 +18,9 @@ rules
     
     VarT()       <sub! eventType,
     
-    //Create scope
     new eventScope,
     eventScope -P-> s,
     
-    // Resolve parameters
     Map1T [[ params ^ (eventScope) : paramTys ]],
 
     Event{name}          =I=> eventScope,

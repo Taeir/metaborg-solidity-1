@@ -27,14 +27,13 @@ rules
     new contractScope,
     contractScope -P-> programScope,
     
-    // Add this
     This{"this" @c} <- contractScope,
     This{"this" @c} : contractType !,
     
-    // Resolve content
+    //Resolve content
     Map1 [[ content ^ (contractScope) ]],
     
-    // Check contents for duplicate definitions (events and functions can be overloaded)
+    //Check contents for duplicate definitions (events and functions can be overloaded)
     distinct/name D(contractScope)/Var              | error $[Duplicate state variable [NAME]] @NAMES,
     distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
     distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
@@ -69,13 +68,12 @@ rules
     TypeReferrable{supername} <=I= contractScope,
     parentContract ?===> parentScope,
     
-    // Create this in contract scope
     This{"this" @c} <- contractScope,
     This{"this" @c} : contractType !,
     
     Map1 [[ content ^ (contractScope) ]],
     
-    // Check contents for duplicate definitions (events and functions can be overloaded)
+    //Check contents for duplicate definitions (events and functions can be overloaded)
     distinct/name D(contractScope)/Var              | error $[Duplicate state variable [NAME]] @NAMES,
     distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
     distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
@@ -104,13 +102,12 @@ rules
     new contractScope,
     contractScope -P-> programScope,
     
-    // Create this in contract scope
     This{"this" @c} <- contractScope,
     This{"this" @c} : contractType !,
     
     Map1 [[ content ^ (contractScope) ]],
     
-    // Check contents for duplicate definitions (events and functions can be overloaded)
+    //Check contents for duplicate definitions (events and functions can be overloaded)
     distinct/name D(contractScope)/Var              | error $[Duplicate state variable [NAME]] @NAMES,
     distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
     distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,

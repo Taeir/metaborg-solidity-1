@@ -18,14 +18,10 @@ rules
     
     VarT()       <sub! modType,
     
-    //Create scope
     new modScope,
     modScope -P-> s,
     
-    // Resolve parameters
     [[ params ^ (modScope) : paramTys ]],
-    
-    //Resolve body
     [[ stmt ^ (modScope) ]],
 
     FunctionModifier{name} =I=> modScope,

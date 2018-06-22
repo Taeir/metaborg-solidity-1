@@ -30,7 +30,7 @@ signature
     DArrayT      : Type -> Type
     
     //Function types
-    FunctionT    : list(Type) * Type -> Type // add VisibilityType
+    FunctionT    : list(Type) * Type -> Type
     FunctionModT : list(Type) -> Type
     
     //Mapping types
@@ -76,7 +76,6 @@ signature
 
   namespaces
     //Something that can be referenced as a type.
-    //TODO Add origin-like field to distinguish between enums, events, etc.?
     TypeReferrable { origin : occurrence }
 
 rules
@@ -102,11 +101,11 @@ rules
   //Arrays
   [[ FixedArrayType(base, sizeExp) ^ (s) : ty ]] :=
     [[ base ^ (s) : baseTy ]],
-    //TODO Determine size from expression!
     [[ sizeExp ^ (s) : sizeTy ]],
-    //TODO Check if size is an int?
     ty == FArrayT(baseTy, 1),
-    VarT() <sub! ty.
+    VarT() <sub! ty,
+    
+    false | note $[Size is not checked].
   
   [[ DynamicArrayType(base)        ^ (s) : ty ]] :=
     [[ base ^ (s) : baseTy ]],
@@ -115,8 +114,6 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Functions
-  
-  //TODO Store  visibility and mutability
   [[ FunctionType(args, vis, stateMut, retParam) ^ (s) : ty ]] :=
     [[ retParam ^ (s) : retTy ]],
     Map1T [[ args ^ (s) : argTys ]],

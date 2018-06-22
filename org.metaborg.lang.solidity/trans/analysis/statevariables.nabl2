@@ -3,23 +3,19 @@ module analysis/statevariables
 imports
   signatures/-
 
-signature
-  namespaces
-    //StateVar { constant : term }
-
 rules
   [[ StateVariable(solty, mod, name, None()) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
+    [[ mod   ^ (s) ]],
     
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
     Var{name}.constant := FalseC(),
-    Var{name} : tyStateVar !,
-    
-    //Check modifier
-    [[ mod ^ (s) ]].
+    Var{name} : tyStateVar !.
+  
   [[ StateVariable(solty, mod, name, Some(exp)) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
+    [[ mod   ^ (s) ]],
     
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
@@ -27,26 +23,22 @@ rules
     Var{name} : tyStateVar !,
     
     [[ exp ^ (s)    : tyAssignExp ]],
-    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp,
-    
-    //Check modifier
-    [[ mod ^ (s) ]].
+    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp.
   
   [[ ConstantStateVariable(solty, mod, name, None()) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
+    [[ mod   ^ (s) ]],
     
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
     Var{name}.constant := TrueC(),
     Var{name} : tyStateVar !,
     
-    //Check modifier
-    [[ mod ^ (s) ]],
-    
     false | warning $[Constants should have initializers!].
-    //TODO constant
+
   [[ ConstantStateVariable(solty, mod, name, Some(exp)) ^ (s) ]] :=
     [[ solty ^ (s) : tyStateVar ]],
+    [[ mod   ^ (s) ]],
     
     Var{name} <- s,
     Var{name}.origin   := StateVariable(),
@@ -54,8 +46,4 @@ rules
     Var{name} : tyStateVar !,
     
     [[ exp ^ (s)    : tyAssignExp ]],
-    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp,
-    
-    //Check modifier
-    [[ mod ^ (s) ]].
-    //TODO constant
+    tyAssignExp <sub? tyStateVar | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyStateVar]] @exp.

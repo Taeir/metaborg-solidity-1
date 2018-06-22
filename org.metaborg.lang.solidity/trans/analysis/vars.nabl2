@@ -45,8 +45,6 @@ rules
     var : tyVarRef.
 
   [[ Member(exp, name) ^ (s) : tyMemberRef ]] :=
-    //TODO Support member calls on addresses, etc.
-    
     //Determine scope of what we are calling on
     [[ exp ^ (s) : tyMemberExp ]],
     tyMemberExp_2 is simplifyType of tyMemberExp | error $[Type [tyMemberExp] does not have fields!] @exp,
@@ -58,7 +56,6 @@ rules
     new resolveScope,
     resolveScope -P-> typeScope,
     
-    //Resolve variable
     Var{name} -> resolveScope,
     Var{name} |-> var | error $[Cannot find variable with name [name] in [occ]] @name,
     var : tyMemberRef.

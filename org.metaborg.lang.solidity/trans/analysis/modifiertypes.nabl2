@@ -17,14 +17,9 @@ signature
     InternalT : VisibilityType  //Only the contract itself and descendants
     ExternalT : VisibilityType  //Everyone but the contract itself
     
-    //Memory variables vs storage variables
+    //Location
     MemoryT   : StorageLocationType
     StorageT  : StorageLocationType
-
-//  relations
-//    reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
-//      [+vissub]
-//    }
 
 rules
   InitVisibility [[ p ^ (programScope) ]] :=

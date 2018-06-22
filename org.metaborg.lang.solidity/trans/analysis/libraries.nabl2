@@ -19,15 +19,12 @@ rules
     libraryType == NamedT(Library{name}, LibraryT()),
     VarT() <sub! libraryType,
     
-    //Create scope
     new libraryScope,
     libraryScope -P-> programScope,
     
-    // Add this
     This{"this" @c} <- libraryScope,
     This{"this" @c} : libraryType !,
     
-    // Resolve content
     Map1 [[ content ^ (libraryScope) ]],
     
     // Check contents for duplicate definitions (events and functions can be overloaded)

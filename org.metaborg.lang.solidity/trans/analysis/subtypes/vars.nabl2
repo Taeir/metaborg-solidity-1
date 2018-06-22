@@ -243,8 +243,6 @@ rules
     VarT() <sub! StringLitT(31),
     VarT() <sub! StringLitT(32),
     
-    //TODO Fixed/UFixed
-    
     //Simple types
     VarT() <sub! BoolT(),
     VarT() <sub! AddressT(),

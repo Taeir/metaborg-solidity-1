@@ -11,123 +11,92 @@ signature
 
 rules
   [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
-    //Declare
     Function{name} <- s,
     Function{name} : funTy !,
     funTy == FunctionT(paramTys, retTy),
     
     VarT() <sub! funTy,
     
-    //Scope
     new funScope,
     funScope -P-> s,
     
-    //Resolve parameters and body
-    Map1T [[ params    ^ (funScope) : paramTys           ]],
-    [[ retParams ^ (funScope) : retTy ]],
-    
-    //Check modifiers
-    Map1  [[ mods ^ (funScope) ]].
+    Map1  [[ mods   ^ (funScope) ]],
+    Map1T [[ params ^ (funScope) : paramTys ]],
+    [[ retParams    ^ (funScope) : retTy ]].
   
   [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
-    //Declare
     Function{name} <- s,
     Function{name} : funTy !,
     funTy == FunctionT(paramTys, retTy),
     
     VarT() <sub! funTy,
     
-    //Scope
     new funScope,
     funScope -P-> s,
     
-    //Resolve parameters and body
-    Map1T [[ params    ^ (funScope) : paramTys           ]],
-    [[ retParams ^ (funScope) : retTy ]],
-    
-    //Check modifiers
-    Map1  [[ mods ^ (funScope) ]].
+    Map1  [[ mods   ^ (funScope) ]],
+    Map1T [[ params ^ (funScope) : paramTys ]],
+    [[ retParams    ^ (funScope) : retTy ]].
   
   [[ Function(name, params, mods, retParams, body) ^ (s) ]] :=
-    //Declare
     Function{name} <- s,
     Function{name} : funTy !,
     funTy == FunctionT(paramTys, retTy),
     
     VarT() <sub! funTy,
     
-    //Scope
     new funScope,
     funScope -P-> s,
     
-    //Check duplicate variables
     distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    Map1T [[ params    ^ (funScope) : paramTys           ]],
-    [[ retParams ^ (funScope) : retTy ]],
-    [[ body ^ (funScope) ]],
-    
-    //Check modifiers
-    Map1  [[ mods ^ (funScope) ]].
+    Map1  [[ mods    ^ (funScope) ]],
+    Map1T [[ params  ^ (funScope) : paramTys ]],
+    [[ retParams     ^ (funScope) : retTy ]],
+    [[ body          ^ (funScope) ]].
   
   //-----------------------------------------------------------------------------------------------
   [[ Constructor(contractName, params, mod, body) ^ (s) ]] :=
-    //Declare
     Function{contractName} <- s,
     Function{contractName} : funTy !,
     funTy == FunctionT(paramTys, retTy),
     
     VarT() <sub! funTy,
     
-    //Scope
     new funScope,
     funScope -P-> s,
     
-    //Check duplicate variables
     distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    //Resolve parameters and body
-    Map1T [[ params ^ (funScope) : paramTys ]],
-    [[ body ^ (funScope) ]],
     
-    //TODO Return void in constructor is allowed! Currently breaks (does not return correct type)
+    [[ mod          ^ (funScope) ]],
+    Map1T [[ params ^ (funScope) : paramTys ]],
+    [[ body         ^ (funScope) ]],
     
     //Resolve return type
     TypeReferrable{contractName} -> s,
     TypeReferrable{contractName} |-> contract | error $[Unable to find contract this constructor belongs to! Name: [contractName]],
-    contract : retTy,
-    
-    //Check modifier
-    [[ mod ^ (funScope) ]].
+    contract : retTy.
   
-  //TODO Constructor with super
-  //ConstructorWithSuper : String * List(Param) * Option(ConsMod) * String * List(Exp) * Statement -> Function
   [[ ConstructorWithSuper(contractName, params, mod, superName, superCall, body) ^ (s) ]] :=
-    //Declare
     Function{contractName} <- s,
     Function{contractName} : funTy !,
     funTy == FunctionT(paramTys, retTy),
     
     VarT() <sub! funTy,
     
-    //Scope
     new funScope,
     funScope -P-> s,
     
-    //Check duplicate variables
     distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    //Resolve parameters and body
+    [[ mod          ^ (funScope) ]],
     Map1T [[ params ^ (funScope) : paramTys ]],
-    [[ body ^ (funScope) ]],
-    
-    //TODO Return void in constructor is allowed! Currently breaks (does not return correct type)
+    [[ body         ^ (funScope) ]],
     
     //Resolve return type
     TypeReferrable{contractName} -> s,
     TypeReferrable{contractName} |-> contract | error $[Unable to find contract this constructor belongs to! Name: [contractName]],
     contract : retTy,
-    
-    //Check modifier
-    [[ mod ^ (funScope) ]],
+
     false | warning $[Super call and super are not yet implemented! Super: [superName]].

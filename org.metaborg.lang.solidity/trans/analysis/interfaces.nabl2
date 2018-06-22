@@ -19,11 +19,9 @@ rules
     interfaceType == NamedT(Interface{name}, InterfaceT()),
     VarT() <sub! interfaceType,
     
-    //Create scope
     new interfaceScope,
     interfaceScope -P-> programScope,
     
-    // Resolve functions
     Map1 [[ functions ^ (interfaceScope) ]],
 
     Interface{name}      =I=> interfaceScope,

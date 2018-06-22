@@ -36,11 +36,7 @@ imports
 signature
   name resolution
     labels
-      // P = Parent (method -> class, class -> program)
-      // I = Import (class -> super)
-      // M = Method Parent (method -> class)
-      // J = Method Import (class -> super)
-      P I M J
+      P I
 
     order
       // Check local declarations over imports and parents
@@ -48,32 +44,23 @@ signature
       D < I,
       
       // Check imports before parents
-      I < P,
-      
-      // J is used for method overriding
-      J < D,
-      J < I
+      I < P
 
     well-formedness
-      // P* I*   gives: D < PD < PI+D       = Local (var/param) over parent (field/method/classname) over import (super field/super method)
-      //                PPD                 = Class lookup (Method -> Class -> Program -> Class Definition)
-      
-      // M J? I* gives: MJD < MD            = Look in direct super before using local
-      //                MJD < MIID          = We first check in the direct super class before looking further
-      //                MJI{n}D < MJI{n+1}D = Prefer closer super methods, check all the way
-      (P* I*) | (M J? I*)
+      // P* I*   gives: D < PD < PI+D       = Local (var/param) over parent (field/function/contract) over super (super field/super function)
+      //                PPD                 = Contract lookup (Function -> Contract -> Program -> Contract Definition)
+      (P* I*)
 
-  namespaces
-    Referrable
-  
   sorts
     NaBLBool
     TypeTest
   
   constructors
+    //True/false placeholders
     NaBLFalse : NaBLBool
     NaBLTrue  : NaBLBool
     
+    //Different checks
     IsType            : TypeTest
     IsNumeric         : TypeTest
     CanCompare        : TypeTest
@@ -84,6 +71,9 @@ signature
     CanIndex          : TypeTest
     
   relations
+    /**
+     * Normal subtyping relation.
+     */
     reflexive, anti-symmetric, transitive sub  : Type * Type {
       [+sub],
       FArrayT(+sub),
@@ -91,12 +81,21 @@ signature
       TupleT(+sub)
     }
     
+    /**
+     * Relation for checking visibility rules.
+     */
     reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
       [+vissub]
     }
     
+    /**
+     * For checking various properties of a simplified type.
+     */
     anti-symmetric, anti-transitive test : Type * TypeTest
     
+    /**
+     * For casting a type to another type. Casting to the same type is always allowed.
+     */
     reflexive cast : Type * Type
   
   functions
@@ -170,80 +169,17 @@ signature
       FractT(m, n, _, _) -> FixedT(m, n),
       ty                 -> ty
     }
-    
-//    //Increases the given number by 8
-//    plus8: Term -> Term {
-//      0   -> 0,  //0 stays 0 (invalid)
-//      8   -> 16,
-//      16  -> 24,
-//      24  -> 32,
-//      32  -> 40,
-//      40  -> 48,
-//      48  -> 56,
-//      56  -> 64,
-//      64  -> 72,
-//      72  -> 80,
-//      80  -> 88,
-//      88  -> 96,
-//      96  -> 104,
-//      104 -> 112,
-//      112 -> 120,
-//      120 -> 128,
-//      128 -> 136,
-//      136 -> 144,
-//      144 -> 152,
-//      152 -> 160,
-//      160 -> 168,
-//      168 -> 176,
-//      176 -> 184,
-//      184 -> 192,
-//      192 -> 200,
-//      200 -> 208,
-//      208 -> 216,
-//      216 -> 224,
-//      224 -> 232,
-//      232 -> 240,
-//      240 -> 248,
-//      248 -> 256,
-//      256 -> 0 //Becomes invalid number
-//    }
-//    
-//    //Converts the type to the bound
-//    tyToNr: Type -> Term {
-//      IntT(x)       -> x,
-//      UIntT(x)      -> x,
-//      FixedT(m, n)  -> [m, n],
-//      UFixedT(m, n) -> [m, n],
-//      FBytesT(n)    -> n,
-//      FArrayT(_, n) -> n,
-//      _             -> NaBLFalse() //Invalid
-//    }
-//    
-//    termToTy: (Term * Type) -> Type {
-//      (x, IntTS())         -> IntT(x),
-//      (x, UIntTS())        -> UIntT(x),
-//      ([m, n], FixedTS())  -> FixedT(m, n),
-//      ([m, n], UFixedTS()) -> UFixedT(m, n),
-//      (x, FBytesTS())      -> FBytesT(x),
-//      (x, FArrayTS(aty))   -> FArrayT(x, aty),
-//      (_, _)               -> InvalidType()
-//    }
 
 rules
 
   init ^ (programScope) :=
     new programScope,
     
-    //TODO Substringlit
-    
     //Casting int -> int/uint ; uint -> int/uint
     IntTS()  <cast! IntTS(),
     UIntTS() <cast! IntTS(),
     IntTS()  <cast! UIntTS(),
     UIntTS() <cast! UIntTS(),
-//    NrTS() <cast! IntTS(),
-//    NrTS() <cast! UIntTS(),
-    
     
     //Casting string -> bytes
     DBytesT() <cast! StringT(),
@@ -309,7 +245,7 @@ rules
     DArrayTS() <test! CanIndex().
 
   [[ p@Program(elements) ^ (programScope) ]] :=
-    //More subtyping relations
+    //Add the subtyping relations
     SubNumberLiterals [[ p ^ (programScope) ]],
     SubStringLiterals [[ p ^ (programScope) ]],
     SubByteArrays     [[ p ^ (programScope) ]],
@@ -317,10 +253,9 @@ rules
     SubAddresses      [[ p ^ (programScope) ]],
     SubVar            [[ p ^ (programScope) ]],
     
-    //Add globals
-    Globals [[ p ^ (programScope) ]],
+    Globals           [[ p ^ (programScope) ]],
     
-    InitVisibility [[ p ^ (programScope) ]],
+    InitVisibility    [[ p ^ (programScope) ]],
     
     Map1 [[ elements ^ (programScope) ]],
     

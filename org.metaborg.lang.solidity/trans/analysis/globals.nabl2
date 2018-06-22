@@ -4,6 +4,18 @@ imports
   analysis/types
 
 rules
+  //We define globals in two separate scopes, to avoid name conflicts.
+  GlobalsStart [[ p ^ (programScope) ]] :=
+    new globalsAScope,
+    programScope -P-> globalsAScope,
+    
+    Globals [[ p ^ (globalsAScope) ]],
+    
+    new globalsBScope,
+    programScope -P-> globalsBScope,
+    
+    Globals2 [[ p ^ (globalsBScope) ]].
+
   Globals [[ p ^ (programScope) ]] :=
     //---------------------------------------------------------------------------------------------
     //abi: encode(...), encodePacked(...), encodeWithSelector(selector, ...), encodeWithSignature(signature, ...)
@@ -14,7 +26,17 @@ rules
     Var{"abi" @p} =I=> abiScope,
     tyAbi == NamedT(Var{"abi" @p}, BuiltInT()),
     
-    //TODO Abi functions (with variable argument counts)
+    Function{"encode"} <- abiScope,
+    Function{"encode"} : FunctionT([ VarT() ], VoidT()) !!,
+    
+    Function{"encodePacked"} <- abiScope,
+    Function{"encodePacked"} : FunctionT([ VarT() ], VoidT()) !!,
+    
+    Function{"encodeWithSelector"} <- abiScope,
+    Function{"encodeWithSelector"} : FunctionT([ VarT(), VarT() ], VoidT()) !!,
+    
+    Function{"encodeWithSignature"} <- abiScope,
+    Function{"encodeWithSignature"} : FunctionT([ VarT(), VarT() ], VoidT()) !!,
     
     //---------------------------------------------------------------------------------------------
     //msg: data, gas, sender, value
@@ -62,8 +84,9 @@ rules
     Var{"timestamp"} : UIntT(256) !!,
     
     Function{"blockhash"} <- blockScope,
-    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], FBytesT(32)) !!,
     
+    //---------------------------------------------------------------------------------------------
     //tx: gasprice, origin
     new txScope,
     txScope -P-> programScope,
@@ -81,38 +104,26 @@ rules
     //---------------------------------------------------------------------------------------------
     //Global functions and variables
     Function{"assert"} <- programScope,
-    Function{"assert"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
-    
-    //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
-//    Function{"blockhash"} <- programScope,
-//    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    Function{"assert"} : FunctionT([ BoolT() ], VoidT()) !!,
     
     Function{"gasleft"} <- programScope,
-    Function{"gasleft"} : FunctionT([], [ UIntT(256) ]) !!,
+    Function{"gasleft"} : FunctionT([], UIntT(256)) !!,
     
     Var{"now"} <- programScope,
     Var{"now"} : UIntT(256) !!,
     
-    //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
-//    Function{"require"} <- programScope,
-//    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
-    
     Function{"require"} <- programScope,
-    Function{"require"} : FunctionT([ BoolT(), StringT() ], [ VoidT() ]) !!,
-    
-    //TODO Figure out a way to define 2 functions with the same name in the same nabl rule.
-//    Function{"revert"} <- programScope,
-//    Function{"revert"} : FunctionT([], [ VoidT() ]) !!,
+    Function{"require"} : FunctionT([ BoolT(), StringT() ], VoidT()) !!,
     
     Function{"revert"} <- programScope,
-    Function{"revert"} : FunctionT([ StringT() ], [ VoidT() ]) !!,
+    Function{"revert"} : FunctionT([ StringT() ], VoidT()) !!,
     
     //---------------------------------------------------------------------------------------------
     //Hashing functions
-    //TODO keccak256, sha3, sha256 and ripemd160 accepts tightly-packed arguments, determine type of this
+    //keccak256, sha3, sha256 and ripemd160 accepts tightly-packed arguments, so we accept var
     Function{"keccak256"} <- programScope,
     Function{"keccak256"} : tyHashFun !!,
-    tyHashFun == FunctionT([ VarT() ], [ FBytesT(32) ]),
+    tyHashFun == FunctionT([ VarT() ], FBytesT(32)),
     
     Function{"sha3"} <- programScope,
     Function{"sha3"} : tyHashFun !!,
@@ -125,34 +136,18 @@ rules
     
     Function{"selfdestruct"} <- programScope,
     Function{"selfdestruct"} : tyDestruct !!,
-    tyDestruct == FunctionT([ AddressT() ], [ VoidT() ]),
+    tyDestruct == FunctionT([ AddressT() ], VoidT()),
     
     Function{"suicide"} <- programScope,
     Function{"suicide"} : tyDestruct !!.
     
-//    Globals2 [[ p ^ (programScope) ]].
-//    
-//    //TODO erecover, addmod, mulmod
-//    
-//    //TODO address balance, send, transfer
+  //Define additional functions in a separate scope. If function overloading is fixed, these will work.
   Globals2 [[ p ^ (programScope) ]] :=
-    
     Function{"blockhash"} <- programScope,
-    Function{"blockhash"} : FunctionT([ UIntT(256) ], [ FBytesT(32) ]) !!,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], FBytesT(32)) !!,
     
     Function{"require"} <- programScope,
-    Function{"require"} : FunctionT([ BoolT() ], [ VoidT() ]) !!,
+    Function{"require"} : FunctionT([ BoolT() ], VoidT()) !!,
     
     Function{"revert"} <- programScope,
-    Function{"revert"} : FunctionT([], [ VoidT() ]) !!.
-    
-  GlobalsStart [[ p ^ (programScope) ]] :=
-    new globalsAScope,
-    programScope -P-> globalsAScope,
-    
-    Globals [[ p ^ (globalsAScope) ]],
-    
-    new globalsBScope,
-    programScope -P-> globalsBScope,
-    
-    Globals2 [[ p ^ (globalsBScope) ]].
+    Function{"revert"} : FunctionT([], VoidT()) !!.
