@@ -129,6 +129,23 @@ rules
     Var{name}.origin := Local(),
     Var{name} : tyVarVar !,
     false | error $[Assignment is required when using var!].
+  
+  //-----------------------------------------------------------------------------------------------
+  //Tuples
+  [[ DeclareTupleVarAssign(stype, names, exp) ^ (s) ]] :=
+    [[ stype ^ (s) : tyVarDecl ]],
+    [[ exp   ^ (s) : tyVarInit ]],
+    
+    tyVarInit == TupleT(tupleTypes),
+    
+    Map1T(DeclareTuple) [[ names ^ (s) : tupleTypes ]].
+  
+  DeclareTuple [[ TupleName(Some(name)) ^ (s) : tupleTy ]] :=
+    Var{name} <- s,
+    Var{name}.origin := Local(),
+    Var{name} : tupleTy !.
+    
+  DeclareTuple [[ TupleName(None()) ^ (s) : tupleTy ]].
 
   //-----------------------------------------------------------------------------------------------
   //Expression statements

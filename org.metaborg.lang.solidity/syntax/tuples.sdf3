@@ -1,0 +1,7 @@
+module tuples
+
+imports
+  Common
+
+context-free syntax
+  TupleName.TupleName = <<ID?>>

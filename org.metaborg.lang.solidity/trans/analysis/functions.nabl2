@@ -2,6 +2,7 @@ module analysis/functions
 
 imports
   signatures/-
+  analysis/types
   analysis/vars
 
 signature
@@ -12,15 +13,37 @@ rules
   [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
     //Declare
     Function{name} <- s,
-    Function{name} : FunctionT(paramTys, retTys) !,
+    Function{name} : funTy !,
+    funTy == FunctionT(paramTys, retTy),
+    
+    VarT() <sub! funTy,
     
     //Scope
     new funScope,
     funScope -P-> s,
     
     //Resolve parameters and body
-    Map1T [[ params    ^ (funScope) : paramTys ]],
-    Map1T [[ retParams ^ (funScope) : retTys   ]],
+    Map1T [[ params    ^ (funScope) : paramTys           ]],
+    [[ retParams ^ (funScope) : retTy ]],
+    
+    //Check modifiers
+    Map1  [[ mods ^ (funScope) ]].
+  
+  [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
+    //Declare
+    Function{name} <- s,
+    Function{name} : funTy !,
+    funTy == FunctionT(paramTys, retTy),
+    
+    VarT() <sub! funTy,
+    
+    //Scope
+    new funScope,
+    funScope -P-> s,
+    
+    //Resolve parameters and body
+    Map1T [[ params    ^ (funScope) : paramTys           ]],
+    [[ retParams ^ (funScope) : retTy ]],
     
     //Check modifiers
     Map1  [[ mods ^ (funScope) ]].
@@ -28,7 +51,10 @@ rules
   [[ Function(name, params, mods, retParams, body) ^ (s) ]] :=
     //Declare
     Function{name} <- s,
-    Function{name} : FunctionT(paramTys, retTys) !,
+    Function{name} : funTy !,
+    funTy == FunctionT(paramTys, retTy),
+    
+    VarT() <sub! funTy,
     
     //Scope
     new funScope,
@@ -37,8 +63,8 @@ rules
     //Check duplicate variables
     distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    Map1T [[ params    ^ (funScope) : paramTys ]],
-    Map1T [[ retParams ^ (funScope) : retTys   ]],
+    Map1T [[ params    ^ (funScope) : paramTys           ]],
+    [[ retParams ^ (funScope) : retTy ]],
     [[ body ^ (funScope) ]],
     
     //Check modifiers
@@ -48,7 +74,10 @@ rules
   [[ Constructor(contractName, params, mod, body) ^ (s) ]] :=
     //Declare
     Function{contractName} <- s,
-    Function{contractName} : FunctionT(paramTys, [retTy]) !,
+    Function{contractName} : funTy !,
+    funTy == FunctionT(paramTys, retTy),
+    
+    VarT() <sub! funTy,
     
     //Scope
     new funScope,
@@ -76,7 +105,10 @@ rules
   [[ ConstructorWithSuper(contractName, params, mod, superName, superCall, body) ^ (s) ]] :=
     //Declare
     Function{contractName} <- s,
-    Function{contractName} : FunctionT(paramTys, [retTy]) !,
+    Function{contractName} : funTy !,
+    funTy == FunctionT(paramTys, retTy),
+    
+    VarT() <sub! funTy,
     
     //Scope
     new funScope,

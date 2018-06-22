@@ -299,12 +299,11 @@ rules
     Function{name} |-> fun | error $[Unable to find function [name]],
     fun : tyCallFun | error $[You can only call functions (not [tyCallFun])],
     
-    tyCallFun == FunctionT(paramTys, retTys) | error $[You can only call functions (not [tyCallFun])],
+    tyCallFun == FunctionT(paramTys, retTy) | error $[You can only call functions (not [tyCallFun])],
     
     Map1T [[ args ^ (s) : argTys ]],
     argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the parameter types [paramTys]],
-    [tyCall] == retTys.
-    //TODO Tuple types
+    tyCall == retTy.
   
   [[ Call(FunctionCall(Member(exp, name), args)) ^ (s) : tyCall ]] :=
     [[ exp ^ (s) : tyCallExp ]],
@@ -322,12 +321,11 @@ rules
     Function{name} |-> fun | error $[Cannot find function with name [name] in [occ]] @name,
     fun : tyCallFun | error $[You can only call functions (not [tyCallFun])],
     
-    tyCallFun == FunctionT(paramTys, retTys) | error $[You can only call functions (not [tyCallFun])],
+    tyCallFun == FunctionT(paramTys, retTy) | error $[You can only call functions (not [tyCallFun])],
     
     Map1T [[ args ^ (s) : argTys ]],
     argTys <sub? paramTys | error $[The types of the arguments [argTys] do not match the parameter types [paramTys]],
-    [tyCall] == retTys.
-    //TODO Tuple types
+    tyCall == retTys.
   
   //TODO Call arbitrary expressions
   
@@ -351,3 +349,25 @@ rules
     tyAssign == tyAssignVar.
   
   //TODO AssignArray
+  [[ AssignArray(expArray, expIndex, expValue) ^ (s) : tyAssignArray ]] :=
+    [[ expArray ^ (s) : tyArray ]],
+    [[ expIndex ^ (s) : tyIndex ]],
+    [[ expValue ^ (s) : tyValue ]],
+    
+    tyArrayTS is simplifyType of tyArray,
+    tyArrayTS <test? CanIndex()         | error $[You can only use index access on arrays (not [tyArray] ],
+    
+    tyArrayBase is arrayType of tyArray | error $[You can only access elements of arrays (not [tyArray])],
+    tyValue <sub? tyArrayBase           | error $[Cannot assign expression of type [tyValue] to an array element of type [tyArrayBase]] @exp.
+
+  [[ AssignTuple(names, exp) ^ (s) : tyAssignTuple ]] :=
+    Map1T(AssignTuple) [[ names ^ (s) : tyAssignTupleNames ]],
+    [[ exp ^ (s) : tyAssignExp ]],
+    TupleT(tyAssignTupleNames) <sub? tyAssignExp | error $[Cannot assign expression of type [tyAssignExp] to a variable of type [tyAssignTupleNames]] @exp.
+  
+  AssignTuple [[ TupleName(Some(name)) ^ (s) : tupleTy ]] :=
+    Var{name} -> s,
+    Var{name} |-> d | error $[Cannot find variable with the name [name]],
+    d : tupleTy.
+    
+  AssignTuple [[ TupleName(None()) ^ (s) : VarT() ]].

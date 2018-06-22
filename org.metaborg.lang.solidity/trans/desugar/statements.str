@@ -4,6 +4,7 @@ imports
   
   signatures/expressions-sig
   signatures/statements-sig
+  signatures/tuples-sig
   signatures/vars-sig
   desugar/expressions
 
@@ -40,6 +41,12 @@ rules
   convert-type-path: VarRef(name)    -> TypeRef(name)
   convert-type-path: Member(a, name) -> TypeRef(<convert-type-path> a, name)
   //TODO emit of imported event? E.g. myContract.myEvent -> EventRef(ContractRef(myContract), myEvent)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Tuple declarations
+  
+  //Desugar tuple away if it only contains a single item.
+  desugar: DeclareTupleVarAssign(ty, [TupleName(Some(name))], exp) -> DeclareVarAssign(ty, NoModifier(), name, exp)
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST

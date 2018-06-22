@@ -1,6 +1,7 @@
 module analysis/types
 
 imports
+  desugar/functions
   signatures/types-sig
   signatures/vars-sig
 
@@ -29,11 +30,14 @@ signature
     DArrayT      : Type -> Type
     
     //Function types
-    FunctionT    : list(Type) * list(Type) -> Type // add VisibilityType
+    FunctionT    : list(Type) * Type -> Type // add VisibilityType
     FunctionModT : list(Type) -> Type
     
     //Mapping types
     MappingT     : Type * Type -> Type
+    
+    //Tuples
+    TupleT       : list(Type) -> Type
 
     //User defined types
     EnumT        : Type
@@ -59,7 +63,8 @@ signature
     FBytesTS     : Type
     FixedTS      : Type
     UFixedTS     : Type
-    FArrayTS     : Type -> Type
+    FArrayTS     : Type
+    DArrayTS     : Type
     NamedTS      : Type
     
     //More general types for constants
@@ -68,13 +73,14 @@ signature
     StringLitT   : INT -> Type
     
     InvalidType  : Type
-  
+
   namespaces
     //Something that can be referenced as a type.
     //TODO Add origin-like field to distinguish between enums, events, etc.?
     TypeReferrable { origin : occurrence }
 
 rules
+  //-----------------------------------------------------------------------------------------------
   //Simple types
   [[ BooleanType() ^ (s) : BoolT()    ]].
   [[ AddressType() ^ (s) : AddressT() ]].
@@ -109,11 +115,22 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Functions
-  [[ FunctionType(args, vis, stateMut, rets) ^ (s) : ty ]] :=
+  
+  //TODO Store  visibility and mutability
+  [[ FunctionType(args, vis, stateMut, retParam) ^ (s) : ty ]] :=
+    [[ retParam ^ (s) : retTy ]],
     Map1T [[ args ^ (s) : argTys ]],
-    Map1T [[ rets ^ (s) : retTys ]],
-    ty == FunctionT(argTys, retTys).
-    //TODO Store  visibility and mutability
+    ty == FunctionT(argTys, retParam),
+    
+    [[ vis      ^ (s) ]],
+    [[ stateMut ^ (s) ]].
+  
+  //Void type is added to fix return type problems
+  [[ VoidType() ^ (s) : VoidT()    ]].
+  
+  //Tuple type is used to wrap return types
+  [[ TupleType(params) ^ (s) : TupleT(tys) ]] :=
+    Map1T [[ params ^ (s) : tys ]].
   
   //-----------------------------------------------------------------------------------------------
   //Mappings

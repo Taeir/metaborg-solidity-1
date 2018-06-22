@@ -6,6 +6,7 @@ imports
   signatures/libraries-sig
   signatures/statements-sig
   signatures/modifiers-sig
+  signatures/types-sig
   
   desugar/solidity
 
@@ -19,6 +20,12 @@ signature
     //Add function name to return statements
     VoidReturn      : String       -> ReturnStatement
     ReturnStatement : String * Exp -> ReturnStatement
+    
+    //Add void type for functions
+    VoidType  : Type
+    
+    //Add tuple type as return type for functions
+    TupleType : List(Type) -> Type
 
 strategies
   name-constructors = topdown(try(name-constructors1))
@@ -77,6 +84,13 @@ rules
   get-visibility-modifiers: [v@Visibility(_) | tail]      -> [v | <get-visibility-modifiers> tail]
   get-visibility-modifiers: [_               | tail]      -> <get-visibility-modifiers> tail
   
+  /**
+   * Converts an array of return types into a single return type (Void, type or tuple).
+   */
+  convert-return-type: []     -> VoidType()
+  convert-return-type: [type] -> type
+  convert-return-type: types  -> TupleType(types)
+
   //-----------------------------------------------------------------------------------------------
   /**
    * Adds the name of the contract/library to all the constructors in it.
@@ -106,7 +120,10 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Unpack returns for abstract functions
   normalize-fun: AbstractFunction(name, params, mods, Some(Returns(retParams))) ->
-                   AbstractFunction(name, params, mods, retParams)
+                   AbstractFunction(name, params, mods', retParams')
+    where
+    mods' := <fix-function-modifiers> mods;
+    retParams' := <convert-return-type> retParams
   normalize-fun: AbstractFunction(name, params, mods, None()) ->
                    AbstractFunction(name, params, mods', VoidType())
     where
@@ -119,15 +136,16 @@ rules
    * - Fallback is turned into a function named "*fallback"
    * - Fixes super constructor modifiers
    */
-  normalize-fun: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods', retParams, body')
+  normalize-fun: Function(name, params, mods, Returns(retParams), body) -> Function(name, params, mods', retParams', body')
+    where
+    body' := Block(<innermost(add-function-name-to-return(|name))> body);
+    mods' := <fix-function-modifiers> mods;
+    retParams' := <convert-return-type> retParams
+  normalize-fun: VoidFunction(name, params, mods, body) -> Function(name, params, mods', VoidType(), body')
     where
     body' := Block(<innermost(add-function-name-to-return(|name))> body);
     mods' := <fix-function-modifiers> mods
-  normalize-fun: VoidFunction(name, params, mods, body) -> Function(name, params, mods', [], body')
-    where
-    body' := Block(<innermost(add-function-name-to-return(|name))> body);
-    mods' := <fix-function-modifiers> mods
-  normalize-fun: FallBackFunction(mods, body) -> Function(name, [], mods', [], body')
+  normalize-fun: FallBackFunction(mods, body) -> Function(name, [], mods', VoidType(), body')
     where
     name := "*fallback";
     body' := Block(<innermost(add-function-name-to-return(|name))> body);
@@ -156,16 +174,19 @@ rules
 
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: Function(n, [], m, [], Block(s))         -> FallBackFunction(m, s)            where <?"*fallback"> n
-  resugar: Function(n, p, m, [], Block(s))          -> VoidFunction(n, p, m, s)          where not(<?"*fallback"> n)
-  resugar: Function(n, p, m, [], Block(s))          -> Function(n, p, m, None(), s)      where not(<?"*fallback"> n)
-  resugar: Function(n, p, m, rp@[_ | _], Block(s))  -> Function(n, p, m, Returns(rp), s) where not(<?"*fallback"> n)
-//  resugar: Function(n, p, m, rp@[_ | _], b, re)     -> Function(n, p, m, Returns(rp), b, ReturnStatement(re))
-  resugar: AbstractFunction(n, p, m, [])            -> AbstractFunction(n, p, m, None())
-  resugar: AbstractFunction(n, p, m, rp@[_ | _])    -> AbstractFunction(n, p, m, Some(Returns(rp)))
+  resugar: Function(n, [], m, VoidType(), Block(s))        -> FallBackFunction(m, s)            where <?"*fallback"> n
+  resugar: Function(n, p, m, VoidType(), Block(s))         -> VoidFunction(n, p, m, s)          where not(<?"*fallback"> n)
+  resugar: Function(n, p, m, t, Block(s))                  -> Function(n, p, m, Returns(<restore-return-type> t), s) where not(<?"*fallback"> n)
+  resugar: AbstractFunction(n, p, m, VoidType())           -> AbstractFunction(n, p, m, None())
+  resugar: AbstractFunction(n, p, m, t)                    -> AbstractFunction(n, p, m, Some(Returns(<restore-return-type> t)))
   resugar: Constructor(_, p, m, Block(s))                  -> Constructor(p, m, s)
   resugar: ConstructorWithSuper(_, p, m, sn, sc, Block(s)) -> ConstructorWithSuper(p, m, ModSuperCall(sn, sc), None(), s)
   
   //Restore return statements
   resugar: ReturnStatement(_, e) -> ReturnStatement(e)
   resugar: VoidReturn(_)         -> VoidReturn()
+  
+  //Restore the return type
+  restore-return-type: VoidType()       -> []
+  restore-return-type: type             -> [type]
+  restore-return-type: TupleType(types) -> types

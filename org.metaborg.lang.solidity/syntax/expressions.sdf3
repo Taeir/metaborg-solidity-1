@@ -135,7 +135,8 @@ context-free syntax
   //-----------------------------------------------------------------
   //Tuples
   //TODO TupleExp
-//  Exp.TupleExp = <()>
+  //  Exp.TupleExpEmpty = <()>
+  //  Exp.TupleExp = <(<TupleName>, <{TupleName ", "}+>)>
 
 context-free priorities
   {//left:

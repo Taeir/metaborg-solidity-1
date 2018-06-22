@@ -85,44 +85,74 @@ signature
     
   relations
     reflexive, anti-symmetric, transitive sub  : Type * Type {
-      [+sub]
+      [+sub],
+      FArrayT(+sub),
+      DArrayT(+sub),
+      TupleT(+sub)
     }
     
     reflexive, anti-symmetric, transitive vissub : VisibilityType * VisibilityType {
       [+vissub]
     }
     
-    anti-symmetric, anti-transitive       test : Type * TypeTest
+    anti-symmetric, anti-transitive test : Type * TypeTest
     
-    /* ------------------------------> */ cast : Type * Type
+    reflexive cast : Type * Type
   
   functions
   
+    /**
+     * Returns NaBLFalse if the given term is zero.
+     * Returns NaBLTrue otherwise (term is non-zero).
+     */
     notZeroConst: Term -> NaBLBool {
       IntLiteral("0", _, _) -> NaBLFalse(),
       IntLiteral(i,   _, _) -> NaBLTrue(),
       exp                   -> NaBLTrue()
     }
     
+    /**
+     * Returns NaBLFalse if the given term is negative.
+     * Returns NaBLTrue otherwise (term is positive).
+     */
     notNegativeConst: Term -> NaBLBool {
       IntLiteral(i, _, None()) -> NaBLFalse(),
       IntLiteral(i, _, _)      -> NaBLTrue(),
       exp                      -> NaBLTrue()
     }
     
+    /**
+     * Throws away type specicality information, e.g. int8 -> int and bytes32 -> bytes.
+     */
     simplifyType: Type -> Type {
       IntT(i)            -> IntTS(),
       UIntT(i)           -> UIntTS(),
+      NrT(i, 0)          -> IntTS(),
       NrT(i, u)          -> UIntTS(), //Simplify NrT to UInt, as UInt can be used in more places
       FractT(_, _, _, _) -> UFixedTS(),
       FBytesT(i)         -> FBytesTS(),
       FixedT(m, n)       -> FixedTS(),
       UFixedT(m, n)      -> UFixedTS(),
       NamedT(o, st)      -> NamedTS(),
+      
+      FArrayT(_, _)      -> FArrayTS(),
+      DArrayT(_)         -> DArrayTS(),
       other              -> other
     }
     
-    //Convert type to an unsigned type, or returns the original type
+    /**
+     * Determines the type of the elements in an array.
+     */
+    arrayType: Type -> Type {
+      FBytesT(_)    -> NrT(8, 8),
+      DBytesT()     -> NrT(8, 8),
+      FArrayT(t, _) -> t,
+      DArrayT(t)    -> t
+    }
+    
+    /*
+     * Convert type to an unsigned type, or returns the original type.
+     */
     toUnsigned: Type -> Type {
       UIntT(i)           -> UIntT(i),      //Already an UInt
       NrT(i, 0)          -> NrT(i, 0),     //Not valid as UInt
@@ -131,7 +161,9 @@ signature
       ty                 -> ty             //Invalid
     }
     
-    //Converts type to a signed type, or returns the original type
+    /**
+     * Converts type to a signed type, or returns the original type.
+     */
     toSigned: Type -> Type {
       IntT(i)            -> IntT(i),
       NrT(i, _)          -> IntT(i),
@@ -260,12 +292,21 @@ rules
     FBytesTS() <test! CanCompareOrdered(),
     FBytesTS() <test! CanIndex(),
     
+    //DBytes: comp1: != index: []
+    DBytesT() <test! IsType(),
+    DBytesT() <test! CanCompare(),
+    DBytesT() <test! CanIndex(),
+    
     //Casting string -> bytes
     StringT() <test! IsType(),
     
-    NamedTS() <test! IsType()
-    .
-
+    NamedTS() <test! IsType(),
+    
+    //Arrays can be indexed
+    FArrayTS() <test! IsType(),
+    FArrayTS() <test! CanIndex(),
+    DArrayTS() <test! IsType(),
+    DArrayTS() <test! CanIndex().
 
   [[ p@Program(elements) ^ (programScope) ]] :=
     //More subtyping relations
