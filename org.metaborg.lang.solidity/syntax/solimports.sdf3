@@ -18,9 +18,6 @@ context-free start-symbols
   Import
 
 context-free syntax
-  //import (x from)? file
-  //x = symbol (as ID)?
-  //x = {x, x*}
   Import.ImportFromFile  = <import <ImportFile>;>
   Import.ImportItemFrom  = <import <ImportItem> from <ImportFile>;>
   

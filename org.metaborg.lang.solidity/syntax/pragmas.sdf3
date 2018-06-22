@@ -18,7 +18,6 @@ lexical syntax
   //Define as keyword
   KEYWORD = PRAGMAKEYWORD
   PRAGMAKEYWORD = "pragma"
-//  ID = PRAGMAKEYWORD {reject}
 
 context-free syntax
   Pragma.Pragma = <pragma <PragmaName> <PragmaValue>;>

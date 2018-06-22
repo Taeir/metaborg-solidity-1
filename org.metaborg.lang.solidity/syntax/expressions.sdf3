@@ -75,10 +75,6 @@ context-free syntax
   AlsoExp       = Exp
   
   //---------------------------------------------------------------------------
-  //Member access
-//  Exp.Member = < <Exp>.<ID> > {left}
-  
-  //---------------------------------------------------------------------------
   //Function calls
   Exp.Call   = FunctionCall
   FunctionCall.FunctionCall = < <Exp>(<{AlsoExp ", "}*>) > {left}
@@ -131,12 +127,6 @@ context-free syntax
   LVal.RShiftAssign = [[VarRef] >>= [Exp]] {right}
   
   Exp.LValAssign    = LVal
-  
-  //-----------------------------------------------------------------
-  //Tuples
-  //TODO TupleExp
-  //  Exp.TupleExpEmpty = <()>
-  //  Exp.TupleExp = <(<TupleName>, <{TupleName ", "}+>)>
 
 context-free priorities
   {//left:
@@ -163,5 +153,4 @@ context-free priorities
   {non-assoc: Exp.Or} >
   {right: Exp.Ternary} >
   {Exp.Assign Exp.AssignArray Exp.AssignTuple Exp.LValAssign},
-  //TODO Solve problems between casts and calls by only making the distinction in the desugaring/nabl?
   {right: Exp.Cast} > {left: FunctionCall.FunctionCall}

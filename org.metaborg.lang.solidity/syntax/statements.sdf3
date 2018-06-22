@@ -27,7 +27,6 @@ lexical syntax
   STMTKEYWORD = "emit"
   STMTKEYWORD = "return"
   
-//  ID = STMTKEYWORD {reject}
 context-free start-symbols
   Statement
 
@@ -41,7 +40,6 @@ context-free syntax
   Statement.If       = < if (<Exp>) <Statement> <Else>>
   Else.None          = <>
   Else.Else          = < else <Statement> >
-//  Statement.IfElse  = < if (<Exp>) <Statement> else <Statement> >
 
   Statement.While    = < while (<Exp>) <Statement> >
   Statement.DoWhile  = < do <Statement> while (<Exp>); >
@@ -86,11 +84,6 @@ context-free syntax
   //-----------------------------------------------------------------------------------------------
   //Inline assembly
   Statement            = AssemblyStatement
-
-  //-----------------------------------------------------------------------------------------------
-  //Added Print statement for usefullness
-  ExtraStatement.Print = < print(<Exp>); >
-  Statement = ExtraStatement
 
 context-free priorities
   UnderscoreStatement.Underscore > ExpStatement.ExpStmt
