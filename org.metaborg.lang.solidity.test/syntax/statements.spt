@@ -67,8 +67,8 @@ test S: Throw    [[ throw;    ]]
 test S: Emit     [[ emit k(); ]] parse to Emit(FunctionCall(_,[]))
 
 //Variable declaration
-test S: variable declaration [[ int x; ]] parse to DeclareVar(IntType(_), "x")
-test S: variable declaration with assignment [[ int x = 10; ]] parse to DeclareVarAssign(IntType(_), "x", _)
+test S: variable declaration [[ int x; ]] parse to DeclareVar(IntType(_), NoModifier(), "x")
+test S: variable declaration with assignment [[ int x = 10; ]] parse to DeclareVarAssign(IntType(_), NoModifier(), "x", _)
 
 test F: VarDec: no semicolon  [[ int x     ]] parse fails
 test F: VarDec: no assignment [[ int x = ; ]] parse fails
