@@ -36,9 +36,15 @@ rules
   fix-constructor-modifiers: (mod1, mod2) -> mod
     where
     (
-      (<?None()> mod1; mod := mod2) <+ //First modifier is absent
-      (<?None()> mod2; mod := mod1) <+ //Second modifier is absent
-      (mod := InvalidMod("You can only specify one modifier"))
+      (<?None()> mod1; tmod := mod2) <+ //First modifier is absent
+      (<?None()> mod2; tmod := mod1) <+ //Second modifier is absent
+      (tmod := InvalidMod("You can only specify one modifier"))
+    );
+    //Unpack the Some
+    (
+      (<?Some(mod)> tmod) <+
+      (<?None()> tmod; mod := NoModifier()) <+
+      (mod := tmod)
     )
   
   /**
@@ -94,7 +100,7 @@ rules
                                             ConstructorWithSuper(contractName, params, mod1, modCon, mod2, body)
   add-name-to-constructor(|contractName): x -> x
     where
-    not(<?Constructor(_, _, _)> x); not(<?ConstructorWithSuper(_, _, _, _, _)> x)
+    not(<?Constructor(_, _, _)> x); not(<?ConstructorWithSuper(_, _, _, _, _, _)> x)
   
   
   //-----------------------------------------------------------------------------------------------
@@ -102,7 +108,9 @@ rules
   normalize-fun: AbstractFunction(name, params, mods, Some(Returns(retParams))) ->
                    AbstractFunction(name, params, mods, retParams)
   normalize-fun: AbstractFunction(name, params, mods, None()) ->
-                   AbstractFunction(name, params, mods, [])
+                   AbstractFunction(name, params, mods', VoidType())
+    where
+    mods' := <fix-function-modifiers> mods
   
   /**
    * Normalize functions
@@ -126,7 +134,9 @@ rules
     mods' := <fix-function-modifiers> mods
   
   //For constuctors, only do the block / modifier fix. Return statements are allowed in the constructor.
-  normalize-fun: Constructor(name, params, mod, body) -> Constructor(name, params, mod, Block(body))
+  normalize-fun: Constructor(name, params, mod, body) -> Constructor(name, params, mod', Block(body))
+    where
+    <?Some(mod')> mod <+ mod' := NoModifier()
   normalize-fun: ConstructorWithSuper(name, params, mod1, ModSuperCall(superName, superCall), mod2, body) ->
                    ConstructorWithSuper(name, params, mod, superName, superCall, Block(body))
     where

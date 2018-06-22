@@ -34,8 +34,6 @@ lexical syntax
   MODKEYWORD = "payable"
   MODKEYWORD = "memory"
   MODKEYWORD = "storage"
-  ID = MODKEYWORD {reject}
-  
   
   ID = "internal" {reject}
   ID = "external" {reject}
@@ -87,5 +85,3 @@ context-free syntax
   
   ModLocation = ModLocationMemory
   ModLocation = ModLocationStorage
-  
-  //TODO: Write bit about how modifiers are difficult in spoofax

@@ -18,7 +18,7 @@ context-free syntax
   StateVariable               = ConstantStateVariable
   
   //Constant state variable
-  ConstantStateVariable.ConstantStateVariable = <<Type> <ModifiersStateVarVis> <Constant> <ModifiersStateVarVis> <ID> <StateVarAssignment>;>
+  ConstantStateVariable.ConstantStateVariable = <<Type> <ModifiersStateVarVis> constant <ModifiersStateVarVis> <ID> <StateVarAssignment>;>
   
   //It can be initialized with an expression
   StateVarAssignment.None               = <>
