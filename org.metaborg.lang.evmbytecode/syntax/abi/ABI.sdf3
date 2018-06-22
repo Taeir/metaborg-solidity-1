@@ -2,8 +2,6 @@ module abi/ABI
 
 imports abi/ABILayout
 
-//[{"constant":false,"inputs":[],"name":"simple","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]
-
 context-free start-symbols
   ABIStart
 

@@ -3,7 +3,6 @@ module ebc/ebcshared/main
 imports
   ebc/ebcshared/analysis
   ebc/ebcshared/codegen
-  ebc/ebcshared/desugar
   ebc/ebcshared/static-semantics
   ebc/ebcshared/ebcfunctions
   ebc/ebcshared/evminstructions

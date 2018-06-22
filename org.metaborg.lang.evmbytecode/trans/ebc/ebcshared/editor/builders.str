@@ -6,14 +6,6 @@ imports
   ebc/ebcshared/codegen
 
 rules
-//TODO Convert to EBC
-//  translate-class:
-//    (selected, position, ast, path, project-path) -> (filename, result)
-//    with
-//      filename := <guarantee-extension(|"asm.aterm")> path
-//    where
-//      result := <jasmin-file-to-asm-class> ast
-
   /**
    * Transform EBC AST to Hex and show the result.
    *

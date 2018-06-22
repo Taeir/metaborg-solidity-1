@@ -3,8 +3,6 @@ module evmbytecode
 imports
   ebc/Layout
   ebc/EBC
-  
-  //TODO Move to separate project?
   abi/ABI
 
 context-free start-symbols
