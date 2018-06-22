@@ -31,8 +31,8 @@ signature
 	//++ and --
 	RetInc : UnOp
 	RetDec : UnOp
-	IncRet : UnOp //TODO Desugar?
-	DecRet : UnOp //TODO Desugar?
+	IncRet : UnOp
+	DecRet : UnOp
 	
 	//Comparison
 	Lt     : BinOp
@@ -52,12 +52,6 @@ signature
 	
 	//Create and delete
 	Delete : UnOp
-	
-	//?
-	Array : UnOp
-	Object : UnOp
-	
-	
 	
     //Sort rules
 	BinExp : BinOp * Exp * Exp     -> Exp

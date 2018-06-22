@@ -14,8 +14,8 @@ rules
   extract-vardecls: s -> Block(<extract-vardecls2> s)
   
   //Keep variable declarations
-  extract-vardecls2: s@DeclareVar(_, _)        -> [s]
-  extract-vardecls2: DeclareVarAssign(t, n, _) -> [DeclareVar(t, n)]
+  extract-vardecls2: s@DeclareVar(_, _, _)        -> [s]
+  extract-vardecls2: DeclareVarAssign(t, m, n, _) -> [DeclareVar(t, m, n)]
   
   //TODO Control flow? Break from block?
   //Check in other constructs
@@ -29,8 +29,8 @@ rules
   //Remove everything else
   extract-vardecls2: s -> []
     where
-    not(<?DeclareVar(_, _)> s);
-    not(<?DeclareVarAssign(_, _, _)> s);
+    not(<?DeclareVar(_, _, _)> s);
+    not(<?DeclareVarAssign(_, _, _, _)> s);
     not(<?Block(_)> s);
     not(<?If(_, _, _)> s);
     not(<?For(_, _, _, _)> s);
@@ -57,13 +57,6 @@ rules
       (s' := [Block(x') | <remove-empty-blocks> tail]))) <+
     //else, retain head and recurse on tail
     (                   s' := [head | <remove-empty-blocks> tail])
-  
-  //---------------------------------------------------------------------------
-  //Blocks
-  
-  //Remove all empty blocks
-//TODO Can be applied an infinite number of times, so should be done only once, after the complete optimization
-//  optimize: Block(ss) -> Block(<remove-empty-blocks> ss)
 
   //---------------------------------------------------------------------------
   //For loops

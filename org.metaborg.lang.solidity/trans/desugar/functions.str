@@ -167,11 +167,6 @@ rules
   add-function-name-to-return(|funName): ReturnStatement(e) -> ReturnStatement(funName, e)
   add-function-name-to-return(|funName): VoidReturn()       -> VoidReturn(funName)
 
-
-  //Unpack returns and returnstatement
-//  desugar: Function(name, params, mods, Returns(retParams), body, ReturnStatement(retExp)) ->
-//             Function(name, params, mods, retParams, body', retExp)
-
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
   resugar: Function(n, [], m, VoidType(), Block(s))        -> FallBackFunction(m, s)            where <?"*fallback"> n

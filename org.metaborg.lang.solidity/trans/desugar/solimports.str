@@ -12,11 +12,6 @@ signature
     DImportItem
   
   constructors
-    //DImport.Import   = <<DImportItem*> <ImportFile>>
-    
-    //DImportItem.Star = <* as <ImportName>>
-    //DImportItem.Item = <<ImportName> as <ImportName>>
-    
     Import     : List(DImportItem) * ImportFile -> DImport
     
     ImportStar : ImportName -> DImportItem

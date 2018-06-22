@@ -35,12 +35,10 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Emit
-  //desugar: Emit(FunctionCall(VarRef(name), args)) -> Emit(name, args)
   desugar: Emit(FunctionCall(ref, args)) -> Emit(<convert-type-path> ref, args)
   
   convert-type-path: VarRef(name)    -> TypeRef(name)
   convert-type-path: Member(a, name) -> TypeRef(<convert-type-path> a, name)
-  //TODO emit of imported event? E.g. myContract.myEvent -> EventRef(ContractRef(myContract), myEvent)
   
   //-----------------------------------------------------------------------------------------------
   //Tuple declarations

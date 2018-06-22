@@ -11,8 +11,6 @@ signature
 
 
 rules
-  //TODO Smarter strategy to be faster (first desugar types (only once on each term), then do the rest (innermost))
-
   //Default values
   desugar: IntType(None())    -> IntType(256)
   desugar: UIntType(None())   -> UIntType(256)
