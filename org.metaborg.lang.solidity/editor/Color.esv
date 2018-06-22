@@ -1,0 +1,26 @@
+module Color
+
+imports
+  libspoofax/color/colors
+  libspoofax/color/default
+
+colorer
+  //Fix int8-int256 and fixed16x20 coloring.
+  Mult8    : 127 0 85 bold
+  ZeroTo80 : 127 0 85 bold
+  
+  //Visibility modifiers: blue
+  Public   : 0 0 128 bold
+  Private  : 0 0 128 bold
+  Internal : 0 0 128 bold
+  External : 0 0 128 bold
+  
+  //State mutability modifiers: purple
+  Pure     : 127 0 85 bold
+  Constant : 127 0 85 bold
+  View     : 127 0 85 bold
+  Payable  : 127 0 85 bold
+  
+  //Location modifiers: orange/brown
+  Storage  : 200 100 0 bold
+  Memory   : 200 100 0 bold
