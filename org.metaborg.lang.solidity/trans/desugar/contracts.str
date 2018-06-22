@@ -2,6 +2,28 @@ module desugar/contracts
 
 imports
   signatures/contracts-sig
+  signatures/expressions-sig
+
+signature
+  constructors
+    ContractInherits      : String * String * List(Exp) * List(ContractContent) -> Contract
+    ContractMultiInherits : String * List(String) * List(Inheritance) * List(ContractContent) -> Contract
 
 rules
+  desugar: ContractInherits(name, inherits, content) -> ContractInherits(name, super, supercall, content)
+    where
+    <eq> (<length> inherits, 1);
+    super     := <Hd> <map(inheritance-name)> inherits;
+    supercall := <Hd> <map(inheritance-call)> inherits
   
+  desugar: ContractInherits(name, inherits, content) -> ContractMultiInherits(name, supers, supercalls, content)
+    where
+    <gti> (<length> inherits, 1);
+    supers     := <map(inheritance-name)> inherits;
+    supercalls := <map(inheritance-call)> inherits
+  
+  inheritance-call: InheritanceId(_)        -> []
+  inheritance-call: InheritanceExt(_, exps) -> exps
+  
+  inheritance-name: InheritanceId(name)     -> name
+  inheritance-name: InheritanceExt(name, _) -> name

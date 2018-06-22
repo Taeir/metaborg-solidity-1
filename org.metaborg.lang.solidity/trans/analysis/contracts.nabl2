@@ -44,13 +44,62 @@ rules
     Contract{name}       =I=> contractScope,
     TypeReferrable{name} =I=> contractScope.
   
-  [[ c@ContractInherits(name, inherits, content) ^ (programScope) ]] :=
+  [[ c@ContractInherits(name, supername, supercall, content) ^ (programScope) ]] :=
+    supername != name | error $[Contract cannot extend itself] @supername,
+  
     //Define contract and type, also make it referrable
     Contract{name}       <- programScope,
     TypeReferrable{name} <- programScope,
     Contract{name}       : contractType !,
     TypeReferrable{name} : contractType !,
     contractType == NamedT(Contract{name}, ContractT()),
+    
+    contractType <sub! AddressT(),
+    VarT()       <sub! contractType,
+    
+    new contractScope,
+    contractScope -P-> programScope,
+    
+    //Add super
+    TypeReferrable{supername} -> contractScope,
+    TypeReferrable{supername} |-> parentContract | error $[Cannot find parent [supername]] @supername,
+    parentContract : parentType,
+    contractType <sub! parentType,
+    
+    TypeReferrable{supername} <=I= contractScope,
+    parentContract ?===> parentScope,
+    
+    // Create this in contract scope
+    This{"this" @c} <- contractScope,
+    This{"this" @c} : contractType !,
+    
+    Map1 [[ content ^ (contractScope) ]],
+    
+    // Check contents for duplicate definitions (events and functions can be overloaded)
+    distinct/name D(contractScope)/Var              | error $[Duplicate state variable [NAME]] @NAMES,
+    distinct/name D(contractScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
+    distinct/name D(contractScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
+    distinct/name D(contractScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
+    distinct/name D(contractScope)/TypeReferrable   | warning $[Duplicate type [NAME]] @NAMES,
+    
+    //Check for field shadowing
+    ((D(contractScope)/Var isect/name W(parentScope)/Var) minus W(parentScope)/Var) seteq 0 | error $[State variable [NAME] hides state variable in super contract] @NAMES,
+    //Check for function overriding
+    ((D(contractScope)/Function isect/name W(parentScope)/Function) minus W(parentScope)/Function) seteq 0 | note $[Function [NAME] overrides super function] @NAMES,
+    
+    Contract{name}       =I=> contractScope,
+    TypeReferrable{name} =I=> contractScope.
+
+  [[ c@ContractMultiInherits(name, supers, supercalls, content) ^ (programScope) ]] :=
+    //Define contract and type, also make it referrable
+    Contract{name}       <- programScope,
+    TypeReferrable{name} <- programScope,
+    Contract{name}       : contractType !,
+    TypeReferrable{name} : contractType !,
+    contractType == NamedT(Contract{name}, ContractT()),
+    
+    contractType <sub! AddressT(),
+    VarT()       <sub! contractType,
     
     new contractScope,
     contractScope -P-> programScope,
@@ -71,4 +120,4 @@ rules
     Contract{name}       =I=> contractScope,
     TypeReferrable{name} =I=> contractScope,
     
-    false | note $[Inherits not yet implemented].
+    false | note $[Multiple inheritance is not supported].
