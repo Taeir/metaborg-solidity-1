@@ -327,4 +327,20 @@ contract nonTypes {
   uint264 _uint264;
   fixed8x81 _fixed8x81;
   ufixed7x2 _ufixed7x2;
+  
+  struct int7 {
+    int x;
+  }
+  
+  struct uint264 {
+    int x;
+  }
+  
+  struct fixed8x81 {
+    int x;
+  }
+  
+  struct ufixed7x2 {
+    int x;
+  }
 }

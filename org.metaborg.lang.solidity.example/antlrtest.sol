@@ -225,10 +225,10 @@ contract test15 {
 import * as abc from './abc.sol';
 
 contract test16 {}
-contract c {
-    uint[] a;
+contract ccc {
+    int8[3] a;
     function f() returns (uint, uint) {
-        a = [1,2,3];
+        a = [-1,2,3];
 //        return (a[3], [2,3,4][0]);
     }
 }
@@ -301,9 +301,9 @@ contract c27 {
 contract C28 {
     function f() {
         var (a,b,c) = g();
-        var (d) = 2;
-        var (,e) = 3;
-        var (f,) = 4;
+//        var (d) = 2;
+//        var (,e) = 3;
+//        var (f,) = 4;
         var (x,,) = g();
         var (,y,) = g();
         var (,,) = g();
@@ -400,10 +400,10 @@ contract test45 {
 contract C46 {
     function f() {
         uint a = (1);
-        var (b,) = 1;
+//        var (b,) = 1;
 //        var (c,d) = (1, 2 + a);
 //        var (e,) = (1, 2, b);
-        (a) = 3;
+//        (a) = 3;
     }
 }
 contract test47 {
@@ -521,6 +521,10 @@ contract test58 {
     (a,) = g();
     (,) = g();
 //    () = ();
+  }
+  
+  function g() returns (uint256, uint256) {
+  
   }
 }
 
