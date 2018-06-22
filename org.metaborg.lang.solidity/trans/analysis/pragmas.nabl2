@@ -1,0 +1,5 @@
+module analysis/pragmas
+
+rules
+  //We can ignore pragmas
+  [[ Pragma(name, version) ^ (programScope) ]].

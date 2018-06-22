@@ -5,6 +5,8 @@ imports
   signatures/-
   desugar/numbers
   
+  analysis/types
+  
   analysis/contracts
   analysis/enums
   analysis/events
@@ -16,10 +18,11 @@ imports
   analysis/libraries
   analysis/modifiers
   analysis/modifiertypes
+  analysis/pragmas
+  analysis/solimports
   analysis/statements
   analysis/statevariables
   analysis/structs
-  analysis/types
   analysis/usingfor
   analysis/vars
   
@@ -60,7 +63,6 @@ signature
       (P* I*) | (M J? I*)
 
   namespaces
-    Import { iname : string }
     Referrable
   
   sorts
@@ -280,28 +282,5 @@ rules
     Map1 [[ elements ^ (programScope) ]],
     
     distinct/name D(programScope)/Import         | error $[Two imports with the same name: [NAME]] @NAMES,
-    distinct/name D(programScope)/Contract       | error $[Duplicate contract [NAME]] @NAMES,
-    distinct/name D(programScope)/Interface      | error $[Duplicate interface [NAME]] @NAMES,
-    distinct/name D(programScope)/Library        | error $[Duplicate library [NAME]] @NAMES,
     distinct/name D(programScope)/TypeReferrable | error $[Duplicate type [NAME]] @NAMES.
-
-  //We can ignore pragmas
-  [[ Pragma(name, version) ^ (programScope) ]].
   
-  //We cannot determine anything from a direct file import
-  [[ ImportFromFile(file) ^ (programScope) ]].
-    
-  
-  [[ Import(items, file) ^ (programScope) ]] :=
-    Map1 [[ items ^ (programScope) ]].
-    
-    
-  [[ ImportStar(name) ^ (programScope) ]] :=
-    TypeReferrable{name} <- programScope,
-    Import{name}         <- programScope,
-    Import{name}.iname := "*".
-  
-  [[ ImportItem(name, as) ^ (programScope) ]] :=
-    TypeReferrable{as} <- programScope,
-    Import{as}         <- programScope,
-    Import{as}.iname := name.

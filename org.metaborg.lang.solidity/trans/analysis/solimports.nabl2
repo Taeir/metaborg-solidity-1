@@ -1,0 +1,29 @@
+module analysis/solimports
+
+imports
+  analysis/types
+  
+  desugar/solimports
+  signatures/solimports-sig
+
+signature
+  namespaces
+    Import { iname : string }
+
+rules
+  //We cannot determine anything from a direct file import
+  [[ ImportFromFile(file) ^ (programScope) ]] :=
+    false | warning $[File imports are not supported.].
+    
+  [[ Import(items, file) ^ (programScope) ]] :=
+    Map1 [[ items ^ (programScope) ]].
+  
+  [[ ImportStar(name) ^ (programScope) ]] :=
+    TypeReferrable{name} <- programScope,
+    Import{name}         <- programScope,
+    Import{name}.iname := "*".
+  
+  [[ ImportItem(name, as) ^ (programScope) ]] :=
+    TypeReferrable{as} <- programScope,
+    Import{as}         <- programScope,
+    Import{as}.iname := name.
