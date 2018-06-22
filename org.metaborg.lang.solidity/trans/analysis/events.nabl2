@@ -16,6 +16,8 @@ rules
     TypeReferrable{name} : eventType !,
     eventType == NamedT(Event{name}, EventT(paramTys)),
     
+    VarT()       <sub! eventType,
+    
     //Create scope
     new eventScope,
     eventScope -P-> s,

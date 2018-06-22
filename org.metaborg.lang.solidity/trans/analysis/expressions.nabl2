@@ -16,7 +16,6 @@ rules
   // Int literal that is positive, can be either int or uint
   [[ IntLiteral(_, min, Some(umin)) ^ (s) : tyIntLiteral ]] :=
     tyIntLiteral == NrT(min, umin).
-//    tyIntLiteral == IntT(min).
   
   // Int literal that is negative, cannot be uint
   [[ IntLiteral(_, min, None()) ^ (s) : tyIntLiteral ]] :=
@@ -54,7 +53,6 @@ rules
   [[ Cast(stype, exp) ^ (s) : tyCastType ]] :=
     [[ stype ^ (s) : tyCastType ]],
     [[ exp ^ (s)   : tyCastExp  ]],
-    //TODO Cast to self should also be allowed right?
     tyCastType_2 is simplifyType of tyCastType,
     tyCastExp_2  is simplifyType of tyCastExp,
     tyCastType_2 <cast? tyCastExp_2.

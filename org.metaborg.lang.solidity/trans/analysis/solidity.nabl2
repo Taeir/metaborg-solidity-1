@@ -31,6 +31,7 @@ imports
   analysis/subtypes/integers
   analysis/subtypes/numberliterals
   analysis/subtypes/stringliterals
+  analysis/subtypes/vars
 
 signature
   name resolution
@@ -273,6 +274,7 @@ rules
     SubByteArrays     [[ p ^ (programScope) ]],
     SubIntegers       [[ p ^ (programScope) ]],
     SubAddresses      [[ p ^ (programScope) ]],
+    SubVar            [[ p ^ (programScope) ]],
     
     //Add globals
     Globals [[ p ^ (programScope) ]],

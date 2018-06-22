@@ -3,6 +3,7 @@ module analysis/contracts
 imports
 
   signatures/contracts-sig
+  desugar/contracts
   analysis/types
 
 signature
@@ -18,6 +19,9 @@ rules
     Contract{name}       : contractType !,
     TypeReferrable{name} : contractType !,
     contractType == NamedT(Contract{name}, ContractT()),
+    
+    contractType <sub! AddressT(),
+    VarT()       <sub! contractType,
     
     //Create scope
     new contractScope,

@@ -17,6 +17,7 @@ rules
     Library{name}        : libraryType !,
     TypeReferrable{name} : libraryType !,
     libraryType == NamedT(Library{name}, LibraryT()),
+    VarT() <sub! libraryType,
     
     //Create scope
     new libraryScope,

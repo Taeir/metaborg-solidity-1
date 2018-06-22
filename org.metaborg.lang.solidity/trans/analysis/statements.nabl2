@@ -114,7 +114,6 @@ rules
     Var{name}.origin := Local(),
     Var{name} : tyVarDecl !.
   
-  //var x = 10; --> x = NrT(8, 8)
   [[ DeclareVarVar(name, exp) ^ (s) ]] :=
     [[ exp   ^ (s) : tyVarInit ]],
 //    tyVarInit <test? IsType() | error $[Unable [tyVarInit] does not match defined type [tyVarDecl]] @exp,

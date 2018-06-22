@@ -16,6 +16,8 @@ rules
     TypeReferrable{name}   : modType !,
     modType == NamedT(FunctionModifier{name}, FunctionModT(paramTys)),
     
+    VarT()       <sub! modType,
+    
     //Create scope
     new modScope,
     modScope -P-> s,

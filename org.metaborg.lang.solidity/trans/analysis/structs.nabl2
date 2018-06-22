@@ -18,6 +18,7 @@ rules
     Struct{name}         : structType !,
     TypeReferrable{name} : structType !,
     structType == NamedT(Struct{name}, StructT()),
+    VarT() <sub! structType,
     
     new structScope,
     structScope -P-> clossScope,

@@ -18,7 +18,6 @@ signature
     //One word types
     BoolT        : Type
     AddressT     : Type
-//    ByteT        : Type //byte == bytes1
     StringT      : Type
     
     //Byte arrays
@@ -85,8 +84,8 @@ rules
   //Numbers
   [[ IntType(x)  ^ (s) : ty ]] := ty == IntT(x).
   [[ UIntType(x) ^ (s) : ty ]] := ty == UIntT(x).
-  [[ FixedType(MxN(m, n))  ^ (s) : ty ]] := ty == FixedT(m, n).
-  [[ UFixedType(MxN(m, n)) ^ (s) : ty ]] := ty == UFixedT(m, n).
+  [[ FixedType(MxN(m, n))  ^ (s) : ty ]] := ty == FixedT(m, n), VarT() <sub! ty.
+  [[ UFixedType(MxN(m, n)) ^ (s) : ty ]] := ty == UFixedT(m, n), VarT() <sub! ty.
   
   //-----------------------------------------------------------------------------------------------
   //Byte arrays
@@ -100,11 +99,13 @@ rules
     //TODO Determine size from expression!
     [[ sizeExp ^ (s) : sizeTy ]],
     //TODO Check if size is an int?
-    ty == FArrayT(baseTy, 1).
+    ty == FArrayT(baseTy, 1),
+    VarT() <sub! ty.
   
   [[ DynamicArrayType(base)        ^ (s) : ty ]] :=
     [[ base ^ (s) : baseTy ]],
-    ty == DArrayT(baseTy).
+    ty == DArrayT(baseTy),
+    VarT() <sub! ty.
   
   //-----------------------------------------------------------------------------------------------
   //Functions
@@ -119,15 +120,14 @@ rules
   [[ MappingType(from, to) ^ (s) : ty ]] :=
     [[ from ^ (s) : fromTy ]],
     [[ to   ^ (s) : toTy   ]],
-    ty == MappingT(fromTy, toTy).
+    ty == MappingT(fromTy, toTy),
+    VarT() <sub! ty.
 
   //-----------------------------------------------------------------------------------------------
   //User defined types
   [[ UserDefinedType(x) ^ (s) : tyRef ]] :=
-    //TODO
-    //Lookup the type
     TypeReferrable{x} -> s,
-    TypeReferrable{x} |-> ref | error $[Cannot find any user defined type [x]] @x,
+    TypeReferrable{x} |-> ref | error $[Cannot find any type [x]] @x,
     ref : tyRef.
   
   //-----------------------------------------------------------------------------------------------

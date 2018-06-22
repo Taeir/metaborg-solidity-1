@@ -17,6 +17,7 @@ rules
     Interface{name}      : interfaceType !,
     TypeReferrable{name} : interfaceType !,
     interfaceType == NamedT(Interface{name}, InterfaceT()),
+    VarT() <sub! interfaceType,
     
     //Create scope
     new interfaceScope,
