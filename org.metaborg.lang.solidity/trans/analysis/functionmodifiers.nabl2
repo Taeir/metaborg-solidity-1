@@ -9,20 +9,20 @@ signature
 
 rules
   [[ FunctionModifier(name, params, stmt) ^ (s) ]] :=
+    new modScope,
+    modScope -P-> s,
+    [[ params ^ (modScope) : paramTys ]],
+    [[ stmt   ^ (modScope) ]],
+    
     //Define modifier and type, also make it referrable
     FunctionModifier{name} <- s,
     TypeReferrable{name}   <- s,
     FunctionModifier{name} : modType !,
     TypeReferrable{name}   : modType !,
-    modType == NamedT(FunctionModifier{name}, FunctionModT(paramTys)),
+    modType == NamedT(FunctionModifier{name}, modScope, FunctionModT(paramTys)),
     
-    VarT()       <sub! modType,
-    
-    new modScope,
-    modScope -P-> s,
-    
-    [[ params ^ (modScope) : paramTys ]],
-    [[ stmt ^ (modScope) ]],
+    //Ensure var subtyping works
+    VarT() <sub! modType,
 
     FunctionModifier{name} =I=> modScope,
     TypeReferrable{name}   =I=> modScope.

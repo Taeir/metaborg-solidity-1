@@ -3,7 +3,6 @@ module analysis/types
 imports
   desugar/functions
   signatures/types-sig
-  signatures/vars-sig
 
 signature
   sorts
@@ -16,7 +15,12 @@ signature
     FixedT       : INT * INT -> Type
     UFixedT      : INT * INT -> Type
     
-    //One word types
+    //More general types for constants
+    NrT          : INT * INT -> Type
+    FractT       : INT * INT * INT * INT -> Type
+    StringLitT   : INT -> Type
+    
+    //"Simple" types
     BoolT        : Type
     AddressT     : Type
     StringT      : Type
@@ -33,13 +37,12 @@ signature
     FunctionT    : list(Type) * Type -> Type
     FunctionModT : list(Type) -> Type
     
-    //Mapping types
+    //Complex types
     MappingT     : Type * Type -> Type
-    
-    //Tuples
     TupleT       : list(Type) -> Type
+    NamedT       : occurrence * scope * Type -> Type
 
-    //User defined types
+    //Type kinds
     EnumT        : Type
     EventT       : list(Type) -> Type
     StructT      : Type
@@ -47,30 +50,32 @@ signature
     InterfaceT   : Type
     LibraryT     : Type
     BuiltInT     : Type
+    ImportT      : Type
     
-    //Named type
-    NamedT       : occurrence * Type -> Type
-    
-    //Var type
+    //Special types
     VarT         : Type
-    
-    //Void type (for functions with no return)
+    AnyT         : Type
     VoidT        : Type
+    PackedT      : Type
     
-    //Simplified type
+    //---------------------------------------------------------------------------------------------
+    //Simplified types
     IntTS        : Type
     UIntTS       : Type
-    FBytesTS     : Type
     FixedTS      : Type
     UFixedTS     : Type
+    
+    AddressTS    : Type
+    
+    FBytesTS     : Type
+    DBytesTS     : Type
     FArrayTS     : Type
     DArrayTS     : Type
-    NamedTS      : Type
+    StringTS     : Type
     
-    //More general types for constants
-    NrT          : INT * INT -> Type
-    FractT       : INT * INT * INT * INT -> Type
-    StringLitT   : INT -> Type
+    NamedTS      : Type
+    MappingTS    : Type
+    FunctionTS   : Type
     
     InvalidType  : Type
 
@@ -140,33 +145,9 @@ rules
 
   //-----------------------------------------------------------------------------------------------
   //User defined types
-  [[ UserDefinedType(x) ^ (s) : tyRef ]] :=
+  [[ UserDefinedType(x) ^ (s) : tyUDef ]] :=
     TypeReferrable{x} -> s,
     TypeReferrable{x} |-> ref | error $[Cannot find any type [x]] @x,
-    ref : tyRef.
-  
-  //-----------------------------------------------------------------------------------------------
-  //Var type
-  [[ Var() ^ (s) : VarT() ]].
-  
-  //A reference to a type
-  [[ TypeRef(name) ^ (s) : tyRef ]] :=
-    TypeReferrable{name} -> s,
-    TypeReferrable{name} |-> ref | error $[Unable to find [name]] @name,
-    ref : tyRef | error @name.
-  
-  //A path reference to a type
-  [[ TypeRef(ref, name) ^ (s) : tyRef ]] :=
-    [[ ref ^ (s) : tyRefBase ]],
-    tyRefBase == NamedT(occ, tyRefBaseBase) | error $[Unable to find [ref]] @name,
-    
-    occ ?=I=> occScope | error @name,
-    
-    new resolveScope,
-    resolveScope -P-> occScope,
-    
-    TypeReferrable{name} -> resolveScope,
-    TypeReferrable{name} |-> ref | error $[Unable to find [name]] @name,
-    ref : tyRef | error @name.
+    ref : tyUDef.
   
   

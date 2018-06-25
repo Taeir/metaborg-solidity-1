@@ -5,34 +5,36 @@ imports
   signatures/libraries-sig
   analysis/types
 
-signature
-  namespaces
-    Library
-
 rules
   [[ c@Library(name, content) ^ (programScope) ]] :=
-    //Define library and type, also make it referrable
-    Library{name}        <- programScope,
-    TypeReferrable{name} <- programScope,
-    Library{name}        : libraryType !,
-    TypeReferrable{name} : libraryType !,
-    libraryType == NamedT(Library{name}, LibraryT()),
-    VarT() <sub! libraryType,
-    
     new libraryScope,
     libraryScope -P-> programScope,
+    Map1 [[ content ^ (libraryScope) ]],
     
+    //Define library and type, also make it referrable
+    //Libraries are treated as contracts by all other components, so we do as well.
+    Contract{name}        <- programScope,
+    TypeReferrable{name}  <- programScope,
+    Contract{name}        : libraryType !,
+    TypeReferrable{name}  : libraryType !,
+    libraryType == NamedT(Contract{name}, libraryScope, LibraryT()),
+    
+    //Ensure correct subtyping and casting
+    GetAddressType [[ c ^ (programScope) : addressType ]],
+    libraryType <cast! addressType,
+    libraryType <sub!  addressType,
+    VarT()      <sub!  libraryType,
+    
+    //Define this
     This{"this" @c} <- libraryScope,
     This{"this" @c} : libraryType !,
     
-    Map1 [[ content ^ (libraryScope) ]],
-    
-    // Check contents for duplicate definitions (events and functions can be overloaded)
+    //Check contents for duplicate definitions (events and functions can be overloaded)
     distinct/name D(libraryScope)/StateVar         | error $[Duplicate state variable [NAME]] @NAMES,
     distinct/name D(libraryScope)/FunctionModifier | error $[Duplicate modifier [NAME]] @NAMES,
     distinct/name D(libraryScope)/Struct           | error $[Duplicate struct [NAME]] @NAMES,
     distinct/name D(libraryScope)/Enum             | error $[Duplicate enum [NAME]] @NAMES,
     distinct/name D(libraryScope)/TypeReferrable   | warning $[Duplicate type [NAME]] @NAMES,
     
-    Library{name}        =I=> libraryScope,
+    Contract{name}       =I=> libraryScope,
     TypeReferrable{name} =I=> libraryScope.

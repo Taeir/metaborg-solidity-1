@@ -6,24 +6,18 @@ imports
 
 signature
   constructors
-    ContractInherits      : String * String * List(Exp) * List(ContractContent) -> Contract
-    ContractMultiInherits : String * List(String) * List(Inheritance) * List(ContractContent) -> Contract
+    Contract : String * List(Inheritance) * List(ContractContent) -> Contract
 
 rules
-  desugar: ContractInherits(name, inherits, content) -> ContractInherits(name, super, supercall, content)
-    where
-    <eq> (<length> inherits, 1);
-    super     := <Hd> <map(inheritance-name)> inherits;
-    supercall := <Hd> <map(inheritance-call)> inherits
+  desugar = desugar-contract
   
-  desugar: ContractInherits(name, inherits, content) -> ContractMultiInherits(name, supers, supercalls, content)
-    where
-    <gti> (<length> inherits, 1);
-    supers     := <map(inheritance-name)> inherits;
-    supercalls := <map(inheritance-call)> inherits
+  //-----------------------------------------------------------------------------------------------
+  //We normalize contracts into one format to make inheritance easier.
+  desugar-contract: Contract(name, content)                   -> Contract(name, [], content)
+  desugar-contract: ContractInherits(name, inherits, content) -> Contract(name, inherits, content)
   
-  inheritance-call: InheritanceId(_)        -> []
-  inheritance-call: InheritanceExt(_, exps) -> exps
+  //-----------------------------------------------------------------------------------------------
+  resugar = resugar-contract
   
-  inheritance-name: InheritanceId(name)     -> name
-  inheritance-name: InheritanceExt(name, _) -> name
+  resugar-contract: Contract(n, [], c) -> Contract(n, c)
+  resugar-contract: Contract(n, i, c)  -> ContractInherits(n, i, c)

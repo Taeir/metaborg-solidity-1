@@ -13,17 +13,42 @@ signature
 rules
   //We cannot determine anything from a direct file import
   [[ ImportFromFile(file) ^ (programScope) ]] :=
-    false | warning $[File imports are not supported.].
+    false | note $[File imports are not supported.].
     
   [[ Import(items, file) ^ (programScope) ]] :=
     Map1 [[ items ^ (programScope) ]].
   
   [[ ImportStar(name) ^ (programScope) ]] :=
+    new importScope,
+    importScope -P-> programScope,
+    
+    //Share namespace with var
     TypeReferrable{name} <- programScope,
     Import{name}         <- programScope,
-    Import{name}.iname := "*".
+    Var{name}            <- programScope,
+    TypeReferrable{name} : tyImport !,
+    Import{name}         : tyImport !,
+    tyImport == NamedT(Import{name}, importScope, ImportT()),
+    
+    Import{name}.iname := "*",
+    
+    TypeReferrable{name} =I=> importScope,
+    Import{name}         =I=> importScope.
   
   [[ ImportItem(name, as) ^ (programScope) ]] :=
+    //Create an empty scope for imports
+    new importScope,
+    importScope -P-> programScope,
+    
     TypeReferrable{as} <- programScope,
     Import{as}         <- programScope,
-    Import{as}.iname := name.
+    Var{as}            <- programScope,
+    TypeReferrable{as} : tyImport !,
+    Import{as}         : tyImport !,
+    tyImport == NamedT(Import{as}, importScope, ImportT()),
+    
+    Import{as}.iname := name,
+    
+    TypeReferrable{as} =I=> importScope,
+    Import{as}         =I=> importScope.
+    

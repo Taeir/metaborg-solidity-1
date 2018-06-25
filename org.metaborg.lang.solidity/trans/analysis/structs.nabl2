@@ -2,37 +2,41 @@ module analysis/structs
 
 imports
   signatures/structs-sig
-  signatures/vars-sig
   analysis/types
-  analysis/vars
 
 signature
   namespaces
     Struct
-    StructField
 
 rules
-  [[ Struct(name, fields) ^ (clossScope) ]] :=
-    Struct{name}         <- clossScope,
-    TypeReferrable{name} <- clossScope,
+  [[ Struct(name, fields) ^ (s) ]] :=
+    //Resolve fields
+    new structScope,
+    structScope -P-> s,
+    Map1T [[ fields ^ (structScope) : tysFields ]],
+    
+    Struct{name}         <- s,
+    TypeReferrable{name} <- s,
     Struct{name}         : structType !,
     TypeReferrable{name} : structType !,
-    structType == NamedT(Struct{name}, StructT()),
+    structType == NamedT(Struct{name}, structScope, StructT()),
+    
+    //Ensure var subtyping works
     VarT() <sub! structType,
     
-    new structScope,
-    structScope -P-> clossScope,
-    
-    Map1 [[ fields ^ (structScope) ]],
+    //Creating structs is done via a function call, so we add a function to the contract scope.
+    Function{name} <- s,
+    Function{name} : FunctionT(tysFields, structType),
     
     distinct/name D(structScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
     Struct{name}         =I=> structScope,
     TypeReferrable{name} =I=> structScope.
   
-  [[ StructField(solType, name) ^ (structScope) ]] :=
+  [[ StructField(solType, name) ^ (structScope) : tyStructField ]] :=
     [[ solType ^ (structScope) : tyStructField ]],
     
     Var{name} <- structScope,
-    Var{name}.origin := StructField(),
+    Var{name}.origin   := StructField(),
+    Var{name}.constant := FalseC(),
     Var{name} : tyStructField !. 

@@ -38,8 +38,8 @@ context-free syntax
     }>
   
   //The inherited contract with optionally a constructor invocation 
-  Inheritance.InheritanceId  = <<ID>>
-  Inheritance.InheritanceExt = <<ID>(<{Exp ", "}*>)>
+  Inheritance.Super     = <<ID>>
+  Inheritance.SuperCall = <<ID>(<{Exp ", "}*>)>
   
   //Contracts can contain basically anything.
   ContractContent = StateVariable

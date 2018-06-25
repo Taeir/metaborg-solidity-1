@@ -3,100 +3,128 @@ module analysis/functions
 imports
   signatures/-
   analysis/types
-  analysis/vars
 
 signature
   namespaces
     Function
 
 rules
-  [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
-    Function{name} <- s,
-    Function{name} : funTy !,
-    funTy == FunctionT(paramTys, retTy),
-    
-    VarT() <sub! funTy,
-    
-    new funScope,
-    funScope -P-> s,
-    
-    Map1  [[ mods   ^ (funScope) ]],
-    Map1T [[ params ^ (funScope) : paramTys ]],
-    [[ retParams    ^ (funScope) : retTy ]].
+  //-----------------------------------------------------------------------------------------------
+  //Abstract functions
   
   [[ AbstractFunction(name, params, mods, retParams) ^ (s) ]] :=
-    Function{name} <- s,
-    Function{name} : funTy !,
-    funTy == FunctionT(paramTys, retTy),
-    
-    VarT() <sub! funTy,
-    
     new funScope,
     funScope -P-> s,
-    
     Map1  [[ mods   ^ (funScope) ]],
-    Map1T [[ params ^ (funScope) : paramTys ]],
-    [[ retParams    ^ (funScope) : retTy ]].
-  
-  [[ Function(name, params, mods, retParams, body) ^ (s) ]] :=
+    Map1T [[ params ^ (funScope) : tysParams ]],
+    [[ retParams    ^ (funScope) : tyRet ]],
+    
     Function{name} <- s,
-    Function{name} : funTy !,
-    funTy == FunctionT(paramTys, retTy),
+    Function{name} : tyFun !,
+    tyFun == FunctionT(tysParams, tyRet),
     
-    VarT() <sub! funTy,
+    VarT() <sub! tyFun,
     
-    new funScope,
-    funScope -P-> s,
-    
-    distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
-    
-    Map1  [[ mods    ^ (funScope) ]],
-    Map1T [[ params  ^ (funScope) : paramTys ]],
-    [[ retParams     ^ (funScope) : retTy ]],
-    [[ body          ^ (funScope) ]].
+    distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES.
   
   //-----------------------------------------------------------------------------------------------
-  [[ Constructor(contractName, params, mod, body) ^ (s) ]] :=
-    Function{contractName} <- s,
-    Function{contractName} : funTy !,
-    funTy == FunctionT(paramTys, retTy),
-    
-    VarT() <sub! funTy,
-    
+  //Functions
+  
+  [[ Function(name, params, mods, retParams, body) ^ (s) ]] :=
     new funScope,
     funScope -P-> s,
+    Map1  [[ mods   ^ (funScope) ]],
+    Map1T [[ params ^ (funScope) : tysParams ]],
+    [[ retParams    ^ (funScope) : tyRet ]],
+    [[ body         ^ (funScope) ]],
+    Function{name} <- s,
+    Function{name} : tyFun !,
+    tyFun == FunctionT(tysParams, tyRet),
+    
+    VarT() <sub! tyFun,
+    
+    distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES.
+  
+  //-----------------------------------------------------------------------------------------------
+  //Constructors
+  
+  [[ Constructor(contractName, params, mod, body) ^ (s) ]] :=
+    new funScope,
+    funScope -P-> s,
+    [[ mod          ^ (funScope) ]],
+    Map1T [[ params ^ (funScope) : tysParams ]],
+    [[ body         ^ (funScope) ]],
+    
+    Function{contractName} <- s,
+    Function{contractName} : tyFun !,
+    tyFun == FunctionT(tysParams, tyRet),
+    
+    VarT() <sub! tyFun,
     
     distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    
-    [[ mod          ^ (funScope) ]],
-    Map1T [[ params ^ (funScope) : paramTys ]],
-    [[ body         ^ (funScope) ]],
-    
-    //Resolve return type
+    //Resolve return type as the type of the contact this constructor belongs to.
     TypeReferrable{contractName} -> s,
     TypeReferrable{contractName} |-> contract | error $[Unable to find contract this constructor belongs to! Name: [contractName]],
-    contract : retTy.
+    contract : tyRet.
   
   [[ ConstructorWithSuper(contractName, params, mod, superName, superCall, body) ^ (s) ]] :=
-    Function{contractName} <- s,
-    Function{contractName} : funTy !,
-    funTy == FunctionT(paramTys, retTy),
-    
-    VarT() <sub! funTy,
-    
     new funScope,
     funScope -P-> s,
+    [[ mod             ^ (funScope) ]],
+    Map1T [[ params    ^ (funScope) : tysParams ]],
+    [[ body            ^ (funScope) ]],
+    Map1T [[ superCall ^ (funScope) : tysSuperArgs ]],
+    
+    Function{contractName} <- s,
+    Function{contractName} : tyFun !,
+    tyFun == FunctionT(tysParams, tyRet),
+    
+    VarT() <sub! tyFun,
     
     distinct/name D(funScope)/Var | error $[Duplicate variable [NAME]] @NAMES,
     
-    [[ mod          ^ (funScope) ]],
-    Map1T [[ params ^ (funScope) : paramTys ]],
-    [[ body         ^ (funScope) ]],
-    
-    //Resolve return type
+    //Resolve return type as the type of the contact this constructor belongs to.
     TypeReferrable{contractName} -> s,
     TypeReferrable{contractName} |-> contract | error $[Unable to find contract this constructor belongs to! Name: [contractName]],
-    contract : retTy,
+    contract : tyRet,
 
-    false | warning $[Super call and super are not yet implemented! Super: [superName]].
+    TypeReferrable{superName} -> s,
+    TypeReferrable{superName} |-> parent | error $[Unable to find contract [superName]] @superName,
+    parent ?===> parentScope,
+    
+    //Look for the constructor
+    Function{superName} -> parentScope,
+    Function{superName} |-> parentConstructor | error $[Cannot find constructor of [superName]] @superName,
+    parentConstructor : FunctionT(tysSuperParams, tySuperRet),
+    
+    //Check if the super name was set as a parent.
+    tySuperRet <sub? tyRet | error $[Invalid call to constructor of [superName]. Did you mean to declare it as a parent? ("contract [contractName] is [superName]")],
+    
+    tysSuperArgs <sub? tysSuperParams | error $[Argument types [tysSuperArgs] do not match constructor parameter types [tysSuperParams]]  @superCall.
+  
+  //-----------------------------------------------------------------------------------------------
+  //Parameters
+  [[ Param(solType, modLoc, None()) ^ (s) : tyParam ]] :=
+    [[ solType ^ (s) : tyParam ]].
+
+  [[ Param(solType, modLoc, Some(name)) ^ (s) : tyParam ]] :=
+    [[ solType ^ (s) : tyParam ]],
+    
+    Var{name} <- s,
+    Var{name}.origin   := Param(),
+    Var{name}.constant := FalseC(),
+    Var{name} : tyParam !.
+  
+  //-----------------------------------------------------------------------------------------------
+  //Return parameters
+  [[ ReturnParam(solType, modLoc, None()) ^ (s) : tyRetParam ]] :=
+    [[ solType ^ (s) : tyRetParam ]].
+  
+  [[ ReturnParam(solType, modLoc, Some(name)) ^ (s) : tyRetParam ]] :=
+    [[ solType ^ (s) : tyRetParam ]],
+    
+    Var{name} <- s,
+    Var{name}.origin   := ReturnParam(),
+    Var{name}.constant := FalseC(),
+    Var{name} : tyRetParam !.

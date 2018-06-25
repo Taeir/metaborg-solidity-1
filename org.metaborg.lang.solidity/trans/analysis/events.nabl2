@@ -9,20 +9,20 @@ signature
 
 rules
   [[ Event(name, params, _) ^ (s) ]] :=
+    new eventScope,
+    eventScope -P-> s,
+    Map1T [[ params ^ (eventScope) : paramTys ]],
+    
     //Define event and type, also make it referrable
     Event{name}          <- s,
     TypeReferrable{name} <- s,
     Event{name}          : eventType !,
     TypeReferrable{name} : eventType !,
-    eventType == NamedT(Event{name}, EventT(paramTys)),
+    eventType == NamedT(Event{name}, eventScope, EventT(paramTys)),
     
-    VarT()       <sub! eventType,
+    //Ensure Var subtyping works
+    VarT() <sub! eventType,
     
-    new eventScope,
-    eventScope -P-> s,
-    
-    Map1T [[ params ^ (eventScope) : paramTys ]],
-
     Event{name}          =I=> eventScope,
     TypeReferrable{name} =I=> eventScope.
   

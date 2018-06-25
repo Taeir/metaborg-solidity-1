@@ -5,24 +5,22 @@ imports
   signatures/interfaces-sig
   analysis/types
 
-signature
-  namespaces
-    Interface
-
 rules
   [[ c@Interface(name, functions) ^ (programScope) ]] :=
-    //Define interface and type, also make it referrable
-    Interface{name}      <- programScope,
-    TypeReferrable{name} <- programScope,
-    Interface{name}      : interfaceType !,
-    TypeReferrable{name} : interfaceType !,
-    interfaceType == NamedT(Interface{name}, InterfaceT()),
-    VarT() <sub! interfaceType,
-    
     new interfaceScope,
     interfaceScope -P-> programScope,
-    
     Map1 [[ functions ^ (interfaceScope) ]],
+    
+    //Define interface and type, also make it referrable
+    //Interfaces are treated as contracts by all other components, so we do as well.
+    Contract{name}       <- programScope,
+    TypeReferrable{name} <- programScope,
+    Contract{name}       : interfaceType !,
+    TypeReferrable{name} : interfaceType !,
+    interfaceType == NamedT(Contract{name}, interfaceScope, InterfaceT()),
+    
+    //Ensure var subtyping works
+    VarT() <sub! interfaceType,
 
-    Interface{name}      =I=> interfaceScope,
+    Contract{name}       =I=> interfaceScope,
     TypeReferrable{name} =I=> interfaceScope.

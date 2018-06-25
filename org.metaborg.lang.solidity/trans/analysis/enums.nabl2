@@ -9,29 +9,24 @@ signature
 
 rules
   [[ Enum(name, values) ^ (s) ]] :=
+    new enumScope,
+    enumScope -P-> s,
+    Map1T [[ values ^ (enumScope) : enumTys ]],
+    
     //Define event and type, also make it referrable
     Enum{name}           <- s,
     TypeReferrable{name} <- s,
-    Referrable{name}     <- s,
     Var{name}            <- s, //Enum shares variable scope
     Enum{name}           : enumType !,
     TypeReferrable{name} : enumType !,
-    Referrable{name}     : enumType !,
     Var{name}            : enumType !,
-    enumType == NamedT(Enum{name}, EnumT()),
+    enumType == NamedT(Enum{name}, enumScope, EnumT()),
     
-    VarT()       <sub! enumType,
-    
-    //Create scope
-    new enumScope,
-    enumScope -P-> s,
-    
-    //Resolve enum values
-    Map1T [[ values ^ (enumScope) : enumTys ]],
+    //Ensure Var subtyping works
+    VarT() <sub! enumType,
 
     Enum{name}           =I=> enumScope,
     TypeReferrable{name} =I=> enumScope,
-    Referrable{name}     =I=> enumScope,
     Var{name}            =I=> enumScope.
   
   [[ EnumValue(enumName, name) ^ (enumScope) : tyEnumValue ]] :=
