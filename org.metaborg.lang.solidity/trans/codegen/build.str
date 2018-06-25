@@ -35,10 +35,10 @@ rules
 
 rules
 
-  set-ebc-source(|path) = EBCFile(!<double-quote> path, id, id)
+  set-ebc-source(|path)   = EBCFile(!<remove-extension> path, id)
 
   write-ebc(|dir):
-    f@EBCFile(_, fileName, _) -> fn
+    f@EBCFile(fileName, _) -> fn
     where
       fn  := $[[dir]/[fileName].ebc]
     ; <fputs; fclose> (<ebc-pp> f, <fopen> (fn, "w"))

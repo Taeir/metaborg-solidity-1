@@ -193,7 +193,7 @@ rules
    /**
    * Converts a list of ebc instructions to a hexadecimal string.
    */
-  ebc-to-hex-string: EBCFile(_, _, Code(instructions)) -> <ebc-to-hex-string> instructions
+  ebc-to-hex-string: EBCFile(_, Code(instructions)) -> <ebc-to-hex-string> instructions
   ebc-to-hex-string: instructions@[_ | _] -> hex
     where
     hexinstructions := <map(instr-to-hex)> <resolve-pushtags> instructions;

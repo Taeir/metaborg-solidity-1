@@ -40,7 +40,6 @@ context-free syntax
   
   EBCFile.EBCFile = <
     FILE: <EBCAnything>
-    CONTRACT: <EBCAnything>
     CODE:
       <Code>
   >

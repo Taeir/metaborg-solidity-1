@@ -10,5 +10,5 @@ rules
 
   //There is not really any type checking that we can do.
   [[ Empty() ^ (s) ]].
-  [[ EBCFile(_, _, _) ^ (s) ]].
+  [[ EBCFile(_, _) ^ (s) ]].
   [[ Code(_) ^ (s) ]].
