@@ -90,8 +90,46 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Loops
+  //-----------------------------------------------------------------------------------------------
   
-  //TODO For loops
+  stmt-to-ebc(|stack, continues, breaks): For(preStmt, condExp, postExp, body) -> instr
+    where
+    tagLoop     := <newname> "For_Loop";
+    tagAfterFor := <newname> "For_After";
+    
+    (
+      (<?Some(preStmt')> preStmt;
+       pre      := <stmt-to-ebc(|stack, continues, breaks)> preStmt') <+
+       pre      := []
+    );
+    condition   := <exp-to-ebc(|stack)> condExp; ebc-stack-pop(|stack);
+    (
+      (<?Some(postExp')> postExp;
+       post     := <exp-to-ebc(|stack)> postExp'; ebc-stack-pop(|stack)) <+
+       post     := []
+    );
+    
+    continues'  := [tagLoop | continues];
+    breaks'     := [tagAfterFor | breaks];
+    bodyInstr   := <stmt-to-ebc(|stack, continues', breaks')> body;
+    
+    instr := <concat> [
+      pre,                           //  <pre>
+      [                              //:loop
+        JUMPDESTTAG(tagLoop) ],      //  JUMPDEST
+      condition,                     //  PUSH condition
+      [ ISZERO(),                    //  ISZERO
+        PUSHTAG(tagAfterFor),        //  PUSHTAG tagAfterFor
+        JUMPI() ],                   //  JUMPI
+      bodyInstr,                     //  <body>
+      post,                          //  <post>
+      [ PUSHTAG(tagLoop),            //  PUSHTAG tagLoop
+        JUMP(),                      //  JUMP
+                                     //:afterFor
+        JUMPDESTTAG(tagAfterFor) ]   //  JUMPDEST
+    ]
+    
+  
   stmt-to-ebc(|stack, continues, breaks): While(e, body) -> instr
     where
     tagLoop       := <newname> "While_Loop";
