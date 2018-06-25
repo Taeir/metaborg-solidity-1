@@ -1,0 +1,27 @@
+module usingfor
+language solidity
+start symbol Program
+
+test S: Simple using for: elementary type (int) [[
+  library SomeLibrary {}
+  contract C {
+    using SomeLibrary for int;
+  }
+]] parse succeeds
+
+test S: Complex using for: user defined type [[
+  library SomeLibrary {}
+  contract C {
+    struct S {
+      int x;
+    }
+    using SomeLibrary for s;
+  }
+]] parse succeeds
+
+test S: Complex using for: star [[
+  library SomeLibrary {}
+  contract C {
+    using SomeLibrary for *;
+  }
+]] parse succeeds
