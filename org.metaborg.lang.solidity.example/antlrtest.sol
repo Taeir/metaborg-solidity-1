@@ -161,7 +161,6 @@ contract test7 {
         for (i = 0; i < 10; i++) {
             uint256 x = i;
             break;
-            continue;
         }
     }
 }
@@ -170,7 +169,6 @@ contract test8 {
         uint256 i = 0;
         for (;;) {
             uint256 x = i;
-            break;
             continue;
         }
     }
@@ -187,7 +185,6 @@ contract test10 {
         for (uint256 i = 0; i < 10; i++) {
             uint256 x = i;
             break;
-            continue;
         }
     }
 }
@@ -201,7 +198,7 @@ contract test12 {
     string b = hex'00AA0000';
 }
 contract test13_2 {
-    function fun(uint256 a) {
+    function fun(uint256 a) returns (uint256) {
         if (a >= 8) {
             return a;
         } else {
@@ -265,9 +262,9 @@ contract Foo19 {
         uint[] memory y;
     }
 }
-// contract Foo20 {
-//     function f(uint[] constant x, uint[] memory y) { }
-// }
+contract Foo20 {
+    function f(uint[] storage x, uint[] memory y) { }
+}
 contract test21 {
     mapping(address => bytes32) names;
 }
@@ -403,7 +400,7 @@ contract C46 {
 //        var (b,) = 1;
 //        var (c,d) = (1, 2 + a);
 //        var (e,) = (1, 2, b);
-//        (a) = 3;
+        (a) = 3;
     }
 }
 contract test47 {
@@ -461,7 +458,7 @@ contract c53 {
 }
 contract test54 {
     function fun(uint256 a) {
-        while (true) { uint256 x = 1; break; continue; } x = 9;
+        while (true) { uint256 x = 1; break; } x = 9;
     }
 }
 
@@ -496,11 +493,11 @@ contract test55 {
 }
 
 contract test56 {
-  function f() view {
+  function f() view returns (int) {
     int y = z(10);
     return 2;
   }
-  function g() pure {
+  function g() pure returns (int) {
     return 2;
   }
   

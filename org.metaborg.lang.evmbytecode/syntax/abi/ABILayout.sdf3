@@ -1,7 +1,8 @@
 module abi/ABILayout
 
-lexical syntax 
-  LAYOUT = [\ \t\n\r]   
+//ABI doesn't have comments, so layout is simple.
+lexical syntax
+  LAYOUT = [\ \t\n\r]
 
 context-free restrictions
   LAYOUT? -/- [\ \t\n\r]

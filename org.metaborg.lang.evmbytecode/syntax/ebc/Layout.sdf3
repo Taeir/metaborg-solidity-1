@@ -1,11 +1,14 @@
 module ebc/Layout
 
 lexical syntax
+  //Represents any character except newlines.
   EBCAnything      = EBCAnyChar* 
   EBCAnyChar       = ~[\n\r]
   
+  //EBC Identifier
   EBCID            = [a-zA-Z0-9\_]+
   
+  //Comments
   EBCCommentChar   = [\*] 
   LAYOUT           = [\ \t\n\r]
   LAYOUT           = "/*" EBCInsideComment* "*/" 

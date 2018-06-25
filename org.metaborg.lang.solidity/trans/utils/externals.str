@@ -109,7 +109,7 @@ rules
   /**
    * = a % b
    *
-   * TODO Currently does not give actual modulo if the modulus (b) is negative.
+   * Note that this method does not give actual modulo if the modulus (b) is negative.
    *
    * @param  Tuple(a, b), where a and b are both Int / Real / String (BigDecimal)
    * @return String (BigDecimal)

@@ -23,5 +23,6 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to the original AST
-  resugar: DeclareVarVar(n, e)                -> DeclareVarAssign(Var(), NoModifier(), n, e)
-  resugar: DeclareVarVar(n)                   -> DeclareVar(Var(), NoModifier(), n)
+  resugar: DeclareVarVar(n)    -> DeclareVar(Var(), NoModifier(), n)
+  resugar: DeclareVarVar(n, e) -> DeclareVarAssign(Var(), NoModifier(), n, e)
+  

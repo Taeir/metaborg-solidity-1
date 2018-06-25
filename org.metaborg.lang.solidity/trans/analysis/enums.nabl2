@@ -41,5 +41,5 @@ rules
     
     Var{name} <- enumScope,
     Var{name}.origin   := EnumValue(),
-    Var{name}.constant := FalseC(),
+    Var{name}.constant := TrueC(),
     Var{name} : tyEnumValue !.

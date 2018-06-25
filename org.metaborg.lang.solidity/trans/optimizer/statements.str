@@ -17,7 +17,6 @@ rules
   extract-vardecls2: s@DeclareVar(_, _, _)        -> [s]
   extract-vardecls2: DeclareVarAssign(t, m, n, _) -> [DeclareVar(t, m, n)]
   
-  //TODO Control flow? Break from block?
   //Check in other constructs
   extract-vardecls2: Block(ss)                 -> <mapconcat(extract-vardecls2)> ss
   extract-vardecls2: If(_, tBody, None())      -> <extract-vardecls2> tBody

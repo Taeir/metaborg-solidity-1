@@ -87,10 +87,10 @@ rules
 
   //-----------------------------------------------------------------------------------------------
   //Numbers
-  [[ IntType(x)  ^ (s) : ty ]] := ty == IntT(x).
-  [[ UIntType(x) ^ (s) : ty ]] := ty == UIntT(x).
-  [[ FixedType(MxN(m, n))  ^ (s) : ty ]] := ty == FixedT(m, n), VarT() <sub! ty.
-  [[ UFixedType(MxN(m, n)) ^ (s) : ty ]] := ty == UFixedT(m, n), VarT() <sub! ty.
+  [[ IntType(x)  ^ (s) : tyInt  ]] := tyInt == IntT(x).
+  [[ UIntType(x) ^ (s) : tyUInt ]] := tyUInt == UIntT(x).
+  [[ FixedType(MxN(m, n))  ^ (s) : tyFixed  ]] := tyFixed == FixedT(m, n), VarT() <sub! tyFixed.
+  [[ UFixedType(MxN(m, n)) ^ (s) : tyUFixed ]] := tyUFixed == UFixedT(m, n), VarT() <sub! tyUFixed.
   
   //-----------------------------------------------------------------------------------------------
   //Byte arrays
@@ -114,16 +114,17 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Functions
-  [[ FunctionType(args, vis, stateMut, retParam) ^ (s) : ty ]] :=
-    [[ retParam ^ (s) : retTy ]],
-    Map1T [[ args ^ (s) : argTys ]],
-    ty == FunctionT(argTys, retParam),
-    
+  [[ FunctionType(args, vis, stateMut, retParam) ^ (s) : tyFunT ]] :=
+    [[ retParam ^ (s) : tyRet ]],
     [[ vis      ^ (s) ]],
-    [[ stateMut ^ (s) ]].
+    [[ stateMut ^ (s) ]],
+    Map1T [[ args ^ (s) : tysArgs ]],
+
+    tyFunT == FunctionT(tysArgs, tyRet),
+    VarT() <sub! tyFunT.
   
   //Void type is added to fix return type problems
-  [[ VoidType() ^ (s) : VoidT()    ]].
+  [[ VoidType() ^ (s) : VoidT() ]].
   
   //Tuple type is used to wrap return types
   [[ TupleType(params) ^ (s) : TupleT(tys) ]] :=
@@ -131,11 +132,11 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Mappings
-  [[ MappingType(from, to) ^ (s) : ty ]] :=
-    [[ from ^ (s) : fromTy ]],
-    [[ to   ^ (s) : toTy   ]],
-    ty == MappingT(fromTy, toTy),
-    VarT() <sub! ty.
+  [[ MappingType(key, value) ^ (s) : tyMapping ]] :=
+    [[ key   ^ (s) : tyKey   ]],
+    [[ value ^ (s) : tyValue ]],
+    tyMapping == MappingT(tyKey, tyValue),
+    VarT() <sub! tyMapping.
 
   //-----------------------------------------------------------------------------------------------
   //User defined types

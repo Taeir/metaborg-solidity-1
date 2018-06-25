@@ -15,7 +15,6 @@ public class sol_bigdec_mod_0_0 extends TupleStrategy {
 		BigDecimal e1 = BigIntHelper.toBigDecimal(terms[0]);
 		BigDecimal e2 = BigIntHelper.toBigDecimal(terms[1]);
 
-		//TODO Javadoc mentions that the behavior is different from mudulo for negative numbers
 		String result = e1.remainder(e2).toString();
 		return context.getFactory().makeString(result);
 	}

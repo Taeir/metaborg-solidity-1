@@ -34,7 +34,7 @@ lexical restrictions
   EBCTag      -/- [a-zA-Z0-9\_]
   
 context-free syntax
-
+  //Allow both empty files and files with content
   EBCStart.Empty = <>
   EBCStart       = EBCFile
   

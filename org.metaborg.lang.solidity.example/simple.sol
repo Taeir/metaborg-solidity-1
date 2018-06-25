@@ -1,7 +1,9 @@
 contract Simple {
-  int8 x;
-  function simple() public returns (bool z) {
-    uint16 y = 1.2e3 * 5;
-    return y <= 3;
+  function simple() public returns (int8) {
+    if (true) {
+      return 10;
+    } else {
+      return 20;
+    }
   }
 }

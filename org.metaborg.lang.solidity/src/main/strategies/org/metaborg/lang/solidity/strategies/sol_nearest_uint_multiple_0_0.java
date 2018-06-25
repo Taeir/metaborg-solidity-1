@@ -20,9 +20,8 @@ public class sol_nearest_uint_multiple_0_0 extends SafeStrategy {
 			return context.getFactory().makeInt(0);
 		}
 		
-		//TODO Use RoundingMode.UNNECESSARY?
-		//Then determine the number of bits required.
-		int bitsReq = Math.max(1, bd.setScale(0, RoundingMode.CEILING).toBigInteger().bitLength());
+		//Determine the number of bits required.
+		int bitsReq = Math.max(1, bd.setScale(0, RoundingMode.UNNECESSARY).toBigInteger().bitLength());
 		int eightBits = (int) (Math.ceil(bitsReq / 8.0) * 8);
 		return context.getFactory().makeInt(eightBits);
 	}

@@ -83,11 +83,6 @@ public class StackUtil {
 		if (i == 100) {
 			throw new IllegalStateException("Assertion failed: infinite loop!");
 		}
-		
-		//TODO This is a temporary assertion
-		if (stack.size() == 0) {
-			throw new IllegalStateException("Assertion failed: Stack should not be empty here!");
-		}
 	}
 	
 	/**

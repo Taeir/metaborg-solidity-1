@@ -15,8 +15,9 @@ lexical syntax
   BackSlashChar = "\\"
 
 lexical restrictions
-  // Backslash chars in strings may not be followed by " 
+  //Backslash chars in strings may not be followed by " 
   BackSlashChar -/- [\"]
+  ABIBoolean    -/- [a-zA-Z0-9]
 
 context-free syntax
   ABIStart = ABI
@@ -28,7 +29,6 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   // Functions
-  
   ABIFunction.ABIFunction = <
     {
       "name": <ABIString>,

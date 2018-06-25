@@ -83,7 +83,7 @@ context-free syntax
   
   //-----------------------------------------------------------------------------------------------
   //Inline assembly
-  Statement            = AssemblyStatement
+  Statement = AssemblyStatement
 
 context-free priorities
   UnderscoreStatement.Underscore > ExpStatement.ExpStmt

@@ -13,7 +13,6 @@ context-free start-symbols
   StateVariable
 
 context-free syntax
-  //TODO Pretty printing adds extra space because of non-optional usage of modifier.
   StateVariable.StateVariable = <<Type> <ModifiersStateVarVis> <ID> <StateVarAssignment>;>
   StateVariable               = ConstantStateVariable
   

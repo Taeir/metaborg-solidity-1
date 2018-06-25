@@ -24,7 +24,7 @@ rules
   //-----------------------------------------------------------------------------------------------
   //A program consists of a specific "contract load" sequence which loads the actual code of the
   //contract and then jumps into it. 
-  program-to-ebc: Program(content) -> [EBCFile(None(), "WIP", Code(<fix-instructions> <concat> [
+  program-to-ebc: Program(content) -> [EBCFile("", Code(<fix-instructions> <concat> [
     [
       //Default initialization (allocate 128 bytes of memory)
       PUSH(1, "0x80"),       //0,1
