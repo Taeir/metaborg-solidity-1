@@ -1,0 +1,59 @@
+module arrays
+language solidity
+start symbol Program
+
+//Solidity has 2 types of arrays, fixed size and dynamic size.
+//Fixed size arrays need to be defined with a constant unsigned integer size.
+//Dynamic size arrays need to be created with a unsigned integer size.
+test S: Fixed size array field [[
+  contract C {
+    [[ int[3] ]] a;
+  }
+]] run nabl2-get-ast-type on #1 to FArrayT(IntT(256), "3", _)
+
+test S: Array with constant size [[
+  contract C {
+    [[ uint[3 + 2] ]] a;
+  }
+]] run nabl2-get-ast-type on #1 to FArrayT(UIntT(256), "5", _)
+
+test F: Fixed size array with negative size [[
+  contract C {
+    int[-3] a;
+  }
+]] >= 1 errors
+
+test F: Fixed size array with non-constant size [[
+  contract C {
+    function f(uint s) {
+      int[s] a;
+    }
+    
+  }
+]] >= 1 errors
+
+//-----------------------------------------------------------------------------
+//Dynamic size arrays
+test S: Dynamic size array field [[
+  contract C {
+    [[ int[] ]] a;
+  }
+]] run nabl2-get-ast-type on #1 to DArrayT(IntT(256), _)
+
+test S: Dynamic size array, create and assign [[
+  contract C {
+    int[] a;
+    function f(uint s) {
+      a = [[ new int[](s) ]];
+    }
+  }
+]] run nabl2-get-ast-type on #1 to DArrayT(IntT(256), _)
+   0 errors
+
+test F: New dynamic size array, signed size [[
+  contract C {
+    function f(int s) {
+      new int[](s);
+    }
+  }
+]] >= 1 errors
