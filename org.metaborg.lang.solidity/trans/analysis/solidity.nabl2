@@ -19,12 +19,12 @@ imports
   analysis/modifiers
   analysis/modifiertypes
   analysis/pragmas
+  analysis/refs
   analysis/solimports
   analysis/statements
   analysis/statevariables
   analysis/structs
   analysis/usingfor
-  analysis/vars
   
   analysis/subtypes/addresses
   analysis/subtypes/bytearrays
@@ -62,11 +62,11 @@ signature
     
     //Different checks
     IsType            : TypeTest
+    IsInt             : TypeTest
     IsNumeric         : TypeTest
     CanCompare        : TypeTest
     CanCompareOrdered : TypeTest
     CanArithBasic     : TypeTest
-    CanPow            : TypeTest
     CanBitwiseOps     : TypeTest
     CanIndex          : TypeTest
     
@@ -121,43 +121,112 @@ signature
     }
     
     /**
+     * Returns the literal integer if the given term is a constant integer literal.
+     */
+    getLiteralInt: Term -> string {
+      IntLiteral(i, _, _) -> i
+    }
+    
+    /**
      * Throws away type specicality information, e.g. int8 -> int and bytes32 -> bytes.
+     * 
+     * Simplified types are used with the test and cast relations to determine if certain
+     * operations can be performed on instances of a certain type. We need the erasure to avoid
+     * having to add a relation for every possible instantiation of these types.
+     *
+     * This function returns the type unchanged for types that don't have any specific information,
+     * as it makes no sense to simplify these types further.
      */
     simplifyType: Type -> Type {
-      IntT(i)            -> IntTS(),
-      UIntT(i)           -> UIntTS(),
-      NrT(i, 0)          -> IntTS(),
-      NrT(i, u)          -> UIntTS(), //Simplify NrT to UInt, as UInt can be used in more places
+      //Numeric types (length parameters)
+      IntT(_)            -> IntTS(),
+      UIntT(_)           -> UIntTS(),
+      NrT(_, 0)          -> IntTS(),
+      NrT(_, _)          -> UIntTS(), //Simplify NrT to UInt, as UInt can be used in more places
       FractT(_, _, _, _) -> UFixedTS(),
-      FBytesT(i)         -> FBytesTS(),
-      FixedT(m, n)       -> FixedTS(),
-      UFixedT(m, n)      -> UFixedTS(),
-      NamedT(o, st)      -> NamedTS(),
+      FixedT(_, _)       -> FixedTS(),
+      UFixedT(_, _)      -> UFixedTS(),
       
-      FArrayT(_, _)      -> FArrayTS(),
-      DArrayT(_)         -> DArrayTS(),
+      //Address has a scope
+      AddressT(_)        -> AddressTS(),
+      
+      //Arrays and strings have a base type, length and/or a scope
+      FBytesT(_, _)      -> FBytesTS(),
+      DBytesT(_)         -> DBytesTS(),
+      FArrayT(_, _, _)   -> FArrayTS(),
+      DArrayT(_, _)      -> DArrayTS(),
+      StringT()          -> StringTS(),
+      StringLitT(_)      -> StringTS(),
+      
+      //Mappings and Functions have additional type information
+      MappingT(_, _)     -> MappingTS(),
+      FunctionT(_, _)    -> FunctionTS(),
+      
+      NamedT(_, _, _)    -> NamedTS(),
       other              -> other
     }
     
     /**
-     * Determines the type of the elements in an array.
+     * Same as simplifyType, but for casts. The difference is that mappings, functions and
+     * named types are not simplified.
      */
-    arrayType: Type -> Type {
-      FBytesT(_)    -> NrT(8, 8),
-      DBytesT()     -> NrT(8, 8),
-      FArrayT(t, _) -> t,
-      DArrayT(t)    -> t
+    simplifyTypeForCast : Type -> Type {
+      //Numeric types (length parameters)
+      IntT(_)            -> IntTS(),
+      UIntT(_)           -> UIntTS(),
+      NrT(_, 0)          -> IntTS(),
+      NrT(_, _)          -> UIntTS(),
+      FractT(_, _, _, _) -> UFixedTS(),
+      FixedT(_, _)       -> FixedTS(),
+      UFixedT(_, _)      -> UFixedTS(),
+      AddressT(_)        -> AddressTS(),
+      
+      //Array-like
+      FBytesT(_, _)      -> FBytesTS(),
+      DBytesT(_)         -> DBytesTS(),
+      FArrayT(_, _, _)   -> FArrayTS(),
+      DArrayT(_, _)      -> DArrayTS(),
+      StringT()          -> StringTS(),
+      StringLitT(_)      -> StringTS(),
+      
+      //Don't convert the rest
+      other              -> other
     }
     
-    /*
-     * Convert type to an unsigned type, or returns the original type.
+    /**
+     * Determines the type of the elements of a complex type.
+     * E.g. for byte arrays, the elements are bytes.
+     * For arrays, the elements are the base type.
+     * For mappings, the elements are the value type of the mapping. 
      */
-    toUnsigned: Type -> Type {
-      UIntT(i)           -> UIntT(i),      //Already an UInt
-      NrT(i, 0)          -> NrT(i, 0),     //Not valid as UInt
-      NrT(_, u)          -> UIntT(u),      //Valid as UInt
-      FractT(_, _, m, n) -> UFixedT(m, n), //Valid as UFixed
-      ty                 -> ty             //Invalid
+    elementType: Type -> Type {
+      FBytesT(_, _)    -> NrT(8, 8),
+      DBytesT(_)       -> NrT(8, 8),
+      FArrayT(t, _, _) -> t,
+      DArrayT(t, _)    -> t,
+      MappingT(_, v)   -> v
+    }
+    
+    /**
+     * Determines the type that can be used for indexing this type.
+     * E.g. for arrays, indexing is done with numbers.
+     * For mappings, indexing is done with the type of the key.
+     */
+    indexType: Type -> Type {
+      FBytesT(_, _)    -> UIntT(8),
+      DBytesT(_)       -> UIntT(8),
+      FArrayT(_, _, _) -> UIntT(8),
+      DArrayT(_, _)    -> UIntT(8),
+      MappingT(k, _)   -> k
+    }
+    
+    /**
+     * Returns true only if the given type is an integer literal or is an unsigned integer.
+     */
+    isUnsignedIntOrLiteral: Type -> NaBLBool {
+      UIntT(_)           -> NaBLTrue(),
+      NrT(_, _)          -> NaBLTrue(),
+      other              -> NaBLFalse()
     }
     
     /**
@@ -169,24 +238,75 @@ signature
       FractT(m, n, _, _) -> FixedT(m, n),
       ty                 -> ty
     }
+    
+    /**
+     * Gets the scope associated with the given type.
+     * 
+     * This function is used to implement type specific functions and fields,
+     * such as length on arrays.
+     */
+    getScope: Type -> scope {
+      AddressT(s)      -> s,
+      FBytesT(_, s)    -> s,
+      DBytesT(s)       -> s,
+      FArrayT(_, _, s) -> s,
+      DArrayT(_, s)    -> s,
+      NamedT(_, s, _)  -> s
+    }
+    
+    /**
+     * This function fixes comparisons that potentially include the any type, up to an arity of 2.
+     *
+     * This function performs the following:
+     *   x <sub? AnyT() --> VarT() <sub? x  (where x != AnyT())
+     *
+     * The reason this function exists, is that adding an any type would require quite a few
+     * additional relations, and would complicate all the cases where the least upper bound is
+     * requested.
+     */
+    fixAny: (Type * Type) -> (Type * Type) {
+      //both sides are any -> no changes (keep reflexivity)
+      (AnyT(),            AnyT())          -> (AnyT(),            AnyT()),
+      ([AnyT()],         [AnyT()])         -> ([AnyT()],         [AnyT()]),
+      ([AnyT(), AnyT()], [AnyT(), AnyT()]) -> ([AnyT(), AnyT()], [AnyT(), AnyT()]),
+      
+      //Right side is any -> swap and replace any with var (where any not on the left)
+      (a,                 AnyT())          -> (VarT(),    a),
+      ([a],              [AnyT()])         -> ([VarT()], [a]),
+      ([AnyT(), a2],     [AnyT(), AnyT()]) -> ([AnyT(), VarT()], [AnyT(), a2]),
+      ([a1, AnyT()],     [AnyT(), AnyT()]) -> ([VarT(), AnyT()], [a1, AnyT()]),
+      ([a1, a2],         [AnyT(), AnyT()]) -> ([VarT(), VarT()], [a1, a2]),
+      
+      //Partial any match
+      ([a1, a2],         [AnyT(), b2])     -> ([VarT(), a2],     [a1, b2]),
+      ([a1, a2],         [b1, AnyT()])     -> ([a1, VarT()],     [b1, a2]),
+      
+      //Neither side has any
+      (a, b)                               -> (a, b)
+    }
 
 rules
 
   init ^ (programScope) :=
     new programScope,
     
-    //Casting int -> int/uint ; uint -> int/uint
-    IntTS()  <cast! IntTS(),
-    UIntTS() <cast! IntTS(),
-    IntTS()  <cast! UIntTS(),
-    UIntTS() <cast! UIntTS(),
+    //Casting int -> uint/address ; uint -> int/address ; address -> int/uint
+    IntTS()     <cast! UIntTS(),
+    IntTS()     <cast! AddressTS(),
+    UIntTS()    <cast! IntTS(),
+    UIntTS()    <cast! AddressTS(),
+    AddressTS() <cast! IntTS(),
+    AddressTS() <cast! UIntTS(),
     
     //Casting string -> bytes
-    DBytesT() <cast! StringT(),
+    StringTS() <cast! DBytesTS(),
     
     //Type testing
+    BoolT()  <test! IsType(),
+    
     //Int: arithbasic: +-*/% bit: &|^~<<>> comp2: <!=>
     IntTS()  <test! IsType(),
+    IntTS()  <test! IsInt(),
     IntTS()  <test! IsNumeric(),
     IntTS()  <test! CanCompare(),
     IntTS()  <test! CanCompareOrdered(),
@@ -195,11 +315,11 @@ rules
     
     //Uint: arithbasic: +-*/%** bit: &|^~<<>> comp2: <!=>
     UIntTS() <test! IsType(),
+    UIntTS() <test! IsInt(),
     UIntTS() <test! IsNumeric(),
     UIntTS() <test! CanCompare(),
     UIntTS() <test! CanCompareOrdered(),
     UIntTS() <test! CanArithBasic(),
-    UIntTS() <test! CanPow(),
     UIntTS() <test! CanBitwiseOps(),
  
     //Fixed: arithbasic: +-*/% comp2: <!=>
@@ -217,9 +337,9 @@ rules
     UFixedTS() <test! CanArithBasic(),
     
     //Address: comp2: <!=>
-    AddressT() <test! IsType(),
-    AddressT() <test! CanCompare(),
-    AddressT() <test! CanCompareOrdered(),
+    AddressTS() <test! IsType(),
+    AddressTS() <test! CanCompare(),
+    AddressTS() <test! CanCompareOrdered(),
     
     //BytesN: bit: &|^~<<>> comp2: <!=> index: []
     FBytesTS() <test! IsType(),
@@ -229,33 +349,44 @@ rules
     FBytesTS() <test! CanIndex(),
     
     //DBytes: comp1: != index: []
-    DBytesT() <test! IsType(),
-    DBytesT() <test! CanCompare(),
-    DBytesT() <test! CanIndex(),
+    DBytesTS() <test! IsType(),
+    DBytesTS() <test! CanCompare(),
+    DBytesTS() <test! CanIndex(),
     
     //Casting string -> bytes
-    StringT() <test! IsType(),
+    StringTS() <test! IsType(),
+    StringTS() <test! CanCompare(),
     
+    //Named types don't have any special properties
     NamedTS() <test! IsType(),
+    NamedTS() <test! CanCompare(),
     
     //Arrays can be indexed
     FArrayTS() <test! IsType(),
     FArrayTS() <test! CanIndex(),
     DArrayTS() <test! IsType(),
-    DArrayTS() <test! CanIndex().
+    DArrayTS() <test! CanIndex(),
+    
+    //Mappings can be indexed
+    MappingTS() <test! IsType(),
+    MappingTS() <test! CanIndex().
 
   [[ p@Program(elements) ^ (programScope) ]] :=
-    //Add the subtyping relations
-    SubNumberLiterals [[ p ^ (programScope) ]],
-    SubStringLiterals [[ p ^ (programScope) ]],
-    SubByteArrays     [[ p ^ (programScope) ]],
-    SubIntegers       [[ p ^ (programScope) ]],
-    SubAddresses      [[ p ^ (programScope) ]],
-    SubVar            [[ p ^ (programScope) ]],
+    //Load built in types (address, arrays)
+    BuiltInTypes        [[ p ^ (programScope) ]],
     
-    Globals           [[ p ^ (programScope) ]],
+    //Load built in functions and fields
+    BuiltInGlobals      [[ p ^ (programScope) ]],
     
-    InitVisibility    [[ p ^ (programScope) ]],
+    //Add subtyping relations between types
+    SubNumberLiterals   [[ p ^ (programScope) ]],
+    SubStringLiterals   [[ p ^ (programScope) ]],
+    SubByteArrays       [[ p ^ (programScope) ]],
+    SubIntegers         [[ p ^ (programScope) ]],
+    SubAddresses        [[ p ^ (programScope) ]],
+    SubVar              [[ p ^ (programScope) ]],
+        
+    InitVisibility      [[ p ^ (programScope) ]],
     
     Map1 [[ elements ^ (programScope) ]],
     

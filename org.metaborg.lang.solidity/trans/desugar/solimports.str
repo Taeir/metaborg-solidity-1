@@ -18,11 +18,12 @@ signature
     ImportItem : ImportName * ImportName -> DImportItem
 
 rules
+  desugar = desugar-import
+  
   //Translate the "import file as name" import syntax into the other syntax
-  desugar: ImportFileAs(file, name) -> ImportItemFrom(Star(name), file)
+  desugar-import: ImportFileAs(file, name) -> ImportItemFrom(Star(name), file)
   
-  
-  desugar: ImportItemFrom(items, file) -> Import(items', file)
+  desugar-import: ImportItemFrom(items, file) -> Import(items', file)
     where
     items' := <convimport> items
     
@@ -42,7 +43,9 @@ rules
   
   //---------------------------------------------------------------------------
   //Resugar back to original form
-  resugar: Import(items, file) -> ImportItemFrom(items', file)
+  resugar = resugar-import
+  
+  resugar-import: Import(items, file) -> ImportItemFrom(items', file)
     where
     items' := <unconvimport2> items
   

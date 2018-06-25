@@ -2,6 +2,7 @@ module desugar/solidity
 
 imports
   signatures/-
+  desugar/builtins
   desugar/contracts
   desugar/enums
   desugar/expressions
@@ -27,9 +28,10 @@ strategies
   //Desugar, fold constants, name constructors, normalize functions
   desugar-all = innermost(desugar);
                 constant-fold;
-                name-constructors;
+                normalize-constructors;
                 normalize-functions;
                 desugar-enums;
+                fix-builtins;   //Must be after function normalization
                 check-dead-code //Should be very late in the process
   
   //Resugar back into original AST

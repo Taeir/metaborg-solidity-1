@@ -25,7 +25,7 @@ rules
   //Treat libraries like contracts
   library-to-ebc: Library(name, content) -> <contract-to-ebc> Contract(name, content)
   
-  contract-to-ebc: Contract(name, content) -> <concat> [
+  contract-to-ebc: Contract(name, inherits, content) -> <concat> [
     //Allocate 128 bytes 
     [ PUSH(1, "0x80"),
       PUSH(1, "0x40"),

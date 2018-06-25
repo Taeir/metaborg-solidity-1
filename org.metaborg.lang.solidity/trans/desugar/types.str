@@ -3,46 +3,71 @@ module desugar/types
 imports
   signatures/types-sig
   signatures/expressions-sig
+  signatures/statements-sig
   signatures/Common-sig
+  desugar/functions
   utils/externals
 
-signature
-  sorts
-
-
 rules
-  //Default values
-  desugar: IntType(None())    -> IntType(256)
-  desugar: UIntType(None())   -> UIntType(256)
-  desugar: FixedType(None())  -> FixedType(MxN(128, 18))
-  desugar: UFixedType(None()) -> UFixedType(MxN(128, 18))
-  desugar: ByteType()         -> FixedBytesArrayType(1)
+  desugar = desugar-type
+  
+  //-----------------------------------------------------------------------------------------------
+  //Add default values
+  desugar-type: IntType(None())    -> IntType(256)
+  desugar-type: UIntType(None())   -> UIntType(256)
+  desugar-type: FixedType(None())  -> FixedType(MxN(128, 18))
+  desugar-type: UFixedType(None()) -> UFixedType(MxN(128, 18))
+  desugar-type: ByteType()         -> FixedBytesArrayType(1)
 
   //Convert the strings to ints
-  desugar: IntType(Some(x))      -> IntType(<string-to-int> x)
-  desugar: UIntType(Some(x))     -> UIntType(<string-to-int> x)
-  desugar: FixedType(MxN(m, n))  -> FixedType(MxN(mI, nI))
+  desugar-type: IntType(Some(x))      -> IntType(<string-to-int> x)
+  desugar-type: UIntType(Some(x))     -> UIntType(<string-to-int> x)
+  desugar-type: FixedType(MxN(m, n))  -> FixedType(MxN(mI, nI))
     where
     mI := <string-to-int> m;
     nI := <string-to-int> n
-  desugar: UFixedType(MxN(m, n)) -> UFixedType(MxN(mI, nI))
+  desugar-type: UFixedType(MxN(m, n)) -> UFixedType(MxN(mI, nI))
     where
     mI := <string-to-int> m;
     nI := <string-to-int> n
 
+  //We need a number for the subtyping relations in nabl to work
+  desugar-type: FixedBytesArrayType(s) -> FixedBytesArrayType(<string-to-int> s)
 
-  desugar: FixedBytesArrayType(s) -> FixedBytesArrayType(<string-to-int> s)
-
-  //Remove the some/none syntax from functiontype return types
-  desugar: FunctionType(args, vis, mut, None())                  -> FunctionType(args, vis, mut, [])
-  desugar: FunctionType(args, vis, mut, Some(ReturnsType(rets))) -> FunctionType(args, vis, mut, rets)
+  //Remove the some/none syntax from functiontype return types and unwrap the modifiers
+  desugar-type: FunctionType(args, vis, mut, None())
+                -> FunctionType(args, <unwrap-mod> vis, <unwrap-mod> mut, VoidType())
+  desugar-type: FunctionType(args, vis, mut, Some(ReturnsType(rets)))
+                -> FunctionType(args, <unwrap-mod> vis, <unwrap-mod> mut, <convert-return-type> rets)
+  
+  /**
+   * Unwraps modifiers from the Some/None form.
+   *
+   * @param  Option(Modifier)
+   * @return Modifier
+   */
+  unwrap-mod: None()    -> NoModifier()
+  unwrap-mod: Some(mod) -> mod
 
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: IntType(n)                       -> IntType(Some(<int-to-string> n))
-  resugar: UIntType(n)                      -> UIntType(Some(<int-to-string> n))
-  resugar: FixedType(MxN(m, n))             -> FixedType(MxN(<int-to-string> m, <int-to-string> n))
-  resugar: UFixedType(MxN(m, n))            -> UFixedType(MxN(<int-to-string> m, <int-to-string> n))
-  resugar: FixedBytesArrayType(s)           -> FixedBytesArrayType(<int-to-string> s)
-  resugar: FunctionType(a, v, m, [])        -> FunctionType(a, v, m, None())
-  resugar: FunctionType(a, v, m, r@[_ | _]) -> FunctionType(a, v, m, Some(ReturnsType(r)))
+  resugar = resugar-type
+  
+  resugar-type: IntType(n)                        -> IntType(Some(<int-to-string> n))
+  resugar-type: UIntType(n)                       -> UIntType(Some(<int-to-string> n))
+  resugar-type: FixedType(MxN(m, n))              -> FixedType(MxN(<int-to-string> m, <int-to-string> n))
+  resugar-type: UFixedType(MxN(m, n))             -> UFixedType(MxN(<int-to-string> m, <int-to-string> n))
+  resugar-type: FixedBytesArrayType(s)            -> FixedBytesArrayType(<int-to-string> s)
+  resugar-type: FunctionType(a, v, m, VoidType()) -> FunctionType(a, <wrap-mod> v, <wrap-mod> m, None())
+  resugar-type: FunctionType(a, v, m, r)          -> FunctionType(a, v, m, Some(ReturnsType(<restore-return-type> r)))
+  
+  /**
+   * Wraps modifiers to the Some/None form.
+   *
+   * @param  Modifier
+   * @return Option(Modifier)
+   */
+  wrap-mod: NoModifier() -> None()
+  wrap-mod: mod          -> Some(mod)
+    where
+    not(<?Some(_)> mod)

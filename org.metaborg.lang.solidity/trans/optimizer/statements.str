@@ -4,7 +4,8 @@ imports
   
   signatures/expressions-sig
   signatures/statements-sig
-  signatures/vars-sig
+  
+  desugar/vartype
 
 rules
   //---------------------------------------------------------------------------
@@ -30,6 +31,7 @@ rules
     where
     not(<?DeclareVar(_, _, _)> s);
     not(<?DeclareVarAssign(_, _, _, _)> s);
+    not(<?DeclareVarVar(_, _)> s);
     not(<?Block(_)> s);
     not(<?If(_, _, _)> s);
     not(<?For(_, _, _, _)> s);
@@ -55,7 +57,7 @@ rules
       //else, retain block and recurse on tail
       (s' := [Block(x') | <remove-empty-blocks> tail]))) <+
     //else, retain head and recurse on tail
-    (                   s' := [head | <remove-empty-blocks> tail])
+    (s' := [head | <remove-empty-blocks> tail])
 
   //---------------------------------------------------------------------------
   //For loops
@@ -77,7 +79,7 @@ rules
   //If statements
   
   //Convert "if (true) ..." and "if (false) else ..." to the appropriate bodies
-  optimize: If(True(),  tBody, None())      -> Block([tBody])
+  optimize: If(True(),  tBody, None())      -> tBody
   optimize: If(True(),  tBody, Else(eBody)) -> Block([tBody | eVars])
     where
     <?Block(eVars)> <extract-vardecls> eBody

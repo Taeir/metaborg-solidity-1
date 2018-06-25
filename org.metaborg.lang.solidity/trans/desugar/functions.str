@@ -2,13 +2,15 @@ module desugar/functions
 
 imports
   signatures/functions-sig
-  signatures/contracts-sig
   signatures/libraries-sig
   signatures/statements-sig
   signatures/modifiers-sig
   signatures/types-sig
   
+  desugar/contracts
   desugar/solidity
+  
+  libspoofax/stratego/debug
 
 signature
   constructors
@@ -28,7 +30,22 @@ signature
     TupleType : List(Type) -> Type
 
 strategies
-  name-constructors = topdown(try(name-constructors1))
+  /**
+   * Normalizes all constructors into a generic format:
+   *   Constructor(name, params, mod?, statement)
+   *   ConstructorWithSuper(name, params, mod?, super, superCall, statement)
+   *
+   * This function adds a default constructor if no constructor exists yet.
+   */
+  normalize-constructors = topdown(try(normalize-constructors-pre))
+  
+  /**
+   * Normalizes functions into a generic format:
+   *   Function(name, params, modifiers, returnParams, statement)
+   *
+   * Also adds the name of the function to each return statement.
+   * This information is used during typechecking.
+   */
   normalize-functions = topdown(try(normalize-fun))
 
 rules
@@ -61,10 +78,11 @@ rules
    * @return list
    */
   fix-function-modifiers: [] -> []
-  fix-function-modifiers: mods -> <concat> [statemut', visibility']
+  fix-function-modifiers: mods -> <concat> [invalid, statemut', visibility']
     where
     statemut := <get-statemut-modifiers> mods;
     visibility := <get-visibility-modifiers> mods;
+    invalid := <get-invalid-modifiers> mods;
     (
       (<gti> (<length> statemut, 1);
       statemut' := [InvalidMod("You can only have one state mutability modifier.")]) <+
@@ -84,6 +102,10 @@ rules
   get-visibility-modifiers: [v@Visibility(_) | tail]      -> [v | <get-visibility-modifiers> tail]
   get-visibility-modifiers: [_               | tail]      -> <get-visibility-modifiers> tail
   
+  get-invalid-modifiers: [] -> []
+  get-invalid-modifiers: [i@InvalidMod(_) | tail] -> [i | <get-invalid-modifiers> tail]
+  get-invalid-modifiers: [_               | tail] -> <get-invalid-modifiers> tail
+  
   /**
    * Converts an array of return types into a single return type (Void, type or tuple).
    */
@@ -95,37 +117,81 @@ rules
   /**
    * Adds the name of the contract/library to all the constructors in it.
    */
-  name-constructors1: Contract(name, content) -> Contract(name, content')
+  normalize-constructors-pre: Contract(name, inherits, content) -> Contract(name, inherits, content')
     where
-    content' := <map(add-name-to-constructor(|name))> content
-  name-constructors1: ContractInherits(name, i, content) -> ContractInherits(name, i, content')
+    content' := <add-constructor(|name)> <map(normalize-constructor(|name))> content
+  normalize-constructors-pre: Library(name, content) -> Library(name, content')
     where
-    content' := <map(add-name-to-constructor(|name))> content
-  name-constructors1: Library(name, content) -> Library(name, content')
-    where
-    content' := <map(add-name-to-constructor(|name))> content
+    content' := <add-constructor(|name)> <map(normalize-constructor(|name))> content
   
   /**
-   * Adds the given name to constructors.
+   * Normalizes all constructors and adds the name of the contract to the constructor.
+   *
+   * If a function is encountered with the given name (old constructor syntax), then it is converted
+   * to a constructor. If this constructor function specifies a return type or state mutability,
+   * then this method will use InvalidMod to display an error to the user.
    */
-  add-name-to-constructor(|contractName): Constructor(params, mod, body) ->
-                                            Constructor(contractName, params, mod, body)
-  add-name-to-constructor(|contractName): ConstructorWithSuper(params, mod1, modCon, mod2, body) ->
-                                            ConstructorWithSuper(contractName, params, mod1, modCon, mod2, body)
-  add-name-to-constructor(|contractName): x -> x
+  normalize-constructor(|contractName): Constructor(params, mod, body)
+                                        -> Constructor(contractName, params, mod, body)
+  normalize-constructor(|contractName): ConstructorWithSuper(params, mod1, modCon, mod2, body)
+                                        -> ConstructorWithSuper(contractName, params, mod1, modCon, mod2, body)
+  normalize-constructor(|contractName): VoidFunction(contractName, params, mods, body)
+                                        -> Constructor(contractName, params, mod, body)
     where
-    not(<?Constructor(_, _, _)> x); not(<?ConstructorWithSuper(_, _, _, _, _, _)> x)
+    mods' := <fix-function-modifiers> mods;
+    if (<gti> (<length> <get-statemut-modifiers> mods', 0))
+    then mod := InvalidMod("Constructor can only have a visibility modifier.")
+    else if (<?[]> mods')
+    then mod := NoModifier()
+    else mod := <Hd> mods'
+    end
+    end
+  normalize-constructor(|contractName): Function(contractName, params, _, ret, body)
+                                        -> Function(contractName, params, mod, ret, body)
+    where
+    mod := [InvalidMod("A constructor (function with contract name) cannot have a return type.")]
+
+  normalize-constructor(|contractName): x -> x
   
+  /**
+   * If the given list of contract content does not include a constructor, this function adds 
+   * an empty constructor.
+   *
+   * @param  string                - the name of the contract
+   * @param  list(ContractContent)
+   * @return list(ContractContent) 
+   */
+  add-constructor(|name): content -> content'
+    where
+    if (<has-no-constructor> content)
+    then content' := [Constructor(name, [], Visibility("public"), []) | content]
+    else content' := content
+    end
+  
+  /**
+   * Succeeds if the given contract content does not include a constructor.
+   *
+   * @param  list(ContractContent)
+   * @return list(ContractContent)
+   */
+  has-no-constructor = map(not-constructor)
+  
+  /**
+   * Succeeds if the given element is not a constructor.
+   */
+  not-constructor: c -> c
+    where
+    not(<?Constructor(_, _, _, _) + ?ConstructorWithSuper(_, _, _, _, _, _)> c)
   
   //-----------------------------------------------------------------------------------------------
   //Unpack returns for abstract functions
-  normalize-fun: AbstractFunction(name, params, mods, Some(Returns(retParams))) ->
-                   AbstractFunction(name, params, mods', retParams')
+  normalize-fun: AbstractFunction(name, params, mods, Some(Returns(retParams)))
+                 -> AbstractFunction(name, params, mods', retParams')
     where
     mods' := <fix-function-modifiers> mods;
     retParams' := <convert-return-type> retParams
-  normalize-fun: AbstractFunction(name, params, mods, None()) ->
-                   AbstractFunction(name, params, mods', VoidType())
+  normalize-fun: AbstractFunction(name, params, mods, None())
+                 -> AbstractFunction(name, params, mods', VoidType())
     where
     mods' := <fix-function-modifiers> mods
   
@@ -169,17 +235,28 @@ rules
 
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: Function(n, [], m, VoidType(), Block(s))        -> FallBackFunction(m, s)            where <?"*fallback"> n
-  resugar: Function(n, p, m, VoidType(), Block(s))         -> VoidFunction(n, p, m, s)          where not(<?"*fallback"> n)
-  resugar: Function(n, p, m, t, Block(s))                  -> Function(n, p, m, Returns(<restore-return-type> t), s) where not(<?"*fallback"> n)
-  resugar: AbstractFunction(n, p, m, VoidType())           -> AbstractFunction(n, p, m, None())
-  resugar: AbstractFunction(n, p, m, t)                    -> AbstractFunction(n, p, m, Some(Returns(<restore-return-type> t)))
-  resugar: Constructor(_, p, m, Block(s))                  -> Constructor(p, m, s)
-  resugar: ConstructorWithSuper(_, p, m, sn, sc, Block(s)) -> ConstructorWithSuper(p, m, ModSuperCall(sn, sc), None(), s)
+  resugar = resugar-fun
+  
+  resugar-fun: Function("*fallback", [], m, VoidType(), Block(s))
+               -> FallBackFunction(m, s)
+  resugar-fun: Function(n, p, m, VoidType(), Block(s))
+               -> VoidFunction(n, p, m, s)
+  resugar-fun: Function(n, p, m, t, Block(s))
+               -> Function(n, p, m, Returns(<restore-return-type> t), s)
+ 
+  resugar-fun: AbstractFunction(n, p, m, VoidType())
+               -> AbstractFunction(n, p, m, None())
+  resugar-fun: AbstractFunction(n, p, m, t)
+               -> AbstractFunction(n, p, m, Some(Returns(<restore-return-type> t)))
+               
+  resugar-fun: Constructor(_, p, m, Block(s))
+               -> Constructor(p, m, s)
+  resugar-fun: ConstructorWithSuper(_, p, m, sn, sc, Block(s))
+               -> ConstructorWithSuper(p, m, ModSuperCall(sn, sc), None(), s)
   
   //Restore return statements
-  resugar: ReturnStatement(_, e) -> ReturnStatement(e)
-  resugar: VoidReturn(_)         -> VoidReturn()
+  resugar-fun: ReturnStatement(_, e) -> ReturnStatement(e)
+  resugar-fun: VoidReturn(_)         -> VoidReturn()
   
   //Restore the return type
   restore-return-type: VoidType()       -> []

@@ -16,9 +16,11 @@ strategies
   constant-fold = innermost(constant-fold1); bottomup(try(constant-fold2))
 
 rules
+  desugar = desugar-nrlit
+
   //In the desugaring, convert to bigdec
-  desugar: NumberLit(nr, None())     -> BigDec(<convertnr> nr)
-  desugar: NumberLit(nr, Some(unit)) -> BigDec(bd')
+  desugar-nrlit: NumberLit(nr, None())     -> BigDec(<convertnr> nr)
+  desugar-nrlit: NumberLit(nr, Some(unit)) -> BigDec(bd')
     where
     bd := <convertnr> nr;
     (
@@ -68,5 +70,7 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: IntLiteral(nr, _, _) -> NumberLit(Int(nr), None())
-  resugar: BigDec(nr)           -> NumberLit(Scientific(nr), None())
+  resugar = resugar-nrlit
+  
+  resugar-nrlit: IntLiteral(nr, _, _) -> NumberLit(Int(nr), None())
+  resugar-nrlit: BigDec(nr)           -> NumberLit(Scientific(nr), None())

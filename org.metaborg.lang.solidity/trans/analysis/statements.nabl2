@@ -3,6 +3,7 @@ module analysis/statements
 imports
   signatures/statements-sig
   signatures/assembly-sig
+  analysis/refs
 
 rules
   //-----------------------------------------------------------------------------------------------

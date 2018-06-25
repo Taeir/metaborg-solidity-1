@@ -26,8 +26,7 @@ rules
         ?VoidReturn(_) +
         ?Continue() +
         ?Break() +
-        ?Throw() +
-        ?Emit(_, _)> h; t' := <map(\s -> DeadStatement(s)\)> t) <+
+        ?Throw()> h; t' := <map(\s -> DeadStatement(s)\)> t) <+
       (t' := <check-dead> t)
     )
   

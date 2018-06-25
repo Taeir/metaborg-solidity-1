@@ -22,16 +22,14 @@ signature
     
     //"Simple" types
     BoolT        : Type
-    AddressT     : Type
+    AddressT     : scope -> Type
     StringT      : Type
     
-    //Byte arrays
-    FBytesT      : INT -> Type
-    DBytesT      : Type
-    
     //Array types
-    FArrayT      : Type * INT -> Type
-    DArrayT      : Type -> Type
+    FBytesT      : INT * scope -> Type
+    DBytesT      : scope -> Type
+    FArrayT      : Type * string * scope -> Type
+    DArrayT      : Type * scope -> Type
     
     //Function types
     FunctionT    : list(Type) * Type -> Type
@@ -85,10 +83,19 @@ signature
 
 rules
   //-----------------------------------------------------------------------------------------------
+  //Helper functions
+  GetAddressType [[ _ ^ (s) : tyAddress ]] :=
+    BuiltInType{"address"} -> s,
+    BuiltInType{"address"} |-> address,
+    address ?===> addressScope,
+    tyAddress == AddressT(addressScope).
+  
+  //-----------------------------------------------------------------------------------------------
   //Simple types
-  [[ BooleanType() ^ (s) : BoolT()    ]].
-  [[ AddressType() ^ (s) : AddressT() ]].
-  [[ StringType()  ^ (s) : StringT()  ]].
+  [[ BooleanType() ^ (s)   : BoolT()   ]].
+  [[ StringType()  ^ (s)   : StringT() ]].
+  [[ a@AddressType() ^ (s) : tyAddress ]] :=
+    GetAddressType [[ a ^ (s) : tyAddress ]].
 
   //-----------------------------------------------------------------------------------------------
   //Numbers
@@ -99,23 +106,54 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Byte arrays
-  [[ FixedBytesArrayType(x)  ^ (s) : ty ]] := ty == FBytesT(x).
-  [[ DynamicBytesArrayType() ^ (s) : ty ]] := ty == DBytesT().
+  [[ FixedBytesArrayType(x)  ^ (s) : tyFBytes ]] :=
+    BuiltInType{"farray"} -> s,
+    BuiltInType{"farray"} |-> farray,
+    farray ?===> farrayScope,
+    tyFBytes == FBytesT(x, farrayScope).
+  [[ DynamicBytesArrayType() ^ (s) : tyDBytes ]] :=
+    BuiltInType{"darray"} -> s,
+    BuiltInType{"darray"} |-> darray,
+    darray ?===> darrayScope,
+    tyDBytes == DBytesT(darrayScope).
   
   //-----------------------------------------------------------------------------------------------
   //Arrays
-  [[ FixedArrayType(base, sizeExp) ^ (s) : ty ]] :=
-    [[ base ^ (s) : baseTy ]],
-    [[ sizeExp ^ (s) : sizeTy ]],
-    ty == FArrayT(baseTy, 1),
-    VarT() <sub! ty,
+  [[ FixedArrayType(base, sizeExp) ^ (s) : tyFArray ]] :=
+    [[ base    ^ (s) : tyBase ]],
+    [[ sizeExp ^ (s) : tySize ]],
     
-    false | note $[Size is not checked].
+    BuiltInType{"farray"} -> s,
+    BuiltInType{"farray"} |-> farray,
+    farray ?===> farrayScope,
+    BuiltInType{"darray"} -> s,
+    BuiltInType{"darray"} |-> darray,
+    darray ?===> darrayScope,
+    
+    //Check if the size is an unsigned integer
+    tySizeReal is sub.lub of (tySize, UIntT(256)) | error $[Size must be an unsigned integer] @sizeExp,
+    UIntTS() is simplifyType of tySizeReal        | error $[Size must be an unsigned integer] @sizeExp,
+    
+    //Determine the size from the expression
+    size is getLiteralInt of sizeExp | error $[Array size must be a constant integer literal] @sizeExp,
+    tyFArray == FArrayT(tyBase, size, farrayScope),
+    
+    //Ensure that casting and var subtyping works.
+    tyDArray == DArrayT(tyBase, darrayScope),
+    tyFArray <cast! tyDArray,
+    
+    VarT()   <sub! tyFArray,
+    VarT()   <sub! tyDArray.
   
-  [[ DynamicArrayType(base)        ^ (s) : ty ]] :=
-    [[ base ^ (s) : baseTy ]],
-    ty == DArrayT(baseTy),
-    VarT() <sub! ty.
+  [[ DynamicArrayType(base) ^ (s) : tyDArray ]] :=
+    [[ base ^ (s) : tyBase ]],
+    
+    BuiltInType{"darray"} -> s,
+    BuiltInType{"darray"} |-> darray,
+    darray ?===> darrayScope,
+    
+    tyDArray == DArrayT(tyBase, darrayScope),
+    VarT() <sub! tyDArray.
   
   //-----------------------------------------------------------------------------------------------
   //Functions
@@ -150,4 +188,6 @@ rules
     TypeReferrable{x} |-> ref | error $[Cannot find any type [x]] @x,
     ref : tyUDef.
   
+  //------------------------------------------------------------------------------------------------
+  [[ Var() ^ (s) : VarT() ]].
   

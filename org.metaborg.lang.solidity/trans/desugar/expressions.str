@@ -60,100 +60,131 @@ signature
 	UnExp : UnOp * Exp -> Exp
 	UnExp : UnOp * ID  -> Exp
 	UnExp : UnOp * INT -> Exp
+	
+	//Literal arrays
+	LitArray : List(Exp) * String -> Exp
 
 rules
-
+  desugar = desugar-ops
+  desugar = desugar-lval
+  desugar = desugar-tuples
+  desugar = desugar-lit-array
+  
+  //-----------------------------------------------------------------------------------------------
+  //Operators
   //Normal
-  desugar: Add(e1, e2) -> BinExp(Plus(), e1, e2)
-  desugar: Sub(e1, e2) -> BinExp(Minus(), e1, e2)
-  desugar: Mul(e1, e2) -> BinExp(Mult(), e1, e2)
-  desugar: Div(e1, e2) -> BinExp(Div(), e1, e2)
-  desugar: Mod(e1, e2) -> BinExp(Mod(), e1, e2)
-  desugar: Pow(e1, e2) -> BinExp(Pow(), e1, e2)
-  desugar: UMin(e1)    -> UnExp(UMinus(), e1)
-  desugar: UPlus(e1)   -> e1
+  desugar-ops: Add(e1, e2) -> BinExp(Plus(), e1, e2)
+  desugar-ops: Sub(e1, e2) -> BinExp(Minus(), e1, e2)
+  desugar-ops: Mul(e1, e2) -> BinExp(Mult(), e1, e2)
+  desugar-ops: Div(e1, e2) -> BinExp(Div(), e1, e2)
+  desugar-ops: Mod(e1, e2) -> BinExp(Mod(), e1, e2)
+  desugar-ops: Pow(e1, e2) -> BinExp(Pow(), e1, e2)
+  desugar-ops: UMin(e1)    -> UnExp(UMinus(), e1)
+  desugar-ops: UPlus(e1)   -> e1
   
   //Shifts
-  desugar: LShift(e1, e2) -> BinExp(LShift(), e1, e2)
-  desugar: RShift(e1, e2) -> BinExp(RShift(), e1, e2)
+  desugar-ops: LShift(e1, e2) -> BinExp(LShift(), e1, e2)
+  desugar-ops: RShift(e1, e2) -> BinExp(RShift(), e1, e2)
 
   //Bitwise
-  desugar: BitAnd(e1, e2) -> BinExp(BitAnd(), e1, e2)
-  desugar: BitOr(e1, e2)  -> BinExp(BitOr(), e1, e2)
-  desugar: BitXor(e1, e2) -> BinExp(BitXor(), e1, e2)
-  desugar: BitNot(e1)     -> UnExp(BitNot(), e1)
+  desugar-ops: BitAnd(e1, e2) -> BinExp(BitAnd(), e1, e2)
+  desugar-ops: BitOr(e1, e2)  -> BinExp(BitOr(), e1, e2)
+  desugar-ops: BitXor(e1, e2) -> BinExp(BitXor(), e1, e2)
+  desugar-ops: BitNot(e1)     -> UnExp(BitNot(), e1)
   
   //++ and --
-  desugar: IncRet(e1) -> UnExp(IncRet(), e1)
-  desugar: DecRet(e1) -> UnExp(DecRet(), e1)
-  desugar: RetInc(e1) -> UnExp(RetInc(), e1)
-  desugar: RetDec(e1) -> UnExp(RetDec(), e1)
+  desugar-ops: IncRet(e1) -> UnExp(IncRet(), e1)
+  desugar-ops: DecRet(e1) -> UnExp(DecRet(), e1)
+  desugar-ops: RetInc(e1) -> UnExp(RetInc(), e1)
+  desugar-ops: RetDec(e1) -> UnExp(RetDec(), e1)
 
   //Equality
-  desugar: Lt(e1, e2)   -> BinExp(Lt(), e1, e2)
-  desugar: LtEq(e1, e2) -> BinExp(LtEq(), e1, e2)
-  desugar: Gt(e1, e2)   -> BinExp(Gt(), e1, e2)
-  desugar: GtEq(e1, e2) -> BinExp(GtEq(), e1, e2)
-  desugar: Eq(e1, e2)   -> BinExp(Eq(), e1, e2)
-  desugar: NEq(e1, e2)  -> BinExp(NEq(), e1, e2)
+  desugar-ops: Lt(e1, e2)   -> BinExp(Lt(), e1, e2)
+  desugar-ops: LtEq(e1, e2) -> BinExp(LtEq(), e1, e2)
+  desugar-ops: Gt(e1, e2)   -> BinExp(Gt(), e1, e2)
+  desugar-ops: GtEq(e1, e2) -> BinExp(GtEq(), e1, e2)
+  desugar-ops: Eq(e1, e2)   -> BinExp(Eq(), e1, e2)
+  desugar-ops: NEq(e1, e2)  -> BinExp(NEq(), e1, e2)
   
   //Boolean operators
-  desugar: And(e1, e2) -> BinExp(And(), e1, e2)
-  desugar: Or(e1, e2)  -> BinExp(Or(), e1, e2)
-  desugar: Not(e1)     -> UnExp(Not(), e1)
+  desugar-ops: And(e1, e2) -> BinExp(And(), e1, e2)
+  desugar-ops: Or(e1, e2)  -> BinExp(Or(), e1, e2)
+  desugar-ops: Not(e1)     -> UnExp(Not(), e1)
   
   //Array access
-  desugar: Subscript(e1, e2) -> BinExp(Subscript(), e1, e2)
+  desugar-ops: Subscript(e1, e2) -> BinExp(Subscript(), e1, e2)
   
   //Delete
-  desugar: Delete(e1)   -> UnExp(Delete(), e1)
+  desugar-ops: Delete(e1)   -> UnExp(Delete(), e1)
   
+  //-----------------------------------------------------------------------------------------------
   //Assignment
-  desugar: LValAssign(assignment) -> <remove_lval> assignment
-  remove_lval: AddAssign(v, e1) -> Assign(v, BinExp(Plus(), v, e1))
-  remove_lval: SubAssign(v, e1) -> Assign(v, BinExp(Minus(), v, e1))
-  remove_lval: MulAssign(v, e1) -> Assign(v, BinExp(Mult(), v, e1))
-  remove_lval: DivAssign(v, e1) -> Assign(v, BinExp(Div(), v, e1))
-  remove_lval: ModAssign(v, e1) -> Assign(v, BinExp(Mod(), v, e1))
+  desugar-lval: LValAssign(assignment) -> <remove-lval> assignment
   
-  remove_lval: BitOrAssign(v, e1)  -> Assign(v, BinExp(BitOr(), v, e1))
-  remove_lval: BitAndAssign(v, e1) -> Assign(v, BinExp(BitAnd(), v, e1))
-  remove_lval: BitXorAssign(v, e1) -> Assign(v, BinExp(BitXor(), v, e1))
+  /**
+   * Removes LVal assignments, turning them into normal assignments.
+   *
+   * @param  LVal
+   * @return Assign
+   */
+  remove-lval: AddAssign(v, e1)    -> Assign(v, BinExp(Plus(), v, e1))
+  remove-lval: SubAssign(v, e1)    -> Assign(v, BinExp(Minus(), v, e1))
+  remove-lval: MulAssign(v, e1)    -> Assign(v, BinExp(Mult(), v, e1))
+  remove-lval: DivAssign(v, e1)    -> Assign(v, BinExp(Div(), v, e1))
+  remove-lval: ModAssign(v, e1)    -> Assign(v, BinExp(Mod(), v, e1))
+  remove-lval: BitOrAssign(v, e1)  -> Assign(v, BinExp(BitOr(), v, e1))
+  remove-lval: BitAndAssign(v, e1) -> Assign(v, BinExp(BitAnd(), v, e1))
+  remove-lval: BitXorAssign(v, e1) -> Assign(v, BinExp(BitXor(), v, e1))
+  remove-lval: LShiftAssign(v, e1) -> Assign(v, BinExp(LShift(), v, e1))
+  remove-lval: RShiftAssign(v, e1) -> Assign(v, BinExp(RShift(), v, e1))
   
-  remove_lval: LShiftAssign(v, e1) -> Assign(v, BinExp(LShift(), v, e1))
-  remove_lval: RShiftAssign(v, e1) -> Assign(v, BinExp(RShift(), v, e1))
-  
-  //---------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Tuple assignments of a single variable are just normal assignments
-  desugar: AssignTuple([TupleName(Some(name))], exp) -> Assign(name, exp)
+  desugar-tuples: AssignTuple([TupleName(Some(name))], exp) -> Assign(IdRef(name), exp)
+  
+  //-----------------------------------------------------------------------------------------------
+  //Literal arrays
+  /**
+   * Adds the length of the array to the expression.
+   * This information is used by NaBL.
+   *
+   * @param  LitArray/1
+   * @return LitArray/2
+   */
+  desugar-lit-array: LitArray(exps) -> LitArray(exps, <int-to-string> <length> exps)
 
-  //---------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: BinExp(Plus(),      e1, e2) -> Add(e1, e2)
-  resugar: BinExp(Minus(),     e1, e2) -> Sub(e1, e2)
-  resugar: BinExp(Mult(),      e1, e2) -> Mul(e1, e2)
-  resugar: BinExp(Div(),       e1, e2) -> Div(e1, e2)
-  resugar: BinExp(Mod(),       e1, e2) -> Mod(e1, e2)
-  resugar: BinExp(Pow(),       e1, e2) -> Pow(e1, e2)
-  resugar: UnExp(UMinus(),     e1)     -> UMin(e1)
-  resugar: BinExp(LShift(),    e1, e2) -> LShift(e1, e2)
-  resugar: BinExp(RShift(),    e1, e2) -> RShift(e1, e2)
-  resugar: BinExp(BitAnd(),    e1, e2) -> BitAnd(e1, e2)
-  resugar: BinExp(BitOr(),     e1, e2) -> BitOr(e1, e2)
-  resugar: BinExp(BitXor(),    e1, e2) -> BitXor(e1, e2)
-  resugar: UnExp(BitNot(),     e1)     -> BitNot(e1)
-  resugar: UnExp(RetInc(),     e1)     -> RetInc(e1)
-  resugar: UnExp(RetDec(),     e1)     -> RetDec(e1)
-  resugar: UnExp(IncRet(),     e1)     -> IncRet(e1)
-  resugar: UnExp(DecRet(),     e1)     -> DecRet(e1)
-  resugar: BinExp(Lt(),        e1, e2) -> Lt(e1, e2)
-  resugar: BinExp(LtEq(),      e1, e2) -> LtEq(e1, e2)
-  resugar: BinExp(Gt(),        e1, e2) -> Gt(e1, e2)
-  resugar: BinExp(GtEq(),      e1, e2) -> GtEq(e1, e2)
-  resugar: BinExp(Eq(),        e1, e2) -> Eq(e1, e2)
-  resugar: BinExp(NEq(),       e1, e2) -> NEq(e1, e2)
-  resugar: BinExp(And(),       e1, e2) -> And(e1, e2)
-  resugar: BinExp(Or(),        e1, e2) -> Or(e1, e2)
-  resugar: UnExp(Not(),        e1)     -> Not(e1)
-  resugar: BinExp(Subscript(), e1, e2) -> Subscript(e1, e2)
-  resugar: UnExp(Delete(),     e1)     -> Delete(e1)
+  resugar = resugar-ops
+  resugar = resugar-lit-array
+  
+  resugar-ops: BinExp(Plus(),      e1, e2) -> Add(e1, e2)
+  resugar-ops: BinExp(Minus(),     e1, e2) -> Sub(e1, e2)
+  resugar-ops: BinExp(Mult(),      e1, e2) -> Mul(e1, e2)
+  resugar-ops: BinExp(Div(),       e1, e2) -> Div(e1, e2)
+  resugar-ops: BinExp(Mod(),       e1, e2) -> Mod(e1, e2)
+  resugar-ops: BinExp(Pow(),       e1, e2) -> Pow(e1, e2)
+  resugar-ops: UnExp(UMinus(),     e1)     -> UMin(e1)
+  resugar-ops: BinExp(LShift(),    e1, e2) -> LShift(e1, e2)
+  resugar-ops: BinExp(RShift(),    e1, e2) -> RShift(e1, e2)
+  resugar-ops: BinExp(BitAnd(),    e1, e2) -> BitAnd(e1, e2)
+  resugar-ops: BinExp(BitOr(),     e1, e2) -> BitOr(e1, e2)
+  resugar-ops: BinExp(BitXor(),    e1, e2) -> BitXor(e1, e2)
+  resugar-ops: UnExp(BitNot(),     e1)     -> BitNot(e1)
+  resugar-ops: UnExp(RetInc(),     e1)     -> RetInc(e1)
+  resugar-ops: UnExp(RetDec(),     e1)     -> RetDec(e1)
+  resugar-ops: UnExp(IncRet(),     e1)     -> IncRet(e1)
+  resugar-ops: UnExp(DecRet(),     e1)     -> DecRet(e1)
+  resugar-ops: BinExp(Lt(),        e1, e2) -> Lt(e1, e2)
+  resugar-ops: BinExp(LtEq(),      e1, e2) -> LtEq(e1, e2)
+  resugar-ops: BinExp(Gt(),        e1, e2) -> Gt(e1, e2)
+  resugar-ops: BinExp(GtEq(),      e1, e2) -> GtEq(e1, e2)
+  resugar-ops: BinExp(Eq(),        e1, e2) -> Eq(e1, e2)
+  resugar-ops: BinExp(NEq(),       e1, e2) -> NEq(e1, e2)
+  resugar-ops: BinExp(And(),       e1, e2) -> And(e1, e2)
+  resugar-ops: BinExp(Or(),        e1, e2) -> Or(e1, e2)
+  resugar-ops: UnExp(Not(),        e1)     -> Not(e1)
+  resugar-ops: BinExp(Subscript(), e1, e2) -> Subscript(e1, e2)
+  resugar-ops: UnExp(Delete(),     e1)     -> Delete(e1)
+  
+  resugar-lit-array: LitArray(exps, _) -> LitArray(exps)

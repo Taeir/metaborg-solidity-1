@@ -3,58 +3,76 @@ module analysis/globals
 imports
   analysis/types
 
+signature
+  namespaces
+    BuiltInType
+
 rules
   //We define globals in two separate scopes, to avoid name conflicts.
-  GlobalsStart [[ p ^ (programScope) ]] :=
+  BuiltInGlobalsStart [[ p ^ (programScope) ]] :=
     new globalsAScope,
     programScope -P-> globalsAScope,
     
-    Globals [[ p ^ (globalsAScope) ]],
+    BuiltInGlobals [[ p ^ (globalsAScope) ]],
     
     new globalsBScope,
     programScope -P-> globalsBScope,
     
-    Globals2 [[ p ^ (globalsBScope) ]].
+    BuiltInGlobals2 [[ p ^ (globalsBScope) ]].
 
-  Globals [[ p ^ (programScope) ]] :=
+  BuiltInGlobals [[ p ^ (programScope) ]] :=
+    //Resolve address, darray and farray to be able to use them.
+    BuiltInType{"address"} -> programScope,
+    BuiltInType{"address"} |-> address,
+    address ?===> addressScope,
+    addressType == AddressT(addressScope),
+    
+    BuiltInType{"darray"} -> programScope,
+    BuiltInType{"darray"} |-> darray,
+    darray ?===> darrayScope,
+    
+    BuiltInType{"farray"} -> programScope,
+    BuiltInType{"farray"} |-> farray,
+    farray ?===> farrayScope,
+    
     //---------------------------------------------------------------------------------------------
     //abi: encode(...), encodePacked(...), encodeWithSelector(selector, ...), encodeWithSignature(signature, ...)
     new abiScope,
     abiScope -P-> programScope,
     Var{"abi" @p} <- programScope,
-    Var{"abi" @p} : tyAbi,
+    Var{"abi" @p} : tyAbi !!,
     Var{"abi" @p} =I=> abiScope,
-    tyAbi == NamedT(Var{"abi" @p}, BuiltInT()),
+    tyAbi == NamedT(Var{"abi" @p}, abiScope, BuiltInT()),
     
     Function{"encode"} <- abiScope,
-    Function{"encode"} : FunctionT([ VarT() ], VoidT()) !!,
+    Function{"encode"} : FunctionT([ PackedT() ], DBytesT(darrayScope)) !!,
     
     Function{"encodePacked"} <- abiScope,
-    Function{"encodePacked"} : FunctionT([ VarT() ], VoidT()) !!,
+    Function{"encodePacked"} : FunctionT([ PackedT() ], DBytesT(darrayScope)) !!,
     
     Function{"encodeWithSelector"} <- abiScope,
-    Function{"encodeWithSelector"} : FunctionT([ VarT(), VarT() ], VoidT()) !!,
+    Function{"encodeWithSelector"} : FunctionT([ FBytesT(4, farrayScope), PackedT() ], DBytesT(darrayScope)) !!,
     
     Function{"encodeWithSignature"} <- abiScope,
-    Function{"encodeWithSignature"} : FunctionT([ VarT(), VarT() ], VoidT()) !!,
+    Function{"encodeWithSignature"} : FunctionT([ StringT(), PackedT() ], DBytesT(darrayScope)) !!,
     
     //---------------------------------------------------------------------------------------------
     //msg: data, gas, sender, value
     new msgScope,
     msgScope -P-> programScope,
     Var{"msg" @p} <- programScope,
-    Var{"msg" @p} : tyMsg,
+    Var{"msg" @p} : tyMsg !!,
     Var{"msg" @p} =I=> msgScope,
-    tyMsg == NamedT(Var{"msg" @p}, BuiltInT()),
+    tyMsg == NamedT(Var{"msg" @p}, msgScope, BuiltInT()),
     
     Var{"data"} <- msgScope,
-    Var{"data"} : DBytesT() !!,
+    Var{"data"} : DBytesT(darrayScope) !!,
     
     Var{"gas"} <- msgScope,
     Var{"gas"} : UIntT(256) !!,
     
     Var{"sender"} <- msgScope,
-    Var{"sender"} : AddressT() !!,
+    Var{"sender"} : addressType !!,
     
     Var{"value"} <- msgScope,
     Var{"value"} : UIntT(256) !!,
@@ -64,12 +82,12 @@ rules
     new blockScope,
     blockScope -P-> programScope,
     Var{"block" @p} <- programScope,
-    Var{"block" @p} : tyBlock,
+    Var{"block" @p} : tyBlock !!,
     Var{"block" @p} =I=> blockScope,
-    tyBlock == NamedT(Var{"block" @p}, BuiltInT()),
+    tyBlock == NamedT(Var{"block" @p}, blockScope, BuiltInT()),
     
     Var{"coinbase"} <- blockScope,
-    Var{"coinbase"} : AddressT() !!,
+    Var{"coinbase"} : addressType !!,
     
     Var{"difficulty"} <- blockScope,
     Var{"difficulty"} : UIntT(256) !!,
@@ -84,22 +102,22 @@ rules
     Var{"timestamp"} : UIntT(256) !!,
     
     Function{"blockhash"} <- blockScope,
-    Function{"blockhash"} : FunctionT([ UIntT(256) ], FBytesT(32)) !!,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], FBytesT(32, farrayScope)) !!,
     
     //---------------------------------------------------------------------------------------------
     //tx: gasprice, origin
     new txScope,
     txScope -P-> programScope,
     Var{"tx" @p} <- programScope,
-    Var{"tx" @p} : tyTx,
+    Var{"tx" @p} : tyTx !!,
     Var{"tx" @p} =I=> txScope,
-    tyTx == NamedT(Var{"tx" @p}, BuiltInT()),
+    tyTx == NamedT(Var{"tx" @p}, txScope, BuiltInT()),
     
     Var{"gasprice"} <- txScope,
     Var{"gasprice"} : UIntT(256) !!,
     
     Var{"origin"} <- txScope,
-    Var{"origin"} : AddressT() !!,
+    Var{"origin"} : addressType !!,
     
     //---------------------------------------------------------------------------------------------
     //Global functions and variables
@@ -115,15 +133,27 @@ rules
     Function{"require"} <- programScope,
     Function{"require"} : FunctionT([ BoolT(), StringT() ], VoidT()) !!,
     
+    Function{"!require1"} <- programScope,
+    Function{"!require1"} : FunctionT([ BoolT() ], VoidT()) !!,
+    
+    Function{"!require2"} <- programScope,
+    Function{"!require2"} : FunctionT([ BoolT(), StringT() ], VoidT()) !!,
+    
     Function{"revert"} <- programScope,
     Function{"revert"} : FunctionT([ StringT() ], VoidT()) !!,
     
+    Function{"!revert0"} <- programScope,
+    Function{"!revert0"} : FunctionT([ ], VoidT()) !!,
+    
+    Function{"!revert1"} <- programScope,
+    Function{"!revert1"} : FunctionT([ StringT() ], VoidT()) !!,
+    
     //---------------------------------------------------------------------------------------------
-    //Hashing functions
+    //Mathematical and Cryptographic Functions
     //keccak256, sha3, sha256 and ripemd160 accepts tightly-packed arguments, so we accept var
     Function{"keccak256"} <- programScope,
     Function{"keccak256"} : tyHashFun !!,
-    tyHashFun == FunctionT([ VarT() ], FBytesT(32)),
+    tyHashFun == FunctionT([ PackedT() ], FBytesT(32, farrayScope)),
     
     Function{"sha3"} <- programScope,
     Function{"sha3"} : tyHashFun !!,
@@ -132,22 +162,81 @@ rules
     Function{"sha256"} : tyHashFun !!,
     
     Function{"ripemd160"} <- programScope,
-    Function{"ripemd160"} : tyHashFun !!,
+    Function{"ripemd160"} : FunctionT([ PackedT() ], FBytesT(20, farrayScope)) !!,
     
+    Function{"ecrecover"} <- programScope,
+    Function{"ecrecover"} : FunctionT([ FBytesT(32, farrayScope), UIntT(8), FBytesT(32, farrayScope),
+                                        FBytesT(32, farrayScope) ], AddressT(addressScope)) !!,
+    
+    Function{"addmod"} <- programScope,
+    Function{"addmod"} : FunctionT([ UIntT(256), UIntT(256), UIntT(256) ], UIntT(256)) !!,
+    
+    Function{"mulmod"} <- programScope,
+    Function{"mulmod"} : FunctionT([ UIntT(256), UIntT(256), UIntT(256) ], UIntT(256)) !!,
+    
+    //---------------------------------------------------------------------------------------------
+    //Contract destruction
     Function{"selfdestruct"} <- programScope,
     Function{"selfdestruct"} : tyDestruct !!,
-    tyDestruct == FunctionT([ AddressT() ], VoidT()),
+    tyDestruct == FunctionT([ addressType ], VoidT()),
     
     Function{"suicide"} <- programScope,
     Function{"suicide"} : tyDestruct !!.
     
-  //Define additional functions in a separate scope. If function overloading is fixed, these will work.
-  Globals2 [[ p ^ (programScope) ]] :=
+  //Define functions with a name conflict in a separate scope.
+  BuiltInGlobals2 [[ p ^ (programScope) ]] :=
+    BuiltInType{"farray"} -> programScope,
+    BuiltInType{"farray"} |-> farray,
+    farray ?===> farrayScope,
+    
     Function{"blockhash"} <- programScope,
-    Function{"blockhash"} : FunctionT([ UIntT(256) ], FBytesT(32)) !!,
+    Function{"blockhash"} : FunctionT([ UIntT(256) ], FBytesT(32, farrayScope)) !!.
+
+  //Defines built in types for address and arrays
+  BuiltInTypes [[ p ^ (programScope) ]] :=
+    BuiltInType{"address"@p} <- programScope,
+    BuiltInType{"address"@p} : NamedT(BuiltInType{"address"@p}, addressScope, BuiltInT()) !!,
+    BuiltInType{"address"@p} =I=> addressScope,
     
-    Function{"require"} <- programScope,
-    Function{"require"} : FunctionT([ BoolT() ], VoidT()) !!,
+    BuiltInType{"farray"@p} <- programScope,
+    BuiltInType{"farray"@p} : NamedT(BuiltInType{"farray"@p}, farrayScope, BuiltInT()) !!,
+    BuiltInType{"farray"@p} =I=> farrayScope,
     
-    Function{"revert"} <- programScope,
-    Function{"revert"} : FunctionT([], VoidT()) !!.
+    BuiltInType{"darray"@p} <- programScope,
+    BuiltInType{"darray"@p} : NamedT(BuiltInType{"darray"@p}, darrayScope, BuiltInT()) !!,
+    BuiltInType{"darray"@p} =I=> darrayScope,
+    
+    new addressScope,
+    
+    Var{"balance"} <- addressScope,
+    Var{"balance"} : UIntT(256) !!,
+    
+    Function{"transfer"} <- addressScope,
+    Function{"transfer"} : FunctionT([ UIntT(256) ], VoidT()) !!,
+    
+    Function{"send"} <- addressScope,
+    Function{"send"} : FunctionT([ UIntT(256) ], BoolT()) !!,
+    
+    Function{"call"} <- addressScope,
+    Function{"call"} : FunctionT([ AnyT() ], BoolT()) !!,
+    
+    Function{"callcode"} <- addressScope,
+    Function{"callcode"} : FunctionT([ AnyT() ], BoolT()) !!,
+    
+    Function{"delegatecall"} <- addressScope,
+    Function{"delegatecall"} : FunctionT([ AnyT() ], BoolT()) !!,
+    
+    new farrayScope,
+    
+    Var{"length"} <- farrayScope,
+    Var{"length"} : UIntT(256) !!,
+    
+    new darrayScope,
+    darrayScope -P-> farrayScope,
+    
+    Function{"push"} <- darrayScope,
+    Function{"push"} : FunctionT([ AnyT() ], UIntT(256)) !!,
+    
+    Function{"pop"} <- darrayScope,
+    Function{"pop"} : FunctionT([ ], VarT()) !!.
+    

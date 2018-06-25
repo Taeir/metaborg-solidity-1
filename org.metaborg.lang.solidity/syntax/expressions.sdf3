@@ -4,7 +4,6 @@ imports
   
   Common
   types
-  vars
   tuples
 
 template options
@@ -49,10 +48,10 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Increment and decrement
-  Exp.RetInc = < <VarRef>++ > {left}
-  Exp.RetDec = < <VarRef>-- > {left}
-  Exp.IncRet = < ++<VarRef> > {right}
-  Exp.DecRet = < --<VarRef> > {right}
+  Exp.RetInc = < <Ref>++ > {left}
+  Exp.RetDec = < <Ref>-- > {left}
+  Exp.IncRet = < ++<Ref> > {right}
+  Exp.DecRet = < --<Ref> > {right}
   
   //---------------------------------------------------------------------------
   //Comparison
@@ -71,8 +70,8 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Arrays
-  Exp.Subscript = < <Exp>[<AlsoExp>] > {left}
-  AlsoExp       = Exp
+  AlsoExp             = Exp
+  Subscript.Subscript = < <Exp>[<AlsoExp>] > {left}
   
   //---------------------------------------------------------------------------
   //Function calls
@@ -88,52 +87,60 @@ context-free syntax
   Exp.False     = <false>
   Exp.This      = <this>
   Exp.LitArray  = < [<{Exp ", "}+>] >
-  Exp           = VarRef
+  Exp           = Ref
+  
+  //Reference can be a variable, a subscript access or some expression followed
+  //by a reference.
+  Ref.IdRef        = ID
+  Ref              = Subscript
+  Ref.MemberRef    = <<Exp>.<Ref>> {right}
   
   //---------------------------------------------------------------------------
   //Create and delete
-  //TODO
   Exp.NewObject = <new <PATH>(<{Exp ", "}*>)> {prefer}
   Exp.NewArray  = <new <Type>(<Exp>)>
-  Exp.Delete    = <delete <Exp>>              {right}
+  Exp.NewStruct = <<UserDefinedType>({<{StructAssign ", "}+>})>
+  Exp.Delete    = <delete <Exp>> {right}
+  
+  StructAssign.StructAssign = <<ID>: <Exp>>
   
   //---------------------------------------------------------------------------
   //Cast
-  Exp.Cast        = < <SimpleCastType>(<Exp>) > {right}
+  Exp.Cast      = < <SimpleCastType>(<Exp>) > {right}
   
   //---------------------------------------------------------------------------
   //Tenary if statement
-  Exp.Ternary = < <Exp> ? <AlsoExp> : <AlsoExp> > {right} //TODO Correct?
+  Exp.Ternary = < <Exp> ? <AlsoExp> : <AlsoExp> > {right}
   
   //-----------------------------------------------------------------
   //Assignment
-  Exp.Assign      = <<VarRef> = <Exp>>              {right}
-  Exp.AssignArray = <<Exp>[<Exp>] = <Exp>>          {right}
+  Exp.Assign      = <<Ref> = <Exp>>                 {right}
   Exp.AssignTuple = <(<{TupleName ", "}*>) = <Exp>> {avoid}
   
   //-----------------------------------------------------------------
   //LValue shorthands
-  LVal.AddAssign    = <<VarRef> += <Exp>>  {right}
-  LVal.SubAssign    = <<VarRef> -= <Exp>>  {right}
-  LVal.MulAssign    = <<VarRef> *= <Exp>>  {right}
-  LVal.DivAssign    = <<VarRef> /= <Exp>>  {right}
-  LVal.ModAssign    = <<VarRef> %= <Exp>>  {right}
+  LVal.AddAssign    = < <Ref> += <Exp> >  {right}
+  LVal.SubAssign    = < <Ref> -= <Exp> >  {right}
+  LVal.MulAssign    = < <Ref> *= <Exp> >  {right}
+  LVal.DivAssign    = < <Ref> /= <Exp> >  {right}
+  LVal.ModAssign    = < <Ref> %= <Exp> >  {right}
   
-  LVal.BitOrAssign  = <<VarRef> |= <Exp>>  {right}
-  LVal.BitAndAssign = <<VarRef> &= <Exp>>  {right}
-  LVal.BitXorAssign = <<VarRef> ^= <Exp>>  {right}
+  LVal.BitOrAssign  = < <Ref> |= <Exp> >  {right}
+  LVal.BitAndAssign = < <Ref> &= <Exp> >  {right}
+  LVal.BitXorAssign = < <Ref> ^= <Exp> >  {right}
   
-  LVal.LShiftAssign = [[VarRef] <<= [Exp]] {right}
-  LVal.RShiftAssign = [[VarRef] >>= [Exp]] {right}
+  LVal.LShiftAssign = [ [Ref] <<= [Exp] ] {right}
+  LVal.RShiftAssign = [ [Ref] >>= [Exp] ] {right}
   
   Exp.LValAssign    = LVal
-
+  
 context-free priorities
-  {//left:
+  {
     Exp.RetInc Exp.RetDec
     Exp.NewObject
-    Exp.Subscript
-    VarRef.Member
+    Subscript.Subscript
+    Ref.IdRef
+    Ref.MemberRef
     FunctionCall.FunctionCall} >
   {right:
     Exp.IncRet Exp.DecRet
@@ -152,5 +159,6 @@ context-free priorities
   {non-assoc: Exp.And} >
   {non-assoc: Exp.Or} >
   {right: Exp.Ternary} >
-  {Exp.Assign Exp.AssignArray Exp.AssignTuple Exp.LValAssign},
+  {Exp.Assign Exp.AssignTuple Exp.LValAssign},
+  
   {right: Exp.Cast} > {left: FunctionCall.FunctionCall}

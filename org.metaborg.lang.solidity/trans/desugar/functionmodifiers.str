@@ -5,13 +5,15 @@ imports
   signatures/statements-sig
 
 rules
-  desugar: FunctionModifier(name, None(), stmts) -> FunctionModifier(name, FMParams([]), stmt)
-    where
-    stmt := Block(stmts)
-  desugar: FunctionModifier(name, Some(fmparams), stmts) -> FunctionModifier(name, fmparams, stmt)
-    where
-    stmt := Block(stmts)
+  desugar = desugar-funmod
+  
+  desugar-funmod: FunctionModifier(name, None(), stmts)
+                  -> FunctionModifier(name, FMParams([]), Block(stmts))
+  desugar-funmod: FunctionModifier(name, Some(fmparams), stmts)
+                  -> FunctionModifier(name, fmparams, Block(stmts))
   
   //-----------------------------------------------------------------------------------------------
-  resugar: FunctionModifier(n, FMParams([]), s)      -> FunctionModifier(n, None(), [s])
-  resugar: FunctionModifier(n, f@FMParams([_|_]), s) -> FunctionModifier(n, Some(f), [s])
+  resugar = resugar-funmod
+  
+  resugar-funmod: FunctionModifier(n, FMParams([]), s)      -> FunctionModifier(n, None(), [s])
+  resugar-funmod: FunctionModifier(n, f@FMParams([_|_]), s) -> FunctionModifier(n, Some(f), [s])

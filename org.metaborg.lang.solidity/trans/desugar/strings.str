@@ -8,8 +8,13 @@ signature
     StringLit : String * INT -> Exp
 
 rules
-  //Add a length to string literals, that is -1 if the string is longer than 32 characters.
-  desugar: StringLit(x) -> StringLit(x', y)
+  desugar = desugar-stringlit
+  
+  /**
+   * Add a length to string literals.
+   * The length is -1 if the string is longer than 32 characters.
+   */
+  desugar-stringlit: StringLit(x) -> StringLit(x', y)
     where
     (
       (<string-starts-with(|"\"")> x; x':= <un-double-quote> x) <+
@@ -23,4 +28,6 @@ rules
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: StringLit(x, _) -> StringLit(x)
+  resugar = resugar-stringlit
+  
+  resugar-stringlit: StringLit(x, _) -> StringLit(x)

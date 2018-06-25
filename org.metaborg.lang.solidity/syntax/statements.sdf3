@@ -6,7 +6,6 @@ imports
   modifiers
   tuples
   types
-  vars
   assembly
 
 template options
@@ -59,7 +58,7 @@ context-free syntax
   //Local variable declaration
   VarDeclStatement.DeclareVar            = <<LocalVarType> <ModVarDecl> <ID>;>
   VarDeclStatement.DeclareVarAssign      = <<LocalVarType> <ModVarDecl> <ID> = <Exp>;>
-  VarDeclStatement.DeclareTupleVarAssign = <<VarType> (<{TupleName ", "}+>) = <Exp>;>
+  VarDeclStatement.DeclareTupleVarAssign = <var (<{TupleName ", "}+>) = <Exp>;>
   Statement                              = VarDeclStatement
   
   ModVarDecl.NoModifier = <>

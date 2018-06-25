@@ -21,7 +21,6 @@ imports
   structs
   types
   usingfor
-  vars
 
 context-free start-symbols
   

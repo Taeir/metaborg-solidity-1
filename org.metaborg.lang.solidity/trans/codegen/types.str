@@ -25,6 +25,6 @@ rules
    */
   is-unsigned-type = ?UIntT(_)
   is-unsigned-type = ?UFixedT(_, _)
-  is-unsigned-type = ?AddressT()
+  is-unsigned-type = ?AddressT(_)
   
   

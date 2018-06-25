@@ -5,57 +5,53 @@ imports
   signatures/expressions-sig
   signatures/statements-sig
   signatures/tuples-sig
-  signatures/vars-sig
   desugar/expressions
 
 signature
   constructors
     Emit    : TypeRef * List(Exp) -> Statement
-    
-    TypeRef : String -> Reference
-    TypeRef : TypeRef * String -> Reference
 
 rules
+  desugar = desugar-for
+  desugar = desugar-emit
+  desugar = desugar-tuple
+  
   //---------------------------------------------------------------------------
   //For loops
   //Convert SomeA and SomeB into Some.
-  desugar: For(SomeA(a), b, c, body) -> For(Some(a), b, c, body)
-  desugar: For(SomeB(a), b, c, body) -> For(Some(a), b, c, body)
+  desugar-for: For(SomeA(a), b, c, body) -> For(Some(a), b, c, body)
+  desugar-for: For(SomeB(a), b, c, body) -> For(Some(a), b, c, body)
 
   //No condition to true, e.g. for(a; ; b) -> for(a; true; b)
-  desugar: For(a, None(), c, body) -> For(a, Some(True()), c, body)
+  desugar-for: For(a, None(), c, body) -> For(a, Some(True()), c, body)
   
   //For with only condition to while, e.g. for(; c;) -> while (c) 
-  desugar: For(None(), cond, None(), body) -> While(cond', body)
+  desugar-for: For(None(), cond, None(), body) -> While(cond', body)
     where
     <?Some(cond')> cond <+ cond' := cond
   
   //Remove the middle "Some"
-  desugar: For(a, Some(b), c, body) -> For(a, b, c, body)
+  desugar-for: For(a, Some(b), c, body) -> For(a, b, c, body)
   
   //-----------------------------------------------------------------------------------------------
   //Emit
-  desugar: Emit(FunctionCall(ref, args)) -> Emit(<convert-type-path> ref, args)
-  
-  convert-type-path: VarRef(name)    -> TypeRef(name)
-  convert-type-path: Member(a, name) -> TypeRef(<convert-type-path> a, name)
+  desugar-emit: Emit(FunctionCall(ref, args)) -> Emit(ref, args)
   
   //-----------------------------------------------------------------------------------------------
   //Tuple declarations
   
   //Desugar tuple away if it only contains a single item.
-  desugar: DeclareTupleVarAssign(ty, [TupleName(Some(name))], exp) -> DeclareVarAssign(ty, NoModifier(), name, exp)
+  desugar-tuple: DeclareTupleVarAssign([TupleName(Some(name))], exp) -> DeclareVarAssign(Var(), NoModifier(), name, exp)
   
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
-  resugar: For(Some(ExpStmt(e)), b, c, body)                   -> For(SomeA(ExpStmt(e)), b, c, body)
-  resugar: For(Some(DeclareVar(t, m, v)), b, c, body)          -> For(SomeB(DeclareVar(t, m, v)), b, c, body)
-  resugar: For(Some(DeclareVarAssign(t, m, v, a)), b, c, body) -> For(SomeB(DeclareVarAssign(t, m, v, a)), b, c, body)
-  resugar: For(a, b, c, body)                                  -> For(a, Some(b), c, body)
+  resugar = resugar-for
+  resugar = resugar-emit
+  
+  resugar-for: For(Some(ExpStmt(e)), b, c, body)                   -> For(SomeA(ExpStmt(e)), b, c, body)
+  resugar-for: For(Some(DeclareVar(t, m, v)), b, c, body)          -> For(SomeB(DeclareVar(t, m, v)), b, c, body)
+  resugar-for: For(Some(DeclareVarAssign(t, m, v, a)), b, c, body) -> For(SomeB(DeclareVarAssign(t, m, v, a)), b, c, body)
+  resugar-for: For(a, b, c, body)                                  -> For(a, Some(b), c, body)
     where
     not(<?Some(_)> b)
-  resugar: Emit(r, a)                                          -> Emit(FunctionCall(<restore-type-path> r, a))
-
-  //Convert from TypeRefs to VarRef/Member statements
-  restore-type-path: TypeRef(n)    -> VarRef(n)
-  restore-type-path: TypeRef(t, n) -> Member(<restore-type-path> t, n)
+  resugar-emit: Emit(r, a)                                         -> Emit(FunctionCall( r, a))

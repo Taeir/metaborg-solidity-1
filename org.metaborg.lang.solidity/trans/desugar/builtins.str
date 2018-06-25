@@ -1,0 +1,84 @@
+module desugar/builtins
+
+imports
+  signatures/expressions-sig
+  signatures/functions-sig
+  signatures/statevariables-sig
+  
+  desugar/contracts
+  desugar/functions
+  desugar/statevariables
+
+signature
+  constructors
+    PackedExp : List(Exp) -> Exp
+
+strategies
+  
+  /**
+   * Changes calls to builtin functions to ensure that they can be checked by NaBL2.
+   * If there is a function that might shadow a builtin, then the calls are not altered.
+   *
+   * This strategy also packs arguments where necessary.
+   */
+  fix-builtins = (check-function-absent(|"require");   topdown(try(builtin-require))) <+
+                 (check-function-absent(|"revert");    topdown(try(builtin-revert))) <+
+                 (check-function-absent(|"keccak256"); topdown(try(builtin-hash(|"keccak256")))) <+
+                 (check-function-absent(|"sha256");    topdown(try(builtin-hash(|"sha256")))) <+
+                 (check-function-absent(|"sha3");      topdown(try(builtin-hash(|"sha3")))) <+
+                 (check-function-absent(|"ripemd160"); topdown(try(builtin-hash(|"ripemd160")))) <+
+                 (check-field-absent(|"abi");          topdown(try(builtin-abi)))
+  /**
+   * Checks if the function with the given name is absent.
+   * This strategy fails if a function with the given name is present.
+   */
+  check-function-absent(|name) = topdown(is-not-function(|name))
+  
+  /**
+   * Checks if the field with the given name is absent.
+   * This strategy fails if a field with the given name is present.
+   */
+  check-field-absent(|name) = topdown(is-not-field(|name))
+
+rules
+  /**
+   * Succeeds only if the current element is not a function with the given name.
+   */
+  is-not-function(|name) = not(?Function(name, _, _, _, _)   + ?AbstractFunction(name, _, _, _))
+  
+  /**
+   * Succeeds only if the current element is not a field with the given name.
+   */
+  is-not-field(|name)    = not(?StateVariable(_, _, name, _) + ?ConstantStateVariable(_, _, name, _))
+  
+  /**
+   * Converts calls to the builtin require function to !require1 or !require2, to distinguish
+   * between the overloaded variants.
+   */
+  builtin-require: FunctionCall(IdRef("require"), l@[_])    -> FunctionCall(IdRef("!require1"), l)
+  builtin-require: FunctionCall(IdRef("require"), l@[_, _]) -> FunctionCall(IdRef("!require2"), l)
+  
+  /**
+   * Converts calls to the builtin revert function to !revert0 or !revert1, to distinguish
+   * between the overloaded variants.
+   */
+  builtin-revert: FunctionCall(IdRef("revert"), l@[])  -> FunctionCall(IdRef("!revert0"), l)
+  builtin-revert: FunctionCall(IdRef("revert"), l@[_]) -> FunctionCall(IdRef("!revert1"), l)
+  
+  /**
+   * Packs arguments of calls to builtin hashing functions.
+   */
+  builtin-hash(|name): FunctionCall(i@IdRef(name), l@[_ | _]) -> FunctionCall(i, [PackedExp(l)])
+  
+  /**
+   * Packs arguments of builtin abi functions 
+   */
+  builtin-abi: FunctionCall(m@MemberRef(IdRef("abi"), IdRef("encode")), l)
+               -> FunctionCall(m, [PackedExp(l)])
+  builtin-abi: FunctionCall(m@MemberRef(IdRef("abi"), IdRef("encodePacked")), l)
+               -> FunctionCall(m, [PackedExp(l)])
+  builtin-abi: FunctionCall(m@MemberRef(IdRef("abi"), IdRef("encodeWithSelector")), [s | l])
+               -> FunctionCall(m, [s, PackedExp(l)])
+  builtin-abi: FunctionCall(m@MemberRef(IdRef("abi"), IdRef("encodeWithSignature")), [s | l])
+               -> FunctionCall(m, [s, PackedExp(l)])
+  
