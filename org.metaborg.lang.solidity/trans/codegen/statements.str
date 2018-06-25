@@ -214,11 +214,14 @@ rules
   stmt-to-ebc(|stack, c, breaks): Break() -> [ PUSHTAG(tag), JUMP() ]
     where
     tag := <ebc-stack-pop(|breaks)>
+    
+  stmt-to-ebc(|stack, c, b): Throw() -> [ PUSH(1, 0), DUP(1), REVERT() ]
 
-  //Throw and emit are not yet supported
+  //Emit is not yet supported
   
   //-----------------------------------------------------------------------------------------------
   //Variable declaration
+  //-----------------------------------------------------------------------------------------------
   
   //These are already handled by var-to-stack (see functions.str)
   stmt-to-ebc(|stack, c, b): d@DeclareVar(_, _, _) -> []
