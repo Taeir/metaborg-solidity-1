@@ -1,0 +1,52 @@
+module deadcode
+language solidity
+start symbol Program
+
+//Check if warnings are generated on dead code after continue, break, return or throw expressions.
+test S: Deadcode after continue [[
+  contract C {
+    function f() {
+      for (int i = 0; i < 10; i++) {
+        continue;
+        [[i++;]]
+      }
+    }
+  }
+]] 1 warning at #1
+   warning like "Dead"
+
+test S: Deadcode after break [[
+  contract C {
+    function f() {
+      for (int i = 0; i < 10; i++) {
+        break;
+        [[i++;]]
+      }
+    }
+  }
+]] 1 warning at #1
+   warning like "Dead"
+
+test S: Deadcode after return [[
+  contract C {
+    int i;
+    function f() {
+      return;
+      [[i = 3;]]
+    }
+  }
+]] 1 warning at #1
+   warning like "Dead"
+
+test S: Deadcode after throw [[
+  contract C {
+    int i;
+    function f() {
+      throw;
+      [[i = 3;]]
+    }
+  }
+]] 1 warning at #1
+   warning like "Dead"
+
+
