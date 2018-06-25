@@ -1,0 +1,26 @@
+module assembly
+language solidity
+start symbol Program
+
+test S: assembly parses [[
+contract C {
+  function c() {
+    assembly {
+      c := byte(0x0)
+    }
+  }
+}
+]] parse succeeds
+
+test F: assembly blocks must match  [[
+contract C {
+  function c() {
+    assembly {
+      {
+        {
+          c := byte(0x0)
+      }
+    }
+  }
+}
+]] parse fails
