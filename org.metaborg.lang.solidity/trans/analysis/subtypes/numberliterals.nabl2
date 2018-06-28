@@ -135,6 +135,7 @@ rules
     NrT(248, 240) <sub! UIntT(240),
     NrT(256, 248) <sub! IntT(256),
     NrT(256, 248) <sub! UIntT(248),
+    NrT(264, 256) <sub! UIntT(256),
     
     //NrT of negative
     NrT(8, 0)   <sub! IntT(8),

@@ -126,7 +126,8 @@ rules
     tyShiftE1S <test? CanBitwiseOps(),
     
 	//Argument 2 must be an integer. If it is a literal, it must be non-negative
-	tyShiftE2 <test? IsInt()             | error $[Invalid type [tyShiftE2], must be an integer] @e2,
+	tyShiftE2S is simplifyType of tyShiftE2,
+	tyShiftE2S <test? IsInt()            | error $[Invalid type [tyShiftE2], must be an integer] @e2,
     NaBLTrue() is notNegativeConst of e2 | error $[Cannot shift with a negative number] @e2,
     
     tyShift == tyShiftE1.

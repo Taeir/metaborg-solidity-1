@@ -106,7 +106,7 @@ context-free syntax
   
   //---------------------------------------------------------------------------
   //Cast
-  Exp.Cast      = < <SimpleCastType>(<Exp>) > {right}
+  Exp.Cast = < <SimpleCastType>(<AlsoExp>) >
   
   //---------------------------------------------------------------------------
   //Tenary if statement
@@ -141,6 +141,7 @@ context-free priorities
     Subscript.Subscript
     Ref.IdRef
     Ref.MemberRef
+    Exp.Cast
     FunctionCall.FunctionCall} >
   {right:
     Exp.IncRet Exp.DecRet
@@ -156,8 +157,8 @@ context-free priorities
   {left: Exp.BitOr} >
   {non-assoc: Exp.Lt Exp.Gt Exp.LtEq Exp.GtEq} >
   {non-assoc: Exp.Eq Exp.NEq} >
-  {non-assoc: Exp.And} >
-  {non-assoc: Exp.Or} >
+  {left: Exp.And} >
+  {left: Exp.Or} >
   {right: Exp.Ternary} >
   {Exp.Assign Exp.AssignTuple Exp.LValAssign},
   

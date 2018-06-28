@@ -21,13 +21,13 @@ strategies
    *
    * This strategy also packs arguments where necessary.
    */
-  fix-builtins = (check-function-absent(|"require");   topdown(try(builtin-require))) <+
-                 (check-function-absent(|"revert");    topdown(try(builtin-revert))) <+
-                 (check-function-absent(|"keccak256"); topdown(try(builtin-hash(|"keccak256")))) <+
-                 (check-function-absent(|"sha256");    topdown(try(builtin-hash(|"sha256")))) <+
-                 (check-function-absent(|"sha3");      topdown(try(builtin-hash(|"sha3")))) <+
-                 (check-function-absent(|"ripemd160"); topdown(try(builtin-hash(|"ripemd160")))) <+
-                 (check-field-absent(|"abi");          topdown(try(builtin-abi)))
+  fix-builtins = try(check-function-absent(|"require");   topdown(try(builtin-require)));
+                 try(check-function-absent(|"revert");    topdown(try(builtin-revert)));
+                 try(check-function-absent(|"keccak256"); topdown(try(builtin-hash(|"keccak256"))));
+                 try(check-function-absent(|"sha256");    topdown(try(builtin-hash(|"sha256"))));
+                 try(check-function-absent(|"sha3");      topdown(try(builtin-hash(|"sha3"))));
+                 try(check-function-absent(|"ripemd160"); topdown(try(builtin-hash(|"ripemd160"))));
+                 try(check-field-absent(|"abi");          topdown(try(builtin-abi)))
   /**
    * Checks if the function with the given name is absent.
    * This strategy fails if a function with the given name is present.
