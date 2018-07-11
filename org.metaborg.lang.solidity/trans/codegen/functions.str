@@ -103,10 +103,7 @@ rules
   /**
    * Converts the statements in a function to ebc instructions.
    *
-   * This function creates 3 stacks:
-   * 1. a stack that contains the state of the stack at runtime
-   * 2. a stack that contains the tags that should be jumped to by continue statements
-   * 3. a stack that contains the tags that should be jumped to by break statements
+   * This function creates a stack which corresponds to the state of the stack at runtime.
    *
    * @param  list(statement)   - the statements to convert
    * @return list(instruction) - the ebc instructions that correspond to the statements
@@ -116,11 +113,9 @@ rules
     instr
   ] where
     stack     := <ebc-stack-create> 16;
-    continues := <ebc-stack-create> 4;
-    breaks    := <ebc-stack-create> 4;
     stmts'    := <map(var-to-stack(|stack))> stmts;
     varinit   := <ebc-initial-instructions(|stack)> 1;
-    instr     := <mapconcat(stmt-to-ebc(|stack, continues, breaks))> stmts'
+    instr     := <mapconcat(stmt-to-ebc(|stack, [], []))> stmts'
   
   //-----------------------------------------------------------------------------------------------
   //Variables

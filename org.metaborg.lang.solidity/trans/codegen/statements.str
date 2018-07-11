@@ -28,8 +28,8 @@ rules
    * Converts a statement to the corresponding ebc instructions.
    *
    * @param  stack               - the stack
-   * @param  stack               - a stack of tags used for continue
-   * @param  stack               - a stack of tags used for breaks
+   * @param  list(tag)           - a list of tags used for continue
+   * @param  list(tag)           - a list of tags used for breaks
    * @param  statement (current) - the statement to convert
    * @return list(instruction)   - the ebc instructions that represent the statement
    */
@@ -209,11 +209,12 @@ rules
   
   stmt-to-ebc(|stack, continues, b): Continue() -> [ PUSHTAG(tag), JUMP() ]
     where
-    tag := <ebc-stack-pop(|continues)>
+    <?[tag | _]> continues
   
   stmt-to-ebc(|stack, c, breaks): Break() -> [ PUSHTAG(tag), JUMP() ]
     where
-    tag := <ebc-stack-pop(|breaks)>
+    <?[tag | _]> breaks
+    
     
   stmt-to-ebc(|stack, c, b): Throw() -> [ PUSH(1, 0), DUP(1), REVERT() ]
 
