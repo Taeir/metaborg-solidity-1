@@ -8,46 +8,6 @@ import org.strategoxt.lang.Context;
 
 public class StackUtil {
 	/**
-	 * Pops and swaps in such a way that only the bottom element of the stack and the element at
-	 * the given index remain. (The bottom element is the return address)
-	 * 
-	 * For example, retaining index 2 ("b") in
-	 *   [returnAddress, a, b, c, d, e] (<- top)
-	 * yields
-	 *   [returnAddress, b]
-	 * 
-	 * @param context
-	 *     the context
-	 * @param stack
-	 *     the stack
-	 * @param index
-	 *     the index of the element to retain
-	 * @param instructions
-	 *     the list of instructions
-	 */
-	public static void retainZeroAnd(Context context, EBCStrategoStack stack, int index, List<IStrategoTerm> instructions) {
-		int i = 0;
-		for (; stack.size() != 2 && i < 100; i++) {
-			//First pop elements until the element we want to return is at the top of the stack
-			int pops = stack.size() - index - 1;
-			addNPops(context, instructions, pops);
-			
-			if (stack.size() == 2) break;
-			
-			//There are still more elements left between us and the return address.
-			//Swap our element down the stack as far as possible.
-			//It will never swap with the return address.
-			int swapIndex = Math.min(16, stack.size() - 2);
-			instructions.add(createSwap(context, swapIndex));
-			stack.swapTop(swapIndex);
-		}
-		
-		if (i == 100) {
-			throw new IllegalStateException("Assertion failed: infinite loop!");
-		}
-	}
-	
-	/**
 	 * Pops and swaps in such a way that only the element at the given index remains.
 	 * 
 	 * @param context
@@ -70,6 +30,7 @@ public class StackUtil {
 			//First pop elements until the element we want to return is at the top of the stack
 			int pops = stack.size() - index - 1;
 			addNPops(context, instructions, pops);
+			stack.pop(pops);
 			
 			if (stack.size() == 1) break;
 			
@@ -78,15 +39,11 @@ public class StackUtil {
 			int swapIndex = Math.min(16, stack.size() - 1);
 			instructions.add(createSwap(context, swapIndex));
 			stack.swapTop(swapIndex);
+			index -= swapIndex;
 		}
 		
 		if (i == 100) {
 			throw new IllegalStateException("Assertion failed: infinite loop!");
-		}
-		
-		//TODO This is a temporary assertion
-		if (stack.size() == 0) {
-			throw new IllegalStateException("Assertion failed: Stack should not be empty here!");
 		}
 	}
 	

@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.spoofax.interpreter.core.Tools;
+import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
+import org.spoofax.interpreter.terms.IStrategoReal;
+import org.spoofax.interpreter.terms.IStrategoString;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermPrinter;
 import org.spoofax.terms.AbstractSimpleTerm;
@@ -67,7 +71,15 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 	 *     the index of the given term, or -1 if not in the stack
 	 */
 	public int getIndex(IStrategoTerm t) {
-		return list.indexOf(t);
+		Object toFind = toJavaObject(t);
+		for (int i = 0; i < list.size(); i++) {
+			Object current = toJavaObject(list.get(i));
+			if (toFind.equals(current)) {
+				return i;
+			}
+		}
+		
+		return -1;
 	}
 	
 	/**
@@ -83,8 +95,10 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 	 *     the index of the given term, or -1 if not in the stack
 	 */
 	public int getIndexFromTop(IStrategoTerm t) {
-		int index = list.indexOf(t);
-		if (index == -1) return -1;
+		int index = getIndex(t);
+		if (index == -1) {
+			return -1;
+		}
 		
 		return list.size() - index - 1;
 	}
@@ -155,7 +169,16 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 	 *     true if the stack changed, false otherwise
 	 */
 	public boolean remove(IStrategoTerm t) {
-		return list.remove(t);
+		Object needle = toJavaObject(t);
+		Iterator<IStrategoTerm> it = list.iterator();
+		while (it.hasNext()) {
+			Object current = toJavaObject(it.next());
+			if (needle.equals(current)) {
+				it.remove();
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -169,6 +192,21 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 	 */
 	public IStrategoTerm pop() {
 		return list.remove(list.size() - 1);
+	}
+	
+	/**
+	 * Removes the top n elements from the stack.
+	 * 
+	 * @param n
+	 *     the number of elements to remove.
+	 * 
+	 * @throws IndexOutOfBoundsException
+	 *     If this stack is empty.
+	 */
+	public void pop(int n) {
+		for (int i = 0; i < n; i++) {
+			pop();
+		}
 	}
 	
 	/**
@@ -295,4 +333,25 @@ public class EBCStrategoStack extends AbstractSimpleTerm implements IStrategoTer
 		output.append(toString());
 	}
 
+	/**
+	 * Converts a stratego term to a java object. This method works only on 
+	 * strings, integers and reals.
+	 * 
+	 * @param term
+	 *     the stratego term
+	 * 
+	 * @return
+	 *     the java object representation of the given term
+	 */
+	private static Object toJavaObject(IStrategoTerm term) {
+		if (term instanceof IStrategoString) {
+			return Tools.asJavaString(term);
+		} else if (term instanceof IStrategoInt) {
+			return Tools.asJavaInt(term);
+		} else if (term instanceof IStrategoReal) {
+			return Tools.asJavaDouble(term);
+		} else {
+			return null;
+		}
+	}
 }

@@ -79,10 +79,10 @@ rules
   //-----------------------------------------------------------------------------------------------
   
   //TODO variable reference
-  exp-to-ebc(|stack): IdRef(x) -> [ DUP(index) ]
+  exp-to-ebc(|stack): IdRef(x) -> [ DUP(<inc> index) ]
     where
     index := <ebc-stack-get-index(|stack)> x;
-    <ebc-stack-push(|stack)> 1
+    <ebc-stack-push(|stack)> x
   
   nopush-to-ebc(|stack): IdRef(x) -> [ ]
   
@@ -149,14 +149,14 @@ rules
   //not, 
   exp-to-ebc(|stack): e@UnExp(op, e1) -> <concat> [ instr, opexp ]
     where
-    opexp := [ <op-to-ebc> (op, e1) ];
+    opexp := [ <op-to-ebc> (op, e1, <nabl2-get-ast-analysis> e) ];
     instr := <exp-to-ebc(|stack)> e1;
     ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
   
   //+ - *, pow, and, or, xor, eq, lt, gt
   exp-to-ebc(|stack): e@BinExp(op, e1, e2) -> <concat> [ i1, i2, opexp ]
     where
-    opexp := [ <op-to-ebc> (op, e1, e2) ];
+    opexp := [ <op-to-ebc> (op, e1, e2, <nabl2-get-ast-analysis> e) ];
     i1    := <exp-to-ebc(|stack)> e1;
     i2    := <exp-to-ebc(|stack)> e2;
     ebc-stack-pop(|stack); ebc-stack-pop(|stack); <ebc-stack-push(|stack)> e
@@ -170,7 +170,7 @@ rules
   
   exp-to-ebc(|stack): e@BinExp(LtEq(), e1, e2) -> instr
     where
-    opexp := <pick-signed-or-unsigned> (e1, e2, SGT(), GT());
+    opexp := <pick-signed-or-unsigned> (e1, e2, SGT(), GT(), <nabl2-get-ast-analysis> e);
     instr := <concat> [
       <exp-to-ebc(|stack)> e1,
       <exp-to-ebc(|stack)> e2,
@@ -181,7 +181,7 @@ rules
   
   exp-to-ebc(|stack): e@BinExp(GtEq(), e1, e2) -> instr
     where
-    opexp := <pick-signed-or-unsigned> (e1, e2, SLT(), LT());
+    opexp := <pick-signed-or-unsigned> (e1, e2, SLT(), LT(), <nabl2-get-ast-analysis> e);
     instr := <concat> [
       <exp-to-ebc(|stack)> e1,
       <exp-to-ebc(|stack)> e2,
@@ -217,18 +217,17 @@ rules
   //  Delete (delete x)
   
   //Simple operators that will work without any other information
-  op-to-ebc: (Plus(),   _, _) -> ADD()
-  op-to-ebc: (Minus(),  _, _) -> SUB()
-  op-to-ebc: (Mult(),   _, _) -> MUL()
-  op-to-ebc: (Pow(),    _, _) -> EXP()
-  op-to-ebc: (BitAnd(), _, _) -> AND()
-  op-to-ebc: (BitOr(),  _, _) -> OR()
-  op-to-ebc: (BitXor(), _, _) -> XOR()
-  op-to-ebc: (BitNot(), _)    -> NOT()
-  op-to-ebc: (op, e1, e2)     -> ebcop
+  op-to-ebc: (Plus(),   _, _, _) -> ADD()
+  op-to-ebc: (Minus(),  _, _, _) -> SUB()
+  op-to-ebc: (Mult(),   _, _, _) -> MUL()
+  op-to-ebc: (Pow(),    _, _, _) -> EXP()
+  op-to-ebc: (BitAnd(), _, _, _) -> AND()
+  op-to-ebc: (BitOr(),  _, _, _) -> OR()
+  op-to-ebc: (BitXor(), _, _, _) -> XOR()
+  op-to-ebc: (BitNot(), _, _)    -> NOT()
+  op-to-ebc: (op, e1, e2, a)     -> ebcop
     where
     //Determine types of expressions
-    a := <nabl2-get-ast-analysis>;
     e1type := <nabl2-get-ast-type(|a)> e1;
     e2type := <nabl2-get-ast-type(|a)> e2;
     
@@ -239,12 +238,12 @@ rules
     end
 
   //Boolean operators
-  op-to-ebc: (Not(),    _)    -> ISZERO()
-  op-to-ebc: (And(),    _, _) -> AND()
-  op-to-ebc: (Or(),     _, _) -> OR()
+  op-to-ebc: (Not(),    _, _)    -> ISZERO()
+  op-to-ebc: (And(),    _, _, _) -> AND()
+  op-to-ebc: (Or(),     _, _, _) -> OR()
   
   //Comparison
-  op-to-ebc: (Eq(),     _, _) -> EQ()
+  op-to-ebc: (Eq(),     _, _, _) -> EQ()
   
   signed-op-to-ebc: Div()   -> SDIV()
   signed-op-to-ebc: Mod()   -> SMOD()
@@ -263,12 +262,12 @@ rules
    * @param e2       - the second expression
    * @param signed   - the signed item
    * @param unsigned - the unsigned item
+   * @param a        - the ast analysis of the expression
    * @return         - signed if either e1 or e2 is signed, unsigned otherwise
    */
-  pick-signed-or-unsigned: (e1, e2, signed, unsigned) -> picked
+  pick-signed-or-unsigned: (e1, e2, signed, unsigned, a) -> picked
     where
     //Determine types of expressions
-    a := <nabl2-get-ast-analysis>;
     e1type := <nabl2-get-ast-type(|a)> e1;
     e2type := <nabl2-get-ast-type(|a)> e2;
     

@@ -106,7 +106,7 @@ public abstract class SafeStrategy extends Strategy {
 	 * @param msg
 	 *     the message to log
 	 */
-	protected void log(String msg) {
+	protected static void log(String msg) {
 		try {
 			Files.append(msg + "\n", new File("stratego-log.txt"), StandardCharsets.UTF_8);
 		} catch (Exception ioex) {
@@ -122,7 +122,7 @@ public abstract class SafeStrategy extends Strategy {
 	 * @param ex
 	 *     the exception to log
 	 */
-	protected void log(String msg, Exception ex) {
+	protected static void log(String msg, Exception ex) {
 		try {
 			Files.append(msg + ": " + ex.toString() + "\n", new File("stratego-log.txt"), StandardCharsets.UTF_8);
 		} catch (Exception ioex) {
@@ -136,7 +136,7 @@ public abstract class SafeStrategy extends Strategy {
 	 * @param ex
 	 *     the exception to log
 	 */
-	protected void log(Exception ex) {
+	protected static void log(Exception ex) {
 		try {
 			Files.append(ex.toString() + "\n", new File("stratego-log.txt"), StandardCharsets.UTF_8);
 		} catch (Exception ioex) {

@@ -131,11 +131,10 @@ rules
    * @param  list(Instr)
    * @return list(Instr)
    */
-  fix-instructions: [] -> []
-  fix-instructions: [JUMPDESTTAG(tag) | tail] -> [TAG(tag), JUMPDEST()    | <fix-instructions> tail]
-  fix-instructions: [instruction      | tail] -> [<fix-instr> instruction | <fix-instructions> tail]
+  fix-instructions: list -> <mapconcat(fix-instr)> list
   
-  fix-instr = fix-instr-numbers
+  fix-instr: JUMPDESTTAG(tag) -> [TAG(tag), JUMPDEST()]
+  fix-instr: instr            -> [<fix-instr-numbers> instr]
   
   //Fixes "loose" usage of PUSH, SWAP, DUP and LOG
   //PUSH(1, "0x10") -> PUSH("1", "0x10")
@@ -151,10 +150,7 @@ rules
   fix-instr-numbers: SWAP(i) -> SWAP(<int-to-string> i)
   fix-instr-numbers: DUP(i)  -> DUP(<int-to-string> i)
   fix-instr-numbers: LOG(i)  -> LOG(<int-to-string> i)
-  
-  fix-instr-numbers: x -> x
-    where
-    not(<?PUSH(_, _) + ?SWAP(_) + ?DUP(_) + ?LOG(_)> x)
+  fix-instr-numbers: x       -> x
   
   //-----------------------------------------------------------------------------------------------
   //Instruction length
