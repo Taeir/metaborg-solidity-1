@@ -148,8 +148,9 @@ rules
   var-to-stack(|stack): Block(stmts) -> Block(<map(var-to-stack(|stack))> stmts)
   
   //If else
-  var-to-stack(|stack): If(c, a, b) -> If(c, <var-to-stack(|stack)> a, <var-to-stack(|stack)> b)
-  var-to-stack(|stack): Else(body) -> e'
+  var-to-stack(|stack): If(c, a, None()) -> If(c, <var-to-stack(|stack)> a, None())
+  var-to-stack(|stack): If(c, a, b)      -> If(c, <var-to-stack(|stack)> a, <var-to-stack(|stack)> b)
+  var-to-stack(|stack): Else(body)       -> e'
     where
     body' := <var-to-stack(|stack)> body;
     ((<?Block([])> body'; e' := None()) <+ e' := Else(body'))

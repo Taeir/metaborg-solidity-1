@@ -91,7 +91,7 @@ context-free syntax
   
   //Reference can be a variable, a subscript access or some expression followed
   //by a reference.
-  Ref.IdRef        = ID
+  Ref.IdRef        = ID {avoid}
   Ref              = Subscript
   Ref.MemberRef    = <<Exp>.<Ref>> {right}
   
@@ -116,6 +116,7 @@ context-free syntax
   //Assignment
   Exp.Assign      = <<Ref> = <Exp>>                 {right}
   Exp.AssignTuple = <(<{TupleName ", "}*>) = <Exp>> {avoid}
+  Exp.Tuple = <(<Exp>, <{Exp ", "}+>)>
   
   //-----------------------------------------------------------------
   //LValue shorthands

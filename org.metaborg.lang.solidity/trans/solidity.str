@@ -37,6 +37,13 @@ rules // Debugging
     ; filename := <guarantee-extension(|$[pp.resugar.[ext]])> path
     ; result   := <pp-debug> <resugar-all> <desugar-all> node
   
+  editor-resugar-ast:
+    (node, _, ast, path, project-path) -> (filename, result)
+    with
+      ext      := <get-extension> path
+    ; filename := <guarantee-extension(|$[resugar.aterm])> path
+    ; result   := <resugar-all> <desugar-all> node
+  
   
   /**
    * Pretty-prints an EBC AST into EBC concrete syntax.

@@ -61,6 +61,9 @@ signature
 	UnExp : UnOp * ID  -> Exp
 	UnExp : UnOp * INT -> Exp
 	
+	//Tuples
+	Tuple : List(Exp) -> Exp
+	
 	//Literal arrays
 	LitArray : List(Exp) * String -> Exp
 
@@ -139,6 +142,9 @@ rules
   remove-lval: RShiftAssign(v, e1) -> Assign(v, BinExp(RShift(), v, e1))
   
   //-----------------------------------------------------------------------------------------------
+  //Combine all expressions in a tuple into one list
+  desugar-tuples: Tuple(e1, exps) -> Tuple([e1 | exps])
+  
   //Tuple assignments of a single variable are just normal assignments
   desugar-tuples: AssignTuple([TupleName(Some(name))], exp) -> Assign(IdRef(name), exp)
   
@@ -156,6 +162,7 @@ rules
   //-----------------------------------------------------------------------------------------------
   //Convert back to original AST
   resugar = resugar-ops
+  resugar = resugar-tuples
   resugar = resugar-lit-array
   
   resugar-ops: BinExp(Plus(),      e1, e2) -> Add(e1, e2)
@@ -186,5 +193,7 @@ rules
   resugar-ops: UnExp(Not(),        e1)     -> Not(e1)
   resugar-ops: BinExp(Subscript(), e1, e2) -> Subscript(e1, e2)
   resugar-ops: UnExp(Delete(),     e1)     -> Delete(e1)
+  
+  resugar-tuples: Tuple([e1 | exps]) -> Tuple(e1, exps)
   
   resugar-lit-array: LitArray(exps, _) -> LitArray(exps)

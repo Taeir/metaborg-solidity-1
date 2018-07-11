@@ -13,7 +13,6 @@ lexical syntax
   EBC0To4     = [0-4]
   EBC1To16    = [1-9] | ("1" [0-6])
   EBC1To32    = [1-9] | ([12] [0-9]) | ("3" [0-2])
-  
   EBCINT      = [0-9]+
   
   EBCTag      = [a-zA-Z0-9\_]+

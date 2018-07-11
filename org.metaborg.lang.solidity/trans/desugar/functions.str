@@ -16,7 +16,7 @@ signature
   constructors
     Function             : String * List(Param) * List(ModifiersFun) * List(ReturnParam) * Statement -> Function
   
-    Constructor          : String * List(Param) * Option(ConsMod) * Statement -> Function
+    Constructor          : String * List(Param) * ConsMod * Statement -> Function
     ConstructorWithSuper : String * List(Param) * Option(ConsMod) * String * List(Exp) * Statement -> Function
     
     //Add function name to return statements
@@ -95,12 +95,13 @@ rules
     )
   
   get-statemut-modifiers:   [] -> []
-  get-statemut-modifiers:   [s@StateMutability(_) | tail] ->  [s | <get-statemut-modifiers> tail]
-  get-statemut-modifiers:   [_                    | tail] ->  <get-statemut-modifiers> tail
+  get-statemut-modifiers:   [StateMutability("constant") | tail] -> [StateMutability("view") | <get-statemut-modifiers> tail]
+  get-statemut-modifiers:   [s@StateMutability(_)        | tail] -> [s | <get-statemut-modifiers> tail]
+  get-statemut-modifiers:   [_                           | tail] -> <get-statemut-modifiers> tail
   
   get-visibility-modifiers: [] -> []
-  get-visibility-modifiers: [v@Visibility(_) | tail]      -> [v | <get-visibility-modifiers> tail]
-  get-visibility-modifiers: [_               | tail]      -> <get-visibility-modifiers> tail
+  get-visibility-modifiers: [v@Visibility(_) | tail] -> [v | <get-visibility-modifiers> tail]
+  get-visibility-modifiers: [_               | tail] -> <get-visibility-modifiers> tail
   
   get-invalid-modifiers: [] -> []
   get-invalid-modifiers: [i@InvalidMod(_) | tail] -> [i | <get-invalid-modifiers> tail]
@@ -249,10 +250,14 @@ rules
   resugar-fun: AbstractFunction(n, p, m, t)
                -> AbstractFunction(n, p, m, Some(Returns(<restore-return-type> t)))
                
+  resugar-fun: Constructor(_, p, NoModifier(), Block(s))
+               -> Constructor(p, None(), s)
   resugar-fun: Constructor(_, p, m, Block(s))
-               -> Constructor(p, m, s)
+               -> Constructor(p, Some(m), s)
+  resugar-fun: ConstructorWithSuper(_, p, NoModifier(), sn, sc, Block(s))
+               -> ConstructorWithSuper(p, None(), ModSuperCall(sn, sc), None(), s)
   resugar-fun: ConstructorWithSuper(_, p, m, sn, sc, Block(s))
-               -> ConstructorWithSuper(p, m, ModSuperCall(sn, sc), None(), s)
+               -> ConstructorWithSuper(p, Some(m), ModSuperCall(sn, sc), None(), s)
   
   //Restore return statements
   resugar-fun: ReturnStatement(_, e) -> ReturnStatement(e)

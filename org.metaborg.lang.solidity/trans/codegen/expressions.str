@@ -54,11 +54,11 @@ rules
       DUP(<dec> index) ]
   ] where
     value := <exp-to-ebc(|stack)> v;
+    index := <ebc-stack-get-index(|stack)> x;
+    ebc-stack-pop(|stack); <ebc-stack-push(|stack)> v
     
     //TODO Use NaBL to determine if we are assigning a stack element or not, then do some kind of
     //     desugaring to add that to the assign statment
-    index := <ebc-stack-get-index(|stack)> x;
-    ebc-stack-pop(|stack); <ebc-stack-push(|stack)> v
   
   nopush-exp-to-ebc(|stack): Assign(x, v) -> <concat> [
     value,
@@ -66,11 +66,11 @@ rules
       POP() ]
   ] where
     value := <exp-to-ebc(|stack)> v;
+    index := <ebc-stack-get-index(|stack)> x;
+    ebc-stack-pop(|stack)
     
     //TODO Use NaBL to determine if we are assigning a stack element or not, then do some kind of
     //     desugaring to add that to the assign statment
-    index := <ebc-stack-get-index(|stack)> x;
-    ebc-stack-pop(|stack)
   
   //TODO Array assign
   
@@ -79,6 +79,12 @@ rules
   //-----------------------------------------------------------------------------------------------
   
   //TODO variable reference
+  exp-to-ebc(|stack): IdRef(x) -> [ DUP(index) ]
+    where
+    index := <ebc-stack-get-index(|stack)> x;
+    <ebc-stack-push(|stack)> 1
+  
+  nopush-to-ebc(|stack): IdRef(x) -> [ ]
   
   //-----------------------------------------------------------------------------------------------
   //Creation

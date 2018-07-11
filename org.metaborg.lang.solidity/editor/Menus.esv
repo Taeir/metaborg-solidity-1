@@ -6,6 +6,7 @@ menus
     action: "Show parsed AST"    = debug-show-aterm (source)
     action: "Show desugared AST" = editor-desugar (source)
     action: "Resugar"            = editor-resugar (source)
+    action: "Resugar AST"            = editor-resugar-ast (source)
   
 //  menu: "Optimize" (openeditor)
 //    action: "Constant Folding" = editor-resugar (source)

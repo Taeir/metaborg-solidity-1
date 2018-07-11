@@ -108,7 +108,6 @@ rules
   is-payable:  <fetch(?StateMutability("payable"))>  -> "true"
   is-payable:  _                                     -> "false"
   
-  //TODO Convert "constant" to "view" in the desugaring
   statemut-to-abi: <fetch(?StateMutability("constant"))> -> "view"
   statemut-to-abi: <fetch(?StateMutability(s))>          -> s
   statemut-to-abi: _                                     -> "nonpayable"

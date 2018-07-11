@@ -223,10 +223,10 @@ import * as abc from './abc.sol';
 
 contract test16 {}
 contract ccc {
-    int8[3] a;
+    uint8[3] a;
     function f() returns (uint, uint) {
-        a = [-1,2,3];
-//        return (a[3], [2,3,4][0]);
+        a = [uint8(1),2,3];
+        return (a[3], [2,3,4][0]);
     }
 }
 library Lib {
@@ -397,9 +397,10 @@ contract test45 {
 contract C46 {
     function f() {
         uint a = (1);
+        var b = 1;
 //        var (b,) = 1;
-//        var (c,d) = (1, 2 + a);
-//        var (e,) = (1, 2, b);
+        var (c,d) = (1, 2 + a);
+        var (e,) = (1, 2, b);
         (a) = 3;
     }
 }
