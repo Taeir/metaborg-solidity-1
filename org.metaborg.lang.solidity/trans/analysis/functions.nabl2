@@ -88,18 +88,14 @@ rules
     TypeReferrable{contractName} -> s,
     TypeReferrable{contractName} |-> contract | error $[Unable to find contract this constructor belongs to! Name: [contractName]],
     contract : tyRet,
-
-    TypeReferrable{superName} -> s,
-    TypeReferrable{superName} |-> parent | error $[Unable to find contract [superName]] @superName,
-    parent ?===> parentScope,
     
     //Look for the constructor
-    Function{superName} -> parentScope,
+    Function{superName} -> s,
     Function{superName} |-> parentConstructor | error $[Cannot find constructor of [superName]] @superName,
     parentConstructor : FunctionT(tysSuperParams, tySuperRet),
     
     //Check if the super name was set as a parent.
-    tySuperRet <sub? tyRet | error $[Invalid call to constructor of [superName]. Did you mean to declare it as a parent? ("contract [contractName] is [superName]")],
+    tyRet <sub? tySuperRet | error $[Invalid call to constructor of [superName]. Did you mean to declare it as a parent? ("contract [contractName] is [superName]")],
     
     tysSuperArgs <sub? tysSuperParams | error $[Argument types [tysSuperArgs] do not match constructor parameter types [tysSuperParams]]  @superCall.
   

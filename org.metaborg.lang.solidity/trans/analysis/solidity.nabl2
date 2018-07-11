@@ -298,8 +298,15 @@ rules
     AddressTS() <cast! IntTS(),
     AddressTS() <cast! UIntTS(),
     
+    //casting numbers to fixed byte arrays
+    IntTS()     <cast! FBytesTS(),
+    UIntTS()    <cast! FBytesTS(),
+    FBytesTS()  <cast! IntTS(),
+    FBytesTS()  <cast! UIntTS(),
+    
     //Casting string -> bytes
     StringTS() <cast! DBytesTS(),
+    DBytesTS() <cast! StringTS(),
     
     //Type testing
     BoolT()  <test! IsType(),
@@ -392,4 +399,5 @@ rules
     
     distinct/name D(programScope)/Import         | error $[Two imports with the same name: [NAME]] @NAMES,
     distinct/name D(programScope)/TypeReferrable | error $[Duplicate type [NAME]] @NAMES.
+  
   
