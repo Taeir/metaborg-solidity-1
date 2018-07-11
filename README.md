@@ -5,7 +5,11 @@ A Solidity language definition implemented in Spoofax. This language definition 
 Taico Aerts, Delft University of Technology
 
 ## Documentation
-A detailed overview of the different aspects of this language definition can be found in (docs/Documentation.md)[docs/Documentation.md].
+An overview of the different aspects of this language definition can be found in (docs/Documentation.md)[docs/Documentation.md].
+
+A report describing the development of the language definition can be found in (docs/Report.pdf)[docs/Report.pdf].
+
+The slides that were used for the workshop can be found in (docs/Slides.pdf)[docs/Slides.pdf].
 
 ## Instructions
 To install the plugin:

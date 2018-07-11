@@ -195,6 +195,8 @@ For constructors, the name of the enclosing contract is added to the constructor
 
 #### Return statements
 In order to support return statements at arbitrary positions, the type of the function to which a return statement belongs must be available for the type checking. To make this easier, the desugarer adds the name of the enclosing function to return statements.
+e.g. `Return(exp) -> Return(functionName, exp)`
+With the name of the function in the return, it is possible to lookup the enclosing function in NaBL2 and then do the type checking by checking the expression type with the return type of the function.
 
 #### Constant folding
 Literal numbers are constant folded to allow proper typechecking. This is necessary since an expression like `1.2 * 5` would be regarded as the integer number 6 by the solidity compiler, even though there are no floating point numbers in the language (partial support was added recently). The desugarer also removes units, e.g. `2 minutes` is converted into `120`. Finally, the desugarer calculates the number of bits that would be required to fit the number (rounded up to multiples of 8) into a signed integer and the number of bits required to fit it into an unsigned integer. This information is used by the type checking to determine the smallest type (int8 vs uint8 vs int16) of integer literals.
