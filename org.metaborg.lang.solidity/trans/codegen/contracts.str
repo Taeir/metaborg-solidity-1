@@ -59,25 +59,27 @@ rules
     <newname> "FailHandler" => tagFailHandler;
     
     //Create the code for the functions
-    functions := <filter-fun> content;
+    funmods   := <filter(?FunctionModifier(_, _, _))> content;
+    functions := <filter(?Function(_, _, _, _, _))> content;
+    fields    := <filter(?StateVariable(_, _, _, _) + ?ConstantStateVariable(_, _, _, _))> content;
+    events    := <filter(?Event(_, _, _))> content;
+    enums     := <filter(?Enum(_, _))> content;
+    structs   := <filter(?Struct(_, _))> content;
+    
+    //Compile the function selection sequence.
+    //It determines which function is selected upon calling
+    selectFunctionSequence := <mapconcat(function-selection(|name))> functions;
     
     //Compile all the functions
-    funtuples := <map(fun-to-ebc)> functions;
-    
-    //The select function sequence is the first element of the tuple, concatenated.
-    //It determines which function is selected upon calling
-    selectFunctionSequence := <concat> <map(\ (i, _) -> i \)> funtuples;
-    
-    //The blocks of instructions for the different functions
-    functionBlocks         := <concat> <map(\ (_, f) -> f \)> funtuples
+    functionBlocks := <mapconcat(fun-to-ebc(|name))> functions
   
   //-----------------------------------------------------------------------------------------------
   //Contract content
   //-----------------------------------------------------------------------------------------------
-  //Support statevariables, functions, event, enum and struct definitions
-  content-to-ebc = statevar-to-ebc
-  content-to-ebc = fun-to-ebc
-  content-to-ebc = eventdecl-to-ebc
-  content-to-ebc = enumdecl-to-ebc
-  content-to-ebc = structdecl-to-ebc
-  content-to-ebc = funmoddecl-to-ebc
+  //Support statevariables, event, enum and struct definitions
+  content-to-ebc(|contractName) = statevar-to-ebc
+  content-to-ebc(|contractName) = fun-to-ebc(|contractName)
+  content-to-ebc(|contractName) = eventdecl-to-ebc
+  content-to-ebc(|contractName) = enumdecl-to-ebc
+  content-to-ebc(|contractName) = structdecl-to-ebc
+  content-to-ebc(|contractName) = funmoddecl-to-ebc

@@ -20,6 +20,43 @@ rules
   //Functions
   //-----------------------------------------------------------------------------------------------
   
+  /**
+   * Gives the base name of tags regarding the given function.
+   * 
+   * @param  string - the name of the contract this function belongs to
+   * @return string - "fun!<contractName>!<name>!<paramcount>"
+   */
+  function-tag-base(|contractName): Function(name, params, _, _, _) -> <concat-strings> [
+    "fun!", contractName, "!", name, "!", <int-to-string> <length> params ]
+  
+  /**
+   * Gives the full tag for the given function and subtag.
+   * 
+   * @param  string - the name of the contract this function belongs to
+   * @param  string - the sub tag of the function
+   * @return string - "fun!<contractName>!<name>!<paramcount>!<subTag>"
+   */
+  function-tag(|contractName, subTag): Function(name, params, _, _, _) -> <concat-strings> [
+    "fun!", contractName, "!", name, "!", <int-to-string> <length> params, "!", subTag ]
+  
+  /**
+   * Function that creates the instructions that are used to determine which function is being
+   * called. This works by checking the hash at the top of the stack with the hash of each
+   * function. If these hashes match, then we jump to the corresponding function.
+   *
+   * @param  string            - the name of the contract this function belongs to
+   * @return list(instruction)
+   */
+  function-selection(|contractName): f@Function(_, _, _, _, _) -> [
+      DUP(1),
+      PUSH(4, funHash),
+      EQ(),
+      PUSHTAG(tagFunInit),
+      JUMPI()
+  ] where
+    funHash    := <conc-strings> ("0x", <hash-signature> f);
+    tagFunInit := <function-tag(|contractName, "init")> f
+  
   //In the first tag, there is matching of function hashes to their initial jump points
   
   //Then, there is, for each function, thus a jump point, which initiates the call as follows:
@@ -28,77 +65,46 @@ rules
   // 3. Actual function
   // 4. Post function jumppoint, returns the correct value
   
-  fun-to-ebc: f@Function(name, params, _, retParams, Block(stmts)) -> (
-    //PART1: Check if this is the function being called, and if so, jump to funInit
-    [
+  fun-to-ebc(|contractName): f@Function(name, params, _, retParams, Block(stmts)) -> <concat> [
+    //PART1: Check if CALLVALUE is ZERO -> jump to pre, else, REVERT
+    [ JUMPDESTTAG(tagFunInit),
+      CALLVALUE(),
       DUP(1),
-      PUSH(4, <conc-strings> ("0x", <hash-signature> f)), //The hash of the function determines which function is being called.
-      EQ(),
-      PUSHTAG(tagFunInit),
-      JUMPI()
-    ],
+      ISZERO(),
+      PUSHTAG(tagFunPre),
+      JUMPI(),
+      PUSH(1, 0),
+      DUP(1),
+      REVERT() ],
+      
+    //PART2: Create stack frame for function (load arguments)
+    //0-argument function
+    [ JUMPDESTTAG(tagFunPre),
+      POP(),
+      PUSHTAG(tagFunPost),
+      
+      //TODO LOAD ARGUMENTS HERE
+      
+      
+      PUSHTAG(tagFunStart),
+      JUMP() ],
     
+    //PART4: store result in memory
+    [ JUMPDESTTAG(tagFunPost) ],
+    <fun-retparams> retParams,
+    
+    //PART3: Actual function
     <concat> [
-      //PART2: Check if CALLVALUE is ZERO -> jump to pre, else, REVERT
-      [ JUMPDESTTAG(tagFunInit),
-        CALLVALUE(),
-        DUP(1),
-        ISZERO(),
-        PUSHTAG(tagFunPre),
-        JUMPI(),
-        PUSH(1, 0),
-        DUP(1),
-        REVERT() ],
-      
-      //PART3: Create stack frame for function (load arguments)
-      //0-argument function
-      [ JUMPDESTTAG(tagFunPre),
-        POP(),
-        PUSHTAG(tagFunPost),
-        
-        //TODO LOAD ARGUMENTS HERE
-        
-        PUSHTAG(tagFunStart),
-        JUMP() ],
-      
-      //PART4: store result
-      [ JUMPDESTTAG(tagFunPost),
-        PUSH(1, "0x40"),
-        MLOAD(),
-        DUP(1),
-        DUP(3),
-        PUSH(1, 0),
-        SIGNEXTEND(),
-        PUSH(1, 0),
-        SIGNEXTEND(),
-        DUP(2),
-        MSTORE(),
-        PUSH(1, "0x20"),
-        ADD(),
-        SWAP(2),
-        POP(),
-        POP(),
-        PUSH(1, "0x40"),
-        MLOAD(),
-        DUP(1),
-        SWAP(2),
-        SUB(),
-        SWAP(1),
-        RETURN() ],
-      
-      //PART5: Actual function
-      <concat> [
-        //Return address is on the stack
-        [ JUMPDESTTAG(tagFunStart) ],
-        //TODO load parameters here
-        <fun-body-to-ebc> stmts
-      ]
+      //Return address is on the stack
+      [ JUMPDESTTAG(tagFunStart) ],
+      //TODO load parameters here
+      <fun-body-to-ebc> stmts
     ]
-    ) where
-    tagFunInit  := <newname> "Fun_Init";
-    tagFunPre   := <newname> "Fun_Pre";
-    tagFunPost  := <newname> "Fun_Post";
-    tagFunStart := <newname> "Fun_Start"
+  ] where
+    tagFunInit  := <function-tag(|contractName, "init")> f;
+    tagFunPre   := <function-tag(|contractName, "pre")> f;
+    tagFunStart := <function-tag(|contractName, "start")> f;
+    tagFunPost  := <function-tag(|contractName, "post")> f
 
   /**
    * Converts the statements in a function to ebc instructions.
@@ -116,6 +122,129 @@ rules
     stmts'    := <map(var-to-stack(|stack))> stmts;
     varinit   := <ebc-initial-instructions(|stack)> 1;
     instr     := <mapconcat(stmt-to-ebc(|stack, [], []))> stmts'
+  
+  /**
+   * Generates instructions for loading function arguments.
+   *
+   * @param  Function
+   * @return list(instruction)
+   */
+  fun-load-args: Function(_, [], _, _, _)     -> []
+  fun-load-args: Function(_, params, _, _, _) -> <concat> [
+    //Determine the size of the call data and the corresponding indices
+    [ PUSH(1, 4),
+      DUP(1),
+      CALLDATASIZE(),
+      SUB(),
+      DUP(2),
+      ADD(),
+      SWAP(1),
+      DUP(1) ],
+    
+    //Load the actual arguments  
+    <mapconcat(fun-load-arg)> params,
+    
+    //Cleanup the stack
+    [ POP(),
+      POP(),
+      POP() ]
+  ]
+  
+  /**
+   * Generates instructions for loading a single argument.
+   *
+   * @param  Param
+   * @return list(instruction)
+   */
+  fun-load-arg: p @ Param(_, _, _) -> <concat> [
+    [ DUP(1),
+      CALLDATALOAD() ],
+    <clean-higher-order-bits> p,
+    [ SWAP(1),
+      PUSH(1, "0x20"),
+      ADD(),
+      SWAP(1),
+      SWAP(3),
+      SWAP(2),
+      SWAP(1) ]
+  ]
+  
+  /**
+   * Generates the sequence of instructions for the return parameters of a function.
+   *
+   * @param  list(RetParam)
+   * @return list(instruction)
+   */
+  fun-retparams: [] -> [ STOP() ]
+  fun-retparams: retParams -> <concat> [
+    //Determine address of next free memory location and duplicate it
+    [ PUSH(1, "0x40"),
+      MLOAD(),
+      DUP(1) ],
+    
+    //Store all return values in memory
+    retstores,
+    
+    //Clear the stack aside from curpointer
+    retaincur,
+    
+    //Determine the size of what we allocated and return it.
+    [ PUSH(1, "0x40"),
+      MLOAD(),
+      DUP(1),
+      SWAP(2),
+      SUB(),
+      SWAP(1),
+      RETURN() ]
+  ] where
+    //We create a stack with all the return values on it.
+    stack     := <ebc-stack-create> 16;
+    nrs       := <range> <length> retParams;
+    retnames  := <map(\ nr -> <conc-strings> ("r", <int-to-string> nr) \)> nrs;
+    <map(ebc-stack-push(|stack))> retnames;
+    
+    //Push oldpointer and curpointer
+    <ebc-stack-push(|stack)> "oldpointer";
+    <ebc-stack-push(|stack)> "curpointer";
+    
+    //We store all the return values in memory
+    retstores := <mapconcat(fun-retparam-store(|stack))> <zip> (retnames, retParams);
+    
+    //We then clear the stack aside from the current pointer
+    retaincur := <ebc-retain-variable(|stack)> "curpointer"
+  
+  /**
+   * Stores a return param in the correct location.
+   *
+   * @param  tuple(string, RetParam) - the number of the return value (e.g. r2) and the RetParam
+   * @return list(instruction)       - the instructions
+   */
+  fun-retparam-store(|stack): (ret, retParam) -> <concat> [
+    [ DUP(retindex) ],
+    <fun-clean-retparam> retParam,
+    [ DUP(cptrindex),
+      MSTORE(),
+      PUSH(1, "0x20"),
+      ADD() ]
+  ] where
+    retindex := <inc> <ebc-stack-get-index(|stack)> ret;
+    <ebc-stack-push(|stack)> 1;
+    cptrindex := <inc> <ebc-stack-get-index(|stack)> "curpointer";
+    <ebc-stack-push(|stack)> 1;
+    //MStore
+    <ebc-stack-pop(|stack)> 1; <ebc-stack-pop(|stack)> 1
+  
+  /**
+   * Cleans the higher order bits of the given return parameter.
+   *
+   * @param  RetParam
+   * @return list(instruction)
+   */
+  fun-clean-retparam: r @ RetParam(_, _, _) -> <clean-higher-order-bits> type
+    where
+    a := <nabl2-get-ast-analysis>;
+    type := <nabl2-get-ast-type> r
+    
   
   //-----------------------------------------------------------------------------------------------
   //Variables
@@ -169,11 +298,10 @@ rules
   /**
    * Generate the function hash from the function
    *
-   * @param  function
+   * @param  Function
    * @return string (hash)
    */
   hash-signature: Function(name, params, _, _, _)  -> <ebc-generate-function-hash> (name, <map(get-param-type-name)> params)
-  hash-signature: VoidFunction(name, params, _, _) -> <ebc-generate-function-hash> (name, <map(get-param-type-name)> params)
   
   /**
    * Gets the pretty printed name of the type of the given parameter.
@@ -192,7 +320,7 @@ rules
   filter-fun: [] -> []
   filter-fun: [head | tail] -> [head | <filter-fun> tail]
     where
-    <?Function(_, _, _, _, _) + ?VoidFunction(_, _, _, _)> head
+    <?Function(_, _, _, _, _)> head
   filter-fun: [head | tail] -> <filter-fun> tail
     where
-    not(<?Function(_, _, _, _, _) + ?VoidFunction(_, _, _, _)> head)
+    not(<?Function(_, _, _, _, _)> head)

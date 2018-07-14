@@ -18,7 +18,7 @@ rules
   
 
   /**
-   * Creates instructions to extend a variable of the given type to the full length.
+   * Cleans the higher order bits.
    *
    * Examples:
    * utin8   = PUSH FF, AND
@@ -28,19 +28,22 @@ rules
    * int8    = PUSH 0, SIGNEXTEND
    * int16   = PUSH 1, SIGNEXTEND
    * int24   = PUSH 2, SIGNEXTEND
+   *
+   * @param  Type
+   * @return list(instruction)
    */
-  extend-to-32-bytes: BoolT() -> [
+  clean-higher-order-bits: BoolT() -> [
     ISZERO(),
     ISZERO()
   ]
-  extend-to-32-bytes: IntT(256) -> []
-  extend-to-32-bytes: IntT(n)   -> [
-    PUSH(1, <divi> (n, 8)),
+  clean-higher-order-bits: IntT(256) -> []
+  clean-higher-order-bits: IntT(n)   -> [
+    PUSH(1, <dec> <divi> (n, 8)),
     SIGNEXTEND()
   ]
-  extend-to-32-bytes: UIntT(256) -> []
-  extend-to-32-bytes: UIntT(n)   -> [
-    PUSH(n', <conc-strings> ("0x", <do-n(append-FF|n')> "") ),
+  clean-higher-order-bits: UIntT(256) -> []
+  clean-higher-order-bits: UIntT(n)   -> [
+    PUSH(n', <do-n(append-FF|n')> "0x"),
     AND()
   ] where n' := <divi> (n, 8)
   
@@ -53,3 +56,6 @@ rules
    * Creates a push instruction of the appropriate size (smallest length fitting the given number).
    */
   create-push: nr    -> PUSH(<addi> (<divi> (nr, 256), 1), nr)
+  
+  
+  //===============================================================================================
